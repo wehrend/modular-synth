@@ -26,6 +26,7 @@ import {
   resumeAudio,
 } from './audio';
 import type { AppNode, OscFlowNode } from './types';
+import styles from './App.module.scss';
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -97,13 +98,13 @@ export default function App() {
 
   return (
     // Erster Klick irgendwo im Canvas weckt den AudioContext auf
-    <div className="app" onPointerDown={() => void resumeAudio()}>
-      <div className="toolbar">
-        <h1 className="toolbar__title">Modular Synth</h1>
-        <button className="toolbar__btn" onClick={addOscillator}>
+    <div className={styles.app} onPointerDown={() => void resumeAudio()}>
+      <div className={styles.toolbar}>
+        <h1 className={styles.title}>Modular Synth</h1>
+        <button className={styles.btn} onClick={addOscillator}>
           + Oszillator
         </button>
-        <p className="toolbar__hint">
+        <p className={styles.hint}>
           Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick
           entfernen — oder auswählen und Entf/Backspace.
         </p>

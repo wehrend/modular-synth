@@ -1,0 +1,58 @@
+// App.module.scss — Layout-Hülle und Toolbar
+
+@use './styles/variables' as v;
+
+.app {
+  width: 100%;
+  height: 100%;
+}
+
+.toolbar {
+  position: absolute;
+  z-index: 10;
+  inset: 0 0 auto 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: linear-gradient(
+    to bottom,
+    rgba(20, 22, 26, 0.95),
+    rgba(20, 22, 26, 0)
+  );
+  // Der Verlauf soll Klicks auf den Canvas darunter nicht schlucken;
+  // die Kinder bleiben aber bedienbar.
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
+}
+
+.title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: v.$text-dim;
+}
+
+.btn {
+  @include v.control-base;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: v.$panel;
+  color: v.$text;
+
+  &:hover {
+    border-color: v.$signal;
+  }
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: v.$text-dim;
+}

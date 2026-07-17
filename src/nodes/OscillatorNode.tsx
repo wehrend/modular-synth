@@ -3,6 +3,7 @@
 
 import { Handle, Position, useReactFlow, type NodeProps } from '@xyflow/react';
 import Knob from '../Knob';
+import styles from './Module.module.scss';
 import { updateAudioNode } from '../audio';
 import { WAVEFORMS, type OscData, type OscFlowNode, type Waveform } from '../types';
 
@@ -23,11 +24,11 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
   };
 
   return (
-    <div className={`module module--osc ${data.running ? 'is-running' : ''}`}>
-      <header className="module__head">
-        <span className="module__title">VCO</span>
+    <div className={`${styles.module} ${data.running ? styles.isRunning : ''}`}>
+      <header className={styles.head}>
+        <span className={styles.title}>VCO</span>
         <button
-          className={`power ${data.running ? 'power--on' : ''}`}
+          className={`${styles.power} ${data.running ? styles.powerOn : ''}`}
           onClick={() => patch({ running: !data.running })}
           aria-label={data.running ? 'Oszillator stoppen' : 'Oszillator starten'}
         >
@@ -46,11 +47,11 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
         onChange={(frequency) => patch({ frequency })}
       />
 
-      <div className="module__row module__row--gap">
+      <div className={`${styles.row} ${styles.rowGap}`}>
         {WAVEFORMS.map((w) => (
           <button
             key={w}
-            className={`chip ${data.waveform === w ? 'chip--active' : ''}`}
+            className={`${styles.chip} ${data.waveform === w ? styles.chipActive : ''}`}
             onClick={() => patch({ waveform: w })}
           >
             {WAVEFORM_LABELS[w]}

@@ -1,0 +1,61 @@
+// global.scss
+// Bewusst klein gehalten: nur das, was wirklich global sein MUSS.
+// Alles Komponentenbezogene lebt in *.module.scss neben der Komponente.
+
+@use './variables' as v;
+
+:root {
+  --bg: #{v.$raw-bg};
+  --panel: #{v.$raw-panel};
+  --panel-edge: #{v.$raw-panel-edge};
+  --text: #{v.$raw-text};
+  --text-dim: #{v.$raw-text-dim};
+  --signal: #{v.$raw-signal};
+  --signal-dim: #{v.$raw-signal-dim};
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: v.$bg;
+  color: v.$text;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+// ---------- React-Flow-Anpassungen ----------
+// Diese Klassen kommen aus @xyflow/react und lassen sich nicht scopen —
+// sie bleiben deshalb hier als bewusste globale Overrides.
+
+.react-flow__handle {
+  width: 12px;
+  height: 12px;
+  background: v.$signal;
+  border: 2px solid v.$bg;
+}
+
+.react-flow__edge-path {
+  stroke: v.$signal;
+  stroke-width: 2;
+}
+
+.react-flow__controls {
+  box-shadow: none;
+
+  button {
+    background: v.$panel;
+    border-bottom: 1px solid v.$panel-edge;
+    fill: v.$text;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-flow__edge.animated path {
+    animation: none;
+  }
+}

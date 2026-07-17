@@ -3,6 +3,7 @@
 
 import { Handle, Position, useReactFlow, type NodeProps } from '@xyflow/react';
 import Knob from '../Knob';
+import styles from './Module.module.scss';
 import { updateAudioNode } from '../audio';
 import type { OutData, OutFlowNode } from '../types';
 
@@ -15,11 +16,11 @@ export default function OutputNode({ id, data }: NodeProps<OutFlowNode>) {
   };
 
   return (
-    <div className="module module--out">
-      <header className="module__head">
-        <span className="module__title">OUT</span>
+    <div className={styles.module}>
+      <header className={styles.head}>
+        <span className={styles.title}>OUT</span>
         <button
-          className={`power ${data.muted ? '' : 'power--on'}`}
+          className={`${styles.power} ${data.muted ? '' : styles.powerOn}`}
           onClick={() => patch({ muted: !data.muted })}
           aria-label={data.muted ? 'Ton einschalten' : 'Stummschalten'}
         >

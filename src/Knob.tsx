@@ -10,6 +10,7 @@
 // Wert; die Kennlinie ist nur das Mapping t ↔ Wert.
 
 import { useRef } from 'react';
+import styles from './Knob.module.scss';
 
 type KnobProps = {
   label: string;
@@ -112,10 +113,10 @@ export default function Knob({
   const base = polar(angle, 6);
 
   return (
-    <div className="knob">
-      <span className="module__label">{label}</span>
+    <div className={styles.knob}>
+      <span className={styles.label}>{label}</span>
       <div
-        className="nodrag knob__dial"
+        className={`nodrag ${styles.dial}`}
         role="slider"
         aria-label={label}
         aria-valuemin={min}
@@ -129,15 +130,15 @@ export default function Knob({
       >
         <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
           {/* Gehäuse */}
-          <circle cx={C} cy={C} r={R - 4} className="knob__body" />
+          <circle cx={C} cy={C} r={R - 4} className={styles.body} />
           {/* Spur (voller Weg) und Wert-Bogen */}
-          <path d={arcPath(SWEEP_START, SWEEP_END, R)} className="knob__track" />
-          <path d={arcPath(SWEEP_START, angle, R)} className="knob__arc" />
+          <path d={arcPath(SWEEP_START, SWEEP_END, R)} className={styles.track} />
+          <path d={arcPath(SWEEP_START, angle, R)} className={styles.arc} />
           {/* Zeiger */}
-          <line x1={base.x} y1={base.y} x2={tip.x} y2={tip.y} className="knob__pointer" />
+          <line x1={base.x} y1={base.y} x2={tip.x} y2={tip.y} className={styles.pointer} />
         </svg>
       </div>
-      <span className="module__value">{format ? format(value) : value}</span>
+      <span className={styles.value}>{format ? format(value) : value}</span>
     </div>
   );
 }

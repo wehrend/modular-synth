@@ -1,0 +1,37 @@
+// _variables.scss
+// Theme-Werte an einer Stelle. Die CSS-Custom-Properties werden in
+// global.scss auf :root gelegt; hier stehen nur die SCSS-Seiten davon
+// plus Mixins, die mehrere Komponenten teilen.
+
+// Farbnamen als CSS-Variablen referenzieren, damit das Theme zur
+// Laufzeit (z. B. für einen Light-Mode) austauschbar bleibt.
+$bg: var(--bg);
+$panel: var(--panel);
+$panel-edge: var(--panel-edge);
+$text: var(--text);
+$text-dim: var(--text-dim);
+$signal: var(--signal);
+$signal-dim: var(--signal-dim);
+
+// Rohwerte für global.scss (dort werden die Custom Properties definiert)
+$raw-bg: #14161a;
+$raw-panel: #1e2127;
+$raw-panel-edge: #2c3038;
+$raw-text: #d6d9de;
+$raw-text-dim: #7c828c;
+$raw-signal: #ffb454; // Signalfarbe: warmes Amber wie eine Röhre
+$raw-signal-dim: #8a5f2a;
+
+// Wiederkehrende Button-Grundform (Toolbar-Button, Chip, Power teilen sie)
+@mixin control-base {
+  font: inherit;
+  border: 1px solid $panel-edge;
+  color: $text-dim;
+  background: transparent;
+  cursor: pointer;
+}
+
+// Gedimmtes Beschriftungs-Layout (Label/Wert an Reglern)
+@mixin dim-label {
+  color: $text-dim;
+}
