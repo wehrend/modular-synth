@@ -29,9 +29,11 @@ export type MixerData = Record<MixerChannel, number> & {
 export type FilterType = "lowpass" | "highpass" | "bandpass";
 
 export type VcfData = {
+  filterType: FilterType;
   cutoff: number; // Hz
   resonance: number; // Q
-  filterType: FilterType;
+  cutoffAmount: number; // Mod-Hub in Hz (0–5000)
+  resonanceAmount: number; // Mod-Hub in Q (0–10)
 };
 
 export type FilterFlowNode = Node<VcfData, "vcf">;
@@ -41,7 +43,11 @@ export type MixerFlowNode = Node<MixerData, "mixer">;
 export type OutFlowNode = Node<OutData, "out">;
 
 /** Diskriminierte Union aller Knoten der App. */
-export type AppNode = OscFlowNode | MixerFlowNode | VcfFlowNode | OutFlowNode;
+export type AppNode =
+  | OscFlowNode
+  | MixerFlowNode
+  | FilterFlowNode
+  | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
 export type AudioNodeInit =

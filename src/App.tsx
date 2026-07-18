@@ -133,7 +133,13 @@ export default function App() {
       id: `filter-${filterCount.current}`,
       type: "vcf",
       position: { x: 440 + Math.random() * 40, y: 460 + Math.random() * 60 },
-      data: { cutoff: 1200, resonance: 2, filterType: "lowpass" },
+      data: {
+        cutoff: 1200,
+        resonance: 2,
+        filterType: "lowpass",
+        cutoffAmount: 2000,
+        resonanceAmount: 0,
+      },
     };
     createAudioNode(node);
     setNodes((nds) => [...nds, node]);

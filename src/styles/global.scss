@@ -69,3 +69,18 @@ body,
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   font-size: 13px;
 }
+
+/* Anschluss-Zeilen: position:relative macht die Zeile zum Bezugsrahmen,
+   damit das Handle auf Zeilenhöhe andockt statt am Modul-Default */
+.io-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  min-height: 16px;
+}
+
+.io-row .react-flow__handle {
+  left: -20px; /* aus dem Modul-Padding heraus an die Panelkante */
+}
