@@ -5,6 +5,7 @@
 import * as Tone from "tone";
 import {
   MIXER_CHANNELS,
+  VcfData,
   type AudioNodeInit,
   type MixerChannel,
   type MixerData,
@@ -20,9 +21,16 @@ type MixerEntry = {
   sum: Tone.Gain;
   out: Tone.ToneAudioNode;
 };
+type VcfEntry = {
+  type: "vcf";
+  filter: Tone.Filter;
+  in: Tone.ToneAudioNode;
+  out: Tone.ToneAudioNode;
+};
+
 type OutEntry = { type: "out"; vol: Tone.Volume; in: Tone.ToneAudioNode };
 
-type RegistryEntry = OscEntry | MixerEntry | OutEntry;
+type RegistryEntry = OscEntry | MixerEntry | VcfEntry | OutEntry;
 
 const registry = new Map<string, RegistryEntry>();
 
@@ -56,6 +64,15 @@ export function createAudioNode(init: AudioNodeInit): void {
       registry.set(init.id, { type: "mixer", ins, sum, out: sum });
       break;
     }
+    case "vcf": {
+      const filter = new Tone.Filter({
+        frequency: init.data.cutoff,
+        Q: init.data.resonance,
+        type: init.data.filterType,
+      });
+      registry.set(init.id, { type: "vcf", filter, in: filter, out: filter });
+      break;
+    }
     case "out": {
       const vol = new Tone.Volume(init.data.volume).toDestination();
       vol.mute = init.data.muted;
@@ -72,6 +89,7 @@ export function removeAudioNode(id: string): void {
 
   if (node.type === "osc") {
     node.osc.dispose();
+    if (node.type === "vcf") node.filter.dispose();
   } else if (node.type === "mixer") {
     // Alle Kanal-Gains UND die Summe freigeben — sonst leben vier
     // Tone.Gain-Objekte pro gelöschtem Mixer im Audiographen weiter.
@@ -112,6 +130,12 @@ export function updateAudioNode(id: string, patch: NodePatch): void {
     if (p.master !== undefined) {
       node.sum.gain.rampTo(p.master, 0.04);
     }
+  }
+  if (node.type === "vcf") {
+    const p = patch as Partial<VcfData>;
+    if (p.cutoff !== undefined) node.filter.frequency.rampTo(p.cutoff, 0.04);
+    if (p.resonance !== undefined) node.filter.Q.rampTo(p.resonance, 0.04);
+    if (p.filterType !== undefined) node.filter.type = p.filterType;
   }
   if (node.type === "out") {
     const p = patch as Partial<OutData>;

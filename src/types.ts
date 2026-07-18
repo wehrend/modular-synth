@@ -26,21 +26,33 @@ export type MixerData = Record<MixerChannel, number> & {
   master: number; // 0–1
 };
 
+export type FilterType = "lowpass" | "highpass" | "bandpass";
+
+export type VcfData = {
+  cutoff: number; // Hz
+  resonance: number; // Q
+  filterType: FilterType;
+};
+
+export type FilterFlowNode = Node<VcfData, "vcf">;
+
 export type OscFlowNode = Node<OscData, "osc">;
 export type MixerFlowNode = Node<MixerData, "mixer">;
 export type OutFlowNode = Node<OutData, "out">;
 
 /** Diskriminierte Union aller Knoten der App. */
-export type AppNode = OscFlowNode | MixerFlowNode | OutFlowNode;
+export type AppNode = OscFlowNode | MixerFlowNode | VcfFlowNode | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
 export type AudioNodeInit =
   | { id: string; type: "osc"; data: OscData }
   | { id: string; type: "mixer"; data: MixerData }
+  | { id: string; type: "vcf"; data: VcfData }
   | { id: string; type: "out"; data: OutData };
 
 /** Partielle Parameter-Updates, wie sie von den Reglern kommen. */
 export type NodePatch =
   | Partial<OscData>
   | Partial<MixerData>
+  | Partial<VcfData>
   | Partial<OutData>;

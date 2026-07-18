@@ -2,7 +2,7 @@
 // Bewusst klein gehalten: nur das, was wirklich global sein MUSS.
 // Alles Komponentenbezogene lebt in *.module.scss neben der Komponente.
 
-@use './variables' as v;
+@use "./variables" as v;
 
 :root {
   --bg: #{v.$raw-bg};
@@ -25,7 +25,7 @@ body,
   height: 100%;
   background: v.$bg;
   color: v.$text;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-family: "Segoe UI", system-ui, sans-serif;
 }
 
 // ---------- React-Flow-Anpassungen ----------
@@ -58,4 +58,14 @@ body,
   .react-flow__edge.animated path {
     animation: none;
   }
+}
+
+.module {
+  width: 220px;
+  padding: 12px 14px 14px;
+  border-radius: 8px;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
 }

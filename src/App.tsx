@@ -26,12 +26,19 @@ import {
   removeAudioNode,
   resumeAudio,
 } from "./audio";
-import type { AppNode, MixerFlowNode, OscFlowNode } from "./types";
+import type {
+  AppNode,
+  FilterFlowNode,
+  MixerFlowNode,
+  OscFlowNode,
+} from "./types";
 import styles from "./App.module.scss";
+import FilterNode from "./nodes/FilterNode";
 
 const nodeTypes = {
   osc: OscillatorNode,
   mixer: MixerNode,
+  vcf: FilterNode,
   out: OutputNode,
 };
 
@@ -59,6 +66,7 @@ export default function App() {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const oscCount = useRef(1);
   const mixerCount = useRef(0);
+  const filterCount = useRef(0);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -119,6 +127,18 @@ export default function App() {
     setNodes((nds) => [...nds, node]);
   }, [setNodes]);
 
+  const addFilter = useCallback(() => {
+    filterCount.current += 1;
+    const node: FilterFlowNode = {
+      id: `filter-${filterCount.current}`,
+      type: "vcf",
+      position: { x: 440 + Math.random() * 40, y: 460 + Math.random() * 60 },
+      data: { cutoff: 1200, resonance: 2, filterType: "lowpass" },
+    };
+    createAudioNode(node);
+    setNodes((nds) => [...nds, node]);
+  }, [setNodes]);
+
   return (
     // Erster Klick irgendwo im Canvas weckt den AudioContext auf
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
@@ -129,6 +149,9 @@ export default function App() {
         </button>
         <button className={styles.btn} onClick={addMixer}>
           + Mixer
+        </button>
+        <button className={styles.btn} onClick={addFilter}>
+          + Filter
         </button>
         <p className={styles.hint}>
           Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick
