@@ -3,7 +3,7 @@
 // Beide Node-Komponenten importieren dieselbe Datei — so bleibt die
 // "Eurorack-Einschub"-Optik an genau einer Stelle definiert.
 
-@use '../styles/variables' as v;
+@use "../styles/variables" as v;
 
 .module {
   width: 220px;
@@ -80,4 +80,19 @@
 .chipActive {
   border-color: v.$signal;
   color: v.$signal;
+}
+
+// ---------- Mixer ----------
+
+.mixerKnobRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.mixerMaster {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid v.$panel-edge;
 }
