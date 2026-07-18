@@ -36,18 +36,14 @@ export type VcfData = {
   resonanceAmount: number; // Mod-Hub in Q (0–10)
 };
 
-export type FilterFlowNode = Node<VcfData, "vcf">;
+export type VcfFlowNode = Node<VcfData, "vcf">;
 
 export type OscFlowNode = Node<OscData, "osc">;
 export type MixerFlowNode = Node<MixerData, "mixer">;
 export type OutFlowNode = Node<OutData, "out">;
 
 /** Diskriminierte Union aller Knoten der App. */
-export type AppNode =
-  | OscFlowNode
-  | MixerFlowNode
-  | FilterFlowNode
-  | OutFlowNode;
+export type AppNode = OscFlowNode | MixerFlowNode | VcfFlowNode | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
 export type AudioNodeInit =

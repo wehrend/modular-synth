@@ -5,3 +5,5 @@ export default defineConfig({
   base: "/modular-synth/",
   plugins: [react()],
 });
+
+//test

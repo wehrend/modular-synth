@@ -1,13 +1,13 @@
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import Knob from "../Knob";
 import { updateAudioNode } from "../audio";
-import type { FilterType, VcfData, VcfFlowNode } from "../types";
+import type { VcfData, VcfFlowNode } from "../types";
 
-const FILTER_TYPES: ReadonlyArray<{ value: FilterType; label: string }> = [
-  { value: "lowpass", label: "LP" },
-  { value: "highpass", label: "HP" },
-  { value: "bandpass", label: "BP" },
-];
+// const FILTER_TYPES: ReadonlyArray<{ value: FilterType; label: string }> = [
+//   { value: "lowpass", label: "LP" },
+//   { value: "highpass", label: "HP" },
+//   { value: "bandpass", label: "BP" },
+// ];
 
 export default function FilterNode({ id, data }: NodeProps<VcfFlowNode>) {
   const { updateNodeData } = useReactFlow();

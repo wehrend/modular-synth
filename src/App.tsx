@@ -26,12 +26,7 @@ import {
   removeAudioNode,
   resumeAudio,
 } from "./audio";
-import type {
-  AppNode,
-  FilterFlowNode,
-  MixerFlowNode,
-  OscFlowNode,
-} from "./types";
+import type { AppNode, VcfFlowNode, MixerFlowNode, OscFlowNode } from "./types";
 import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
 
@@ -129,7 +124,7 @@ export default function App() {
 
   const addFilter = useCallback(() => {
     filterCount.current += 1;
-    const node: FilterFlowNode = {
+    const node: VcfFlowNode = {
       id: `filter-${filterCount.current}`,
       type: "vcf",
       position: { x: 440 + Math.random() * 40, y: 460 + Math.random() * 60 },

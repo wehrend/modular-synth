@@ -4,7 +4,6 @@
 
 import * as Tone from "tone";
 import {
-  MIXER_CHANNELS,
   VcfData,
   type AudioNodeInit,
   type MixerChannel,
@@ -107,21 +106,25 @@ export function removeAudioNode(id: string): void {
   const node = registry.get(id);
   if (!node) return;
 
-  if (node.type === "osc") {
-    node.osc.dispose();
-    if (node.type === "vcf") node.filter.dispose();
-  } else if (node.type === "mixer") {
-    // Alle Kanal-Gains UND die Summe freigeben — sonst leben vier
-    // Tone.Gain-Objekte pro gelöschtem Mixer im Audiographen weiter.
-    Object.values(node.ins).forEach((gain) => gain.dispose());
-    node.sum.dispose();
-  } else {
-    node.vol.dispose();
+  switch (node.type) {
+    case "osc":
+      node.osc.dispose();
+      break;
+    case "out":
+      node.vol.dispose();
+      break;
+    case "mixer":
+      Object.values(node.ins).forEach((g) => g.dispose());
+      node.sum.dispose();
+      break;
+    case "vcf":
+      node.ins.cutoff.dispose();
+      node.ins.resonance.dispose();
+      node.filter.dispose(); // ins.in ist der Filter selbst — nicht doppelt disposen
+      break;
   }
-
   registry.delete(id);
 }
-
 /**
  * Überträgt Parameteränderungen aus der UI auf den Audio-Knoten.
  * Die Casts pro Zweig sind nötig, weil die Map die Verbindung zwischen
@@ -201,7 +204,8 @@ function resolveInput(
   targetHandle?: string | null,
 ): Tone.ToneAudioNode | null {
   if (targetHandle && target && "ins" in target) {
-    const input = target.ins[targetHandle as MixerChannel];
+    const ins = target.ins as Record<string, Tone.ToneAudioNode>;
+    const input = ins[targetHandle] ?? null;
     if (input) return input;
   }
   return target && "in" in target ? target.in : null;
