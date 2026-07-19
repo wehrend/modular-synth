@@ -38,18 +38,33 @@ export type VcfData = {
 
 export type VcfFlowNode = Node<VcfData, "vcf">;
 
+export type EnvelopeData = {
+  attack: number; // Sekunden
+  decay: number; // Sekunden
+  sustain: number; // Pegel 0–1
+  release: number; // Sekunden
+};
+
 export type OscFlowNode = Node<OscData, "osc">;
 export type MixerFlowNode = Node<MixerData, "mixer">;
 export type OutFlowNode = Node<OutData, "out">;
+export type EnvelopeFlowNode = Node<EnvelopeData, "envelope">;
 
+// → in AppNode, AudioNodeInit und NodePatch aufnehmen, wie gehabt
 /** Diskriminierte Union aller Knoten der App. */
-export type AppNode = OscFlowNode | MixerFlowNode | VcfFlowNode | OutFlowNode;
+export type AppNode =
+  | OscFlowNode
+  | MixerFlowNode
+  | VcfFlowNode
+  | EnvelopeFlowNode
+  | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
 export type AudioNodeInit =
   | { id: string; type: "osc"; data: OscData }
   | { id: string; type: "mixer"; data: MixerData }
   | { id: string; type: "vcf"; data: VcfData }
+  | { id: string; type: "envelope"; data: EnvelopeData }
   | { id: string; type: "out"; data: OutData };
 
 /** Partielle Parameter-Updates, wie sie von den Reglern kommen. */
@@ -57,4 +72,5 @@ export type NodePatch =
   | Partial<OscData>
   | Partial<MixerData>
   | Partial<VcfData>
+  | Partial<EnvelopeData>
   | Partial<OutData>;

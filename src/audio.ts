@@ -32,6 +32,13 @@ type VcfEntry = {
   out: Tone.ToneAudioNode;
 };
 
+type EnvelopeEntry = {
+  type: "envelope";
+  env: Tone.AmplitudeEnvelope;
+  in: Tone.ToneAudioNode;
+  out: Tone.ToneAudioNode;
+};
+
 type OutEntry = { type: "out"; vol: Tone.Volume; in: Tone.ToneAudioNode };
 
 type RegistryEntry = OscEntry | MixerEntry | VcfEntry | OutEntry;
@@ -92,6 +99,16 @@ export function createAudioNode(init: AudioNodeInit): void {
       });
       break;
     }
+    case "envelope": {
+      const env = new Tone.AmplitudeEnvelope({
+        attack: init.data.attack,
+        decay: init.data.decay,
+        sustain: init.data.sustain,
+        release: init.data.release,
+      });
+      registry.set(init.id, { type: "envelope", env, in: env, out: env });
+      break;
+    }
     case "out": {
       const vol = new Tone.Volume(init.data.volume).toDestination();
       vol.mute = init.data.muted;
@@ -110,9 +127,6 @@ export function removeAudioNode(id: string): void {
     case "osc":
       node.osc.dispose();
       break;
-    case "out":
-      node.vol.dispose();
-      break;
     case "mixer":
       Object.values(node.ins).forEach((g) => g.dispose());
       node.sum.dispose();
@@ -121,6 +135,12 @@ export function removeAudioNode(id: string): void {
       node.ins.cutoff.dispose();
       node.ins.resonance.dispose();
       node.filter.dispose(); // ins.in ist der Filter selbst — nicht doppelt disposen
+      break;
+    case "envelope":
+      node.env.dispose();
+      break;
+    case "out":
+      node.vol.dispose();
       break;
   }
   registry.delete(id);
@@ -172,7 +192,14 @@ export function updateAudioNode(id: string, patch: NodePatch): void {
       node.sum.gain.rampTo(p.master, 0.04);
     }
   }
-
+  // in updateAudioNode:
+  if (node.type === "envelope") {
+    const p = patch as Partial<AdsrData>;
+    if (p.attack !== undefined) node.env.attack = p.attack;
+    if (p.decay !== undefined) node.env.decay = p.decay;
+    if (p.sustain !== undefined) node.env.sustain = p.sustain;
+    if (p.release !== undefined) node.env.release = p.release;
+  }
   if (node.type === "vcf") {
     const p = patch as Partial<VcfData>;
     if (p.cutoff !== undefined) {
@@ -192,6 +219,18 @@ export function updateAudioNode(id: string, patch: NodePatch): void {
       node.ins.resonance.gain.rampTo(p.resonanceAmount, 0.04);
     }
   }
+}
+
+/** Gate an: Attack-Phase starten (Taste gedrückt). */
+export function gateOn(id: string): void {
+  const node = registry.get(id);
+  if (node?.type === "envelope") node.env.triggerAttack();
+}
+
+/** Gate aus: Release-Phase starten (Taste losgelassen). */
+export function gateOff(id: string): void {
+  const node = registry.get(id);
+  if (node?.type === "envelope") node.env.triggerRelease();
 }
 
 /**

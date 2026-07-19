@@ -26,14 +26,23 @@ import {
   removeAudioNode,
   resumeAudio,
 } from "./audio";
-import type { AppNode, VcfFlowNode, MixerFlowNode, OscFlowNode } from "./types";
+import type {
+  AppNode,
+  VcfFlowNode,
+  MixerFlowNode,
+  OscFlowNode,
+  EnvelopeFlowNode,
+} from "./types";
 import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
+import { Envelope } from "tone";
+import EnvelopeNode from "./nodes/EnvelopeNode";
 
 const nodeTypes = {
   osc: OscillatorNode,
   mixer: MixerNode,
   vcf: FilterNode,
+  envelope: EnvelopeNode,
   out: OutputNode,
 };
 
@@ -62,6 +71,7 @@ export default function App() {
   const oscCount = useRef(1);
   const mixerCount = useRef(0);
   const filterCount = useRef(0);
+  const envelopeCount = useRef(0);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -140,6 +150,18 @@ export default function App() {
     setNodes((nds) => [...nds, node]);
   }, [setNodes]);
 
+  const addEnvelope = useCallback(() => {
+    envelopeCount.current += 1;
+    const node: EnvelopeFlowNode = {
+      id: `envelope-${envelopeCount.current}`,
+      type: "envelope",
+      position: { x: 440 + Math.random() * 40, y: 460 + Math.random() * 60 },
+      data: { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.5 },
+    };
+    createAudioNode(node);
+    setNodes((nds) => [...nds, node]);
+  }, [setNodes]);
+
   return (
     // Erster Klick irgendwo im Canvas weckt den AudioContext auf
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
@@ -153,6 +175,9 @@ export default function App() {
         </button>
         <button className={styles.btn} onClick={addFilter}>
           + Filter
+        </button>
+        <button className={styles.btn} onClick={addEnvelope}>
+          + ADSR / Envelope
         </button>
         <p className={styles.hint}>
           Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick
