@@ -35,7 +35,6 @@ import type {
 } from "./types";
 import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
-import { Envelope } from "tone";
 import EnvelopeNode from "./nodes/EnvelopeNode";
 
 const nodeTypes = {

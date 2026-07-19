@@ -4,6 +4,7 @@
 
 import * as Tone from "tone";
 import {
+  EnvelopeData,
   VcfData,
   type AudioNodeInit,
   type MixerChannel,
@@ -41,7 +42,12 @@ type EnvelopeEntry = {
 
 type OutEntry = { type: "out"; vol: Tone.Volume; in: Tone.ToneAudioNode };
 
-type RegistryEntry = OscEntry | MixerEntry | VcfEntry | OutEntry;
+type RegistryEntry =
+  | OscEntry
+  | MixerEntry
+  | VcfEntry
+  | EnvelopeEntry
+  | OutEntry;
 
 const registry = new Map<string, RegistryEntry>();
 
@@ -194,7 +200,7 @@ export function updateAudioNode(id: string, patch: NodePatch): void {
   }
   // in updateAudioNode:
   if (node.type === "envelope") {
-    const p = patch as Partial<AdsrData>;
+    const p = patch as Partial<EnvelopeData>;
     if (p.attack !== undefined) node.env.attack = p.attack;
     if (p.decay !== undefined) node.env.decay = p.decay;
     if (p.sustain !== undefined) node.env.sustain = p.sustain;
