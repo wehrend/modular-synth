@@ -157,72 +157,84 @@ export function removeAudioNode(id: string): void {
  * Knotentyp und Patch-Typ nicht kennt — der per node.type abgesicherte
  * Zweig stellt sie wieder her.
  */
+
+const RAMP = 0.04; // Sekunden — knackfreie Parameterwechsel
+
 export function updateAudioNode(id: string, patch: NodePatch): void {
   const node = registry.get(id);
   if (!node) return;
 
-  if (node.type === "osc") {
-    const p = patch as Partial<OscData>;
-    if (p.frequency !== undefined) {
-      // rampTo statt hartem Setzen vermeidet Knackser beim Schieben
-      node.osc.frequency.rampTo(p.frequency, 0.04);
-    }
-    if (p.waveform !== undefined) {
-      node.osc.type = p.waveform;
-    }
-    if (p.running !== undefined) {
-      if (p.running) node.osc.start();
-      else node.osc.stop();
-    }
-  }
-
-  if (node.type === "out") {
-    const p = patch as Partial<OutData>;
-    if (p.volume !== undefined) {
-      node.vol.volume.rampTo(p.volume, 0.04);
-    }
-    if (p.muted !== undefined) {
-      node.vol.mute = p.muted;
-    }
-  }
-
-  if (node.type === "mixer") {
-    const p = patch as Partial<MixerData>;
-    (Object.keys(node.ins) as MixerChannel[]).forEach((ch) => {
-      const value = p[ch];
-      if (value !== undefined) {
-        node.ins[ch].gain.rampTo(value, 0.04);
+  switch (node.type) {
+    case "osc": {
+      const p = patch as Partial<OscData>;
+      if (p.frequency !== undefined) {
+        // rampTo statt hartem Setzen vermeidet Knackser beim Schieben
+        node.osc.frequency.rampTo(p.frequency, RAMP);
       }
-    });
-    if (p.master !== undefined) {
-      node.sum.gain.rampTo(p.master, 0.04);
+      if (p.waveform !== undefined) {
+        node.osc.type = p.waveform;
+      }
+      if (p.running !== undefined) {
+        if (p.running) node.osc.start();
+        else node.osc.stop();
+      }
+      break;
     }
-  }
-  // in updateAudioNode:
-  if (node.type === "envelope") {
-    const p = patch as Partial<EnvelopeData>;
-    if (p.attack !== undefined) node.env.attack = p.attack;
-    if (p.decay !== undefined) node.env.decay = p.decay;
-    if (p.sustain !== undefined) node.env.sustain = p.sustain;
-    if (p.release !== undefined) node.env.release = p.release;
-  }
-  if (node.type === "vcf") {
-    const p = patch as Partial<VcfData>;
-    if (p.cutoff !== undefined) {
-      node.filter.frequency.rampTo(p.cutoff, 0.04);
+    case "vcf": {
+      const p = patch as Partial<VcfData>;
+      if (p.cutoff !== undefined) {
+        node.filter.frequency.rampTo(p.cutoff, RAMP);
+      }
+      if (p.resonance !== undefined) {
+        node.filter.Q.rampTo(p.resonance, RAMP);
+      }
+      if (p.filterType !== undefined) {
+        node.filter.type = p.filterType;
+      }
+      // Mod-Hub der CV-Eingänge (Attenuator-Gains in `ins`)
+      if (p.cutoffAmount !== undefined) {
+        node.ins.cutoff.gain.rampTo(p.cutoffAmount, RAMP);
+      }
+      if (p.resonanceAmount !== undefined) {
+        node.ins.resonance.gain.rampTo(p.resonanceAmount, RAMP);
+      }
+      break;
     }
-    if (p.resonance !== undefined) {
-      node.filter.Q.rampTo(p.resonance, 0.04);
+
+    case "envelope": {
+      const p = patch as Partial<EnvelopeData>;
+      // Kein rampTo: A/D/S/R sind gewöhnliche Zahlen-Properties (Form
+      // künftiger Verläufe), keine laufenden Audio-Signale
+      if (p.attack !== undefined) node.env.attack = p.attack;
+      if (p.decay !== undefined) node.env.decay = p.decay;
+      if (p.sustain !== undefined) node.env.sustain = p.sustain;
+      if (p.release !== undefined) node.env.release = p.release;
+      break;
     }
-    if (p.filterType !== undefined) {
-      node.filter.type = p.filterType;
+
+    case "mixer": {
+      const p = patch as Partial<MixerData>;
+      (Object.keys(node.ins) as MixerChannel[]).forEach((ch) => {
+        const value = p[ch];
+        if (value !== undefined) {
+          node.ins[ch].gain.rampTo(value, RAMP);
+        }
+      });
+      if (p.master !== undefined) {
+        node.sum.gain.rampTo(p.master, RAMP);
+      }
+      break;
     }
-    // Mod-Hub der CV-Eingänge (Attenuator-Gains in `ins`)
-    if (p.cutoffAmount !== undefined) {
-      node.ins.cutoff.gain.rampTo(p.cutoffAmount, 0.04);
-    }
-    if (p.resonanceAmount !== undefined) {
-      node.ins.resonance.gain.rampTo(p.resonanceAmount, 0.04);
+
+    case "out": {
+      const p = patch as Partial<OutData>;
+      if (p.volume !== undefined) {
+        node.vol.volume.rampTo(p.volume, RAMP);
+      }
+      if (p.muted !== undefined) {
+        node.vol.mute = p.muted;
+      }
+      break;
     }
   }
 }
