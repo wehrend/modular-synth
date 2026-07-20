@@ -32,16 +32,19 @@ import type {
   MixerFlowNode,
   OscFlowNode,
   EnvelopeFlowNode,
+  LfoFlowNode,
 } from "./types";
 import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
 import EnvelopeNode from "./nodes/EnvelopeNode";
+import LfoNode from "./nodes/LfoNode";
 
 const nodeTypes = {
   osc: OscillatorNode,
   mixer: MixerNode,
   vcf: FilterNode,
   envelope: EnvelopeNode,
+  lfo: LfoNode,
   out: OutputNode,
 };
 
@@ -71,6 +74,7 @@ export default function App() {
   const mixerCount = useRef(0);
   const filterCount = useRef(0);
   const envelopeCount = useRef(0);
+  const lfoCount = useRef(0);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -161,6 +165,18 @@ export default function App() {
     setNodes((nds) => [...nds, node]);
   }, [setNodes]);
 
+  const addLfo = useCallback(() => {
+    lfoCount.current += 1;
+    const node: LfoFlowNode = {
+      id: `lfo-${lfoCount.current}`,
+      type: "lfo",
+      position: { x: 440 + Math.random() * 40, y: 460 + Math.random() * 60 },
+      data: { rate: 4.4, waveform: "sawtooth" },
+    };
+    createAudioNode(node);
+    setNodes((nds) => [...nds, node]);
+  }, [setNodes]);
+
   return (
     // Erster Klick irgendwo im Canvas weckt den AudioContext auf
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
@@ -177,6 +193,9 @@ export default function App() {
         </button>
         <button className={styles.btn} onClick={addEnvelope}>
           + ADSR / Envelope
+        </button>
+        <button className={styles.btn} onClick={addLfo}>
+          + LFO
         </button>
         <p className={styles.hint}>
           Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick

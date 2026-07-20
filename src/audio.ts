@@ -5,7 +5,9 @@
 import * as Tone from "tone";
 import {
   EnvelopeData,
+  LfoData,
   VcfData,
+  Waveform,
   type AudioNodeInit,
   type MixerChannel,
   type MixerData,
@@ -39,6 +41,7 @@ type EnvelopeEntry = {
   in: Tone.ToneAudioNode;
   out: Tone.ToneAudioNode;
 };
+type LfoEntry = { type: "lfo"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 
 type OutEntry = { type: "out"; vol: Tone.Volume; in: Tone.ToneAudioNode };
 
@@ -47,6 +50,7 @@ type RegistryEntry =
   | MixerEntry
   | VcfEntry
   | EnvelopeEntry
+  | LfoEntry
   | OutEntry;
 
 const registry = new Map<string, RegistryEntry>();
@@ -115,6 +119,12 @@ export function createAudioNode(init: AudioNodeInit): void {
       registry.set(init.id, { type: "envelope", env, in: env, out: env });
       break;
     }
+    case "lfo": {
+      const osc = makeOscillator(init.data.rate, init.data.waveform);
+      osc.start(); // free-running ab Geburt
+      registry.set(init.id, { type: "lfo", osc, out: osc });
+      break;
+    }
     case "out": {
       const vol = new Tone.Volume(init.data.volume).toDestination();
       vol.mute = init.data.muted;
@@ -144,6 +154,9 @@ export function removeAudioNode(id: string): void {
       break;
     case "envelope":
       node.env.dispose();
+      break;
+    case "lfo":
+      node.osc.dispose();
       break;
     case "out":
       node.vol.dispose();
@@ -225,7 +238,17 @@ export function updateAudioNode(id: string, patch: NodePatch): void {
       }
       break;
     }
-
+    case "lfo": {
+      const p = patch as Partial<LfoData>;
+      if (p.rate !== undefined) {
+        // rampTo statt hartem Setzen vermeidet Knackser beim Schieben
+        node.osc.frequency.rampTo(p.rate, RAMP);
+      }
+      if (p.waveform !== undefined) {
+        node.osc.type = p.waveform;
+      }
+      break;
+    }
     case "out": {
       const p = patch as Partial<OutData>;
       if (p.volume !== undefined) {
@@ -237,6 +260,14 @@ export function updateAudioNode(id: string, patch: NodePatch): void {
       break;
     }
   }
+}
+
+/** Gemeinsamer Kern von VCO und LFO — die "Vererbung" als Funktion. */
+function makeOscillator(
+  frequency: number,
+  waveform: Waveform,
+): Tone.Oscillator {
+  return new Tone.Oscillator(frequency, waveform);
 }
 
 /** Gate an: Attack-Phase starten (Taste gedrückt). */

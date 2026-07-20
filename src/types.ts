@@ -6,6 +6,16 @@
 import type { Node } from "@xyflow/react";
 
 export const WAVEFORMS = ["sine", "triangle", "sawtooth", "square"] as const;
+
+// types.ts
+export const WAVEFORM_LABELS: Record<Waveform, string> = {
+  sine: "Sin",
+  triangle: "Tri",
+  sawtooth: "Saw",
+  square: "Sqr",
+};
+
+
 export type Waveform = (typeof WAVEFORMS)[number];
 
 export type OscData = {
@@ -50,13 +60,19 @@ export type MixerFlowNode = Node<MixerData, "mixer">;
 export type OutFlowNode = Node<OutData, "out">;
 export type EnvelopeFlowNode = Node<EnvelopeData, "envelope">;
 
-// → in AppNode, AudioNodeInit und NodePatch aufnehmen, wie gehabt
+export type LfoData = {
+  rate: number; // Hz, 0.05–20
+  waveform: Waveform; // dieselbe Konstante wie beim VCO!
+};
+
+export type LfoFlowNode = Node<LfoData, "lfo">;
 /** Diskriminierte Union aller Knoten der App. */
 export type AppNode =
   | OscFlowNode
   | MixerFlowNode
   | VcfFlowNode
   | EnvelopeFlowNode
+  | LfoFlowNode
   | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
@@ -65,6 +81,7 @@ export type AudioNodeInit =
   | { id: string; type: "mixer"; data: MixerData }
   | { id: string; type: "vcf"; data: VcfData }
   | { id: string; type: "envelope"; data: EnvelopeData }
+  | { id: string; type: "lfo"; data: LfoData }
   | { id: string; type: "out"; data: OutData };
 
 /** Partielle Parameter-Updates, wie sie von den Reglern kommen. */
@@ -73,4 +90,5 @@ export type NodePatch =
   | Partial<MixerData>
   | Partial<VcfData>
   | Partial<EnvelopeData>
+  | Partial<LfoData>
   | Partial<OutData>;
