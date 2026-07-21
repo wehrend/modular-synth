@@ -52,24 +52,69 @@ const initialNodes: AppNode[] = [
   {
     id: "osc-1",
     type: "osc",
-    position: { x: 60, y: 140 },
-    data: { frequency: 220, waveform: "sawtooth", running: false },
+    position: { x: 40, y: 60 },
+    data: { frequency: 220, waveform: "sawtooth", running: true },
+  },
+  {
+    id: "lfo-1",
+    type: "lfo",
+    position: { x: 40, y: 260 },
+    data: { rate: 3, waveform: "sine" },
+  },
+  {
+    id: "vcf-1",
+    type: "vcf",
+    position: { x: 340, y: 160 },
+    data: {
+      cutoff: 1500,
+      resonance: 3,
+      filterType: "lowpass",
+      cutoffAmount: 1200,
+      resonanceAmount: 0,
+    },
   },
   {
     id: "out-1",
     type: "out",
-    position: { x: 480, y: 170 },
+    position: { x: 660, y: 220 },
     data: { volume: -12, muted: false },
+  },
+];
+
+const initialEdges: Edge[] = [
+  {
+    id: "e-osc-vcf",
+    source: "osc-1",
+    target: "vcf-1",
+    targetHandle: "in",
+    animated: true,
+  },
+  {
+    id: "e-lfo-vcf",
+    source: "lfo-1",
+    target: "vcf-1",
+    targetHandle: "cutoff",
+    animated: true,
+  },
+  {
+    id: "e-vcf-out",
+    source: "vcf-1",
+    sourceHandle: "out",
+    target: "out-1",
+    animated: true,
   },
 ];
 
 // Tone.js-Gegenstücke für den Startzustand anlegen (Modul-Scope statt
 // useEffect: läuft garantiert genau einmal, auch unter React StrictMode).
-initialNodes.forEach((n) => createAudioNode(n));
+initialNodes.forEach((n) =>
+  createAudioNode({ id: n.id, type: n.type as any, data: n.data as any }),
+);
+initialEdges.forEach((e) => connectAudio(e.source, e.target, e.targetHandle));
 
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
   const oscCount = useRef(1);
   const mixerCount = useRef(0);
   const filterCount = useRef(0);
