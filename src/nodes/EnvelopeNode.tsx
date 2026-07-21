@@ -2,30 +2,56 @@ import { Handle, NodeProps, Position, useReactFlow } from "@xyflow/react";
 import { EnvelopeData, EnvelopeFlowNode } from "../types";
 import { gateOff, gateOn, updateAudioNode } from "../audio";
 import Knob from "../Knob";
+import { useEffect, useRef, useState } from "react";
+
+const GATE_KEY = " "; // Leertaste; e.key für Space ist ein Leerzeichen
 
 export default function EnvelopeNode({
   id,
   data,
 }: NodeProps<EnvelopeFlowNode>) {
   const { updateNodeData } = useReactFlow();
+  const gateHeld = useRef(false); // Wächter gegen Key-Repeat
+  const [gateActive, setGateActive] = useState(false); // nur fürs UI
 
   const patch = (changes: Partial<EnvelopeData>) => {
     updateNodeData(id, changes);
     updateAudioNode(id, changes);
   };
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== GATE_KEY || gateHeld.current) return;
+      gateHeld.current = true;
+      setGateActive(true);
+      gateOn(id);
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key !== GATE_KEY) return;
+      gateHeld.current = false;
+      setGateActive(false);
+      gateOff(id);
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      if (gateHeld.current) {
+        gateOff(id);
+        gateHeld.current = false;
+      }
+    };
+  }, [id]);
+
   return (
     <div className="module module--adsr">
       <header className="module__head">
         <span className="module__title">ADSR</span>
-        <button
-          className="power nodrag"
-          onPointerDown={() => gateOn(id)}
-          onPointerUp={() => gateOff(id)}
-          onPointerLeave={() => gateOff(id)}
-        >
-          gate
-        </button>
+        <span className={`power ${gateActive ? "power--on" : ""}`}>
+          {GATE_KEY === " " ? "Leertaste" : GATE_KEY}
+        </span>
       </header>
 
       <div className="module__row module__row--gap">
