@@ -70,6 +70,12 @@ body,
   font-size: 13px;
 }
 
+.module__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
 /* Anschluss-Zeilen: position:relative macht die Zeile zum Bezugsrahmen,
    damit das Handle auf Zeilenhöhe andockt statt am Modul-Default */
 .io-row {

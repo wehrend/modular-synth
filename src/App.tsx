@@ -74,9 +74,15 @@ const initialNodes: AppNode[] = [
     },
   },
   {
+    id: "envelope-1",
+    type: "envelope",
+    position: { x: 660, y: 200 },
+    data: { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.4 },
+  },
+  {
     id: "out-1",
     type: "out",
-    position: { x: 660, y: 220 },
+    position: { x: 960, y: 220 },
     data: { volume: -12, muted: false },
   },
 ];
@@ -97,8 +103,16 @@ const initialEdges: Edge[] = [
     animated: true,
   },
   {
-    id: "e-vcf-out",
+    id: "e-vcf-env",
     source: "vcf-1",
+    sourceHandle: "out",
+    target: "envelope-1",
+    targetHandle: "in",
+    animated: true,
+  },
+  {
+    id: "e-env-out",
+    source: "envelope-1",
     sourceHandle: "out",
     target: "out-1",
     animated: true,
@@ -222,6 +236,11 @@ export default function App() {
     setNodes((nds) => [...nds, node]);
   }, [setNodes]);
 
+  console.log(
+    "nodes:",
+    nodes.map((n) => `${n.id}(${n.type})`),
+  );
+  console.log("edges:", edges);
   return (
     // Erster Klick irgendwo im Canvas weckt den AudioContext auf
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
