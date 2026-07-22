@@ -194,7 +194,7 @@ export default function App() {
   // Audio-Trennen hier explizit passieren.
   const onEdgeDoubleClick = useCallback(
     (_event: React.MouseEvent, edge: Edge) => {
-      disconnectAudio(edge.source, edge.target);
+      disconnectAudio(edge.source, edge.target, edge.targetHandle); // ← ergänzt
       setEdges((eds) => eds.filter((e) => e.id !== edge.id));
     },
     [setEdges],
@@ -271,20 +271,15 @@ export default function App() {
     setNodes,
   );
 
-  console.log(
-    "nodes:",
-    nodes.map((n) => `${n.id}(${n.type})`),
-  );
-  console.log("edges:", edges);
   return (
     // Erster Klick irgendwo im Canvas weckt den AudioContext auf
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
       <div className={styles.toolbar}>
         <h1 className={styles.title}>Modular Synth</h1>
-        <button className="none" onClick={handleSave}>
+        <button className={styles.btn} onClick={handleSave}>
           Speichern
         </button>
-        <button className="none" onClick={handleLoad}>
+        <button className={styles.btn} onClick={handleLoad}>
           Laden
         </button>
 
