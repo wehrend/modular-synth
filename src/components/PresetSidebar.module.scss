@@ -1,21 +1,33 @@
 // PresetSidebar.module.scss
+@use "../styles/variables" as v;
+
 .sidebar {
   max-width: 15%;
   flex-shrink: 0;
-  padding: 12px;
-  margin-top: 20%;
+  padding: 14px 12px;
+  margin-top: 5rem;
   overflow-y: auto;
-  border-left: 1px solid #ddd;
+  background: v.$panel;
+  border-right: 1px solid v.$panel-edge;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .title {
-  margin: 0 0 8px;
-  font-size: 14px;
-  font-weight: 600;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  @include v.dim-label;
 }
+
 .empty {
-  font-size: 13px;
-  color: #888;
+  margin: 0;
+  font-size: 12px;
+  font-style: italic;
+  @include v.dim-label;
 }
 
 .list {
@@ -30,24 +42,35 @@
 .item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+
+  &:hover {
+    border-color: v.$panel-edge;
+    background: v.$bg;
+  }
 }
 
 .loadBtn {
+  @include v.control-base;
   flex: 1;
   text-align: left;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 4px;
-}
-.loadBtn:hover {
-  background: #f0f0f0;
+  border: none; // .item übernimmt die Umrandung, der Button selbst bleibt randlos
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+
+  &:hover {
+    color: v.$signal;
+  }
 }
 
 .date {
-  font-size: 11px;
-  color: #999;
-  white-space: nowrap;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  @include v.dim-label;
 }

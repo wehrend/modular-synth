@@ -74,3 +74,10 @@
   flex: 1; // ReactFlow nimmt den restlichen Platz ein
   min-width: 0; // verhindert Überlauf bei sehr breiten Inhalten
 }
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 5rem;
+}

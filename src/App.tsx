@@ -279,32 +279,34 @@ export default function App() {
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
       <div className={styles.toolbar}>
         <h1 className={styles.title}>Modular Synth</h1>
-        <button className={styles.btn} onClick={handleSave}>
-          Speichern
-        </button>
-        {/* <button className={styles.btn} onClick={handleLoad}>
+        <div className={styles.actions}>
+          <button className={styles.btn} onClick={handleSave}>
+            Speichern
+          </button>
+          {/* <button className={styles.btn} onClick={handleLoad}>
             Laden
           </button> */}
 
-        <button className={styles.btn} onClick={addOscillator}>
-          + Oszillator
-        </button>
-        <button className={styles.btn} onClick={addMixer}>
-          + Mixer
-        </button>
-        <button className={styles.btn} onClick={addFilter}>
-          + Filter
-        </button>
-        <button className={styles.btn} onClick={addEnvelope}>
-          + ADSR / Envelope
-        </button>
-        <button className={styles.btn} onClick={addLfo}>
-          + LFO
-        </button>
-        <p className={styles.hint}>
-          Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick
-          entfernen — oder auswählen und Entf/Backspace.
-        </p>
+          <button className={styles.btn} onClick={addOscillator}>
+            + Oszillator
+          </button>
+          <button className={styles.btn} onClick={addMixer}>
+            + Mixer
+          </button>
+          <button className={styles.btn} onClick={addFilter}>
+            + Filter
+          </button>
+          <button className={styles.btn} onClick={addEnvelope}>
+            + ADSR / Envelope
+          </button>
+          <button className={styles.btn} onClick={addLfo}>
+            + LFO
+          </button>
+          <p className={styles.hint}>
+            Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick
+            entfernen — oder auswählen und Entf/Backspace.
+          </p>
+        </div>
       </div>
       <div className={styles.layout}>
         <PresetSidebar onLoad={loadPresetByName} refreshKey={presetRefresh} />
