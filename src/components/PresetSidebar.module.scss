@@ -1,0 +1,53 @@
+// PresetSidebar.module.scss
+.sidebar {
+  max-width: 15%;
+  flex-shrink: 0;
+  padding: 12px;
+  margin-top: 20%;
+  overflow-y: auto;
+  border-left: 1px solid #ddd;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.empty {
+  font-size: 13px;
+  color: #888;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.loadBtn {
+  flex: 1;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+.loadBtn:hover {
+  background: #f0f0f0;
+}
+
+.date {
+  font-size: 11px;
+  color: #999;
+  white-space: nowrap;
+}

@@ -2,7 +2,7 @@
 // Der Flow-Graph ist die "Wahrheit" für die Patch-Struktur.
 // Jede Änderung an Kanten/Knoten wird 1:1 in den Audiographen gespiegelt.
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -40,8 +40,9 @@ import EnvelopeNode from "./nodes/EnvelopeNode";
 import LfoNode from "./nodes/LfoNode";
 
 import { serializePatch, toFlow } from "./persist/serialize";
-import { listPresets, savePreset, loadPreset } from "./persist/localStore";
+import { savePreset, loadPreset } from "./persist/localStore";
 import { nextId, seedIds } from "./persist/ids";
+import PresetSidebar from "./components/PresetSidebar";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -134,40 +135,42 @@ export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
 
+  const [presetRefresh, setPresetRefresh] = useState(0);
+
   const handleSave = () => {
     const name = window.prompt("Preset-Name?");
     if (!name) return;
     savePreset(name, serializePatch(nodes, edges));
+    setPresetRefresh((v) => v + 1); // Sidebar zum Neuladen anstoßen
   };
 
-  const handleLoad = () => {
-    const presets = listPresets();
-    if (presets.length === 0) {
-      window.alert("Keine gespeicherten Presets.");
-      return;
-    }
-    const name = window.prompt(
-      `Preset laden:\n${presets.map((p) => p.name).join("\n")}`,
-    );
-    if (!name) return;
+  const loadPresetByName = useCallback(
+    (name: string) => {
+      try {
+        const doc = loadPreset(name);
+        const { nodes: newNodes, edges: newEdges } = toFlow(doc);
 
-    try {
-      const doc = loadPreset(name);
-      const { nodes: newNodes, edges: newEdges } = toFlow(doc);
+        nodes.forEach((n) => removeAudioNode(n.id));
+        newNodes.forEach((n) =>
+          createAudioNode({
+            id: n.id,
+            type: n.type as any,
+            data: n.data as any,
+          }),
+        );
+        newEdges.forEach((e) =>
+          connectAudio(e.source, e.target, e.targetHandle),
+        );
+        seedIds(newNodes.map((n) => n.id));
 
-      nodes.forEach((n) => removeAudioNode(n.id)); // alten Audiographen abbauen
-      newNodes.forEach((n) =>
-        createAudioNode({ id: n.id, type: n.type as any, data: n.data as any }),
-      );
-      newEdges.forEach((e) => connectAudio(e.source, e.target, e.targetHandle));
-      seedIds(newNodes.map((n) => n.id));
-
-      setNodes(newNodes);
-      setEdges(newEdges);
-    } catch (err) {
-      window.alert(err instanceof Error ? err.message : "Fehler beim Laden.");
-    }
-  };
+        setNodes(newNodes);
+        setEdges(newEdges);
+      } catch (err) {
+        window.alert(err instanceof Error ? err.message : "Fehler beim Laden.");
+      }
+    },
+    [nodes, setNodes, setEdges],
+  );
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -279,9 +282,9 @@ export default function App() {
         <button className={styles.btn} onClick={handleSave}>
           Speichern
         </button>
-        <button className={styles.btn} onClick={handleLoad}>
-          Laden
-        </button>
+        {/* <button className={styles.btn} onClick={handleLoad}>
+            Laden
+          </button> */}
 
         <button className={styles.btn} onClick={addOscillator}>
           + Oszillator
@@ -303,23 +306,25 @@ export default function App() {
           entfernen — oder auswählen und Entf/Backspace.
         </p>
       </div>
-
-      <ReactFlow<AppNode>
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onEdgesDelete={onEdgesDelete}
-        onEdgeDoubleClick={onEdgeDoubleClick}
-        onNodesDelete={onNodesDelete}
-        deleteKeyCode={["Backspace", "Delete"]}
-        fitView
-      >
-        <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} />
-        <Controls />
-      </ReactFlow>
+      <div className={styles.layout}>
+        <PresetSidebar onLoad={loadPresetByName} refreshKey={presetRefresh} />
+        <ReactFlow<AppNode>
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onEdgesDelete={onEdgesDelete}
+          onEdgeDoubleClick={onEdgeDoubleClick}
+          onNodesDelete={onNodesDelete}
+          deleteKeyCode={["Backspace", "Delete"]}
+          fitView
+        >
+          <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} />
+          <Controls />
+        </ReactFlow>
+      </div>
     </div>
   );
 }
