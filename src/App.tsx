@@ -2,7 +2,7 @@
 // Der Flow-Graph ist die "Wahrheit" für die Patch-Struktur.
 // Jede Änderung an Kanten/Knoten wird 1:1 in den Audiographen gespiegelt.
 
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import {
   ReactFlow,
   Background,
@@ -38,6 +38,10 @@ import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
 import EnvelopeNode from "./nodes/EnvelopeNode";
 import LfoNode from "./nodes/LfoNode";
+
+import { serializePatch, toFlow } from "./persist/serialize";
+import { listPresets, savePreset, loadPreset } from "./persist/localStore";
+import { nextId, seedIds } from "./persist/ids";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -129,11 +133,41 @@ initialEdges.forEach((e) => connectAudio(e.source, e.target, e.targetHandle));
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
-  const oscCount = useRef(1);
-  const mixerCount = useRef(0);
-  const filterCount = useRef(0);
-  const envelopeCount = useRef(0);
-  const lfoCount = useRef(0);
+
+  const handleSave = () => {
+    const name = window.prompt("Preset-Name?");
+    if (!name) return;
+    savePreset(name, serializePatch(nodes, edges));
+  };
+
+  const handleLoad = () => {
+    const presets = listPresets();
+    if (presets.length === 0) {
+      window.alert("Keine gespeicherten Presets.");
+      return;
+    }
+    const name = window.prompt(
+      `Preset laden:\n${presets.map((p) => p.name).join("\n")}`,
+    );
+    if (!name) return;
+
+    try {
+      const doc = loadPreset(name);
+      const { nodes: newNodes, edges: newEdges } = toFlow(doc);
+
+      nodes.forEach((n) => removeAudioNode(n.id)); // alten Audiographen abbauen
+      newNodes.forEach((n) =>
+        createAudioNode({ id: n.id, type: n.type as any, data: n.data as any }),
+      );
+      newEdges.forEach((e) => connectAudio(e.source, e.target, e.targetHandle));
+      seedIds(newNodes.map((n) => n.id));
+
+      setNodes(newNodes);
+      setEdges(newEdges);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Fehler beim Laden.");
+    }
+  };
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -175,13 +209,11 @@ export default function App() {
     nodeType: T["type"],
     basePosition: { x: number; y: number },
     makeDefaults: () => T["data"],
-    countRef: React.MutableRefObject<number>,
     setNodes: React.Dispatch<React.SetStateAction<AppNode[]>>,
   ) {
     return useCallback(() => {
-      countRef.current += 1;
       const node = {
-        id: `${idPrefix}-${countRef.current}`,
+        id: nextId(idPrefix), // ersetzt: countRef.current += 1; `${idPrefix}-${countRef.current}`
         type: nodeType,
         position: {
           x: basePosition.x + Math.random() * 40,
@@ -191,14 +223,13 @@ export default function App() {
       } as T;
       createAudioNode(node);
       setNodes((nds) => [...nds, node]);
-    }, [idPrefix, nodeType, basePosition, countRef, setNodes]);
+    }, [idPrefix, nodeType, basePosition, setNodes]);
   }
   const addOscillator = useAddModule<OscFlowNode>(
     "osc",
     "osc",
     { x: 60, y: 320 },
     () => ({ frequency: 440, waveform: "sine", running: false }),
-    oscCount,
     setNodes,
   );
 
@@ -207,7 +238,6 @@ export default function App() {
     "mixer",
     { x: 300, y: 320 },
     () => ({ ch1: 0.8, ch2: 0.8, ch3: 0.8, master: 0.8 }),
-    mixerCount,
     setNodes,
   );
 
@@ -222,7 +252,6 @@ export default function App() {
       cutoffAmount: 2000,
       resonanceAmount: 0,
     }),
-    filterCount,
     setNodes,
   );
 
@@ -231,7 +260,6 @@ export default function App() {
     "envelope",
     { x: 440, y: 460 },
     () => ({ attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.5 }),
-    envelopeCount,
     setNodes,
   );
 
@@ -240,7 +268,6 @@ export default function App() {
     "lfo",
     { x: 440, y: 460 },
     () => ({ rate: 4.4, waveform: "sawtooth" }),
-    lfoCount,
     setNodes,
   );
 
@@ -254,6 +281,13 @@ export default function App() {
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
       <div className={styles.toolbar}>
         <h1 className={styles.title}>Modular Synth</h1>
+        <button className="none" onClick={handleSave}>
+          Speichern
+        </button>
+        <button className="none" onClick={handleLoad}>
+          Laden
+        </button>
+
         <button className={styles.btn} onClick={addOscillator}>
           + Oszillator
         </button>
