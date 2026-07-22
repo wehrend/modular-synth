@@ -170,71 +170,79 @@ export default function App() {
     deleted.forEach((node) => removeAudioNode(node.id));
   }, []);
 
-  const addOscillator = useCallback(() => {
-    oscCount.current += 1;
-    const node: OscFlowNode = {
-      id: `osc-${oscCount.current}`,
-      type: "osc",
-      position: { x: 60 + Math.random() * 40, y: 320 + Math.random() * 60 },
-      data: { frequency: 440, waveform: "sine", running: false },
-    };
-    createAudioNode(node);
-    setNodes((nds) => [...nds, node]);
-  }, [setNodes]);
+  function useAddModule<T extends AppNode>(
+    idPrefix: string,
+    nodeType: T["type"],
+    basePosition: { x: number; y: number },
+    makeDefaults: () => T["data"],
+    countRef: React.MutableRefObject<number>,
+    setNodes: React.Dispatch<React.SetStateAction<AppNode[]>>,
+  ) {
+    return useCallback(() => {
+      countRef.current += 1;
+      const node = {
+        id: `${idPrefix}-${countRef.current}`,
+        type: nodeType,
+        position: {
+          x: basePosition.x + Math.random() * 40,
+          y: basePosition.y + Math.random() * 60,
+        },
+        data: makeDefaults(),
+      } as T;
+      createAudioNode(node);
+      setNodes((nds) => [...nds, node]);
+    }, [idPrefix, nodeType, basePosition, countRef, setNodes]);
+  }
+  const addOscillator = useAddModule<OscFlowNode>(
+    "osc",
+    "osc",
+    { x: 60, y: 320 },
+    () => ({ frequency: 440, waveform: "sine", running: false }),
+    oscCount,
+    setNodes,
+  );
 
-  const addMixer = useCallback(() => {
-    mixerCount.current += 1;
-    const node: MixerFlowNode = {
-      id: `mixer-${mixerCount.current}`,
-      type: "mixer",
-      position: { x: 300 + Math.random() * 40, y: 320 + Math.random() * 60 },
-      data: { ch1: 0.8, ch2: 0.8, ch3: 0.8, master: 0.8 },
-    };
-    createAudioNode(node);
-    setNodes((nds) => [...nds, node]);
-  }, [setNodes]);
+  const addMixer = useAddModule<MixerFlowNode>(
+    "mixer",
+    "mixer",
+    { x: 300, y: 320 },
+    () => ({ ch1: 0.8, ch2: 0.8, ch3: 0.8, master: 0.8 }),
+    mixerCount,
+    setNodes,
+  );
 
-  const addFilter = useCallback(() => {
-    filterCount.current += 1;
-    const node: VcfFlowNode = {
-      id: `filter-${filterCount.current}`,
-      type: "vcf",
-      position: { x: 440 + Math.random() * 40, y: 460 + Math.random() * 60 },
-      data: {
-        cutoff: 1200,
-        resonance: 2,
-        filterType: "lowpass",
-        cutoffAmount: 2000,
-        resonanceAmount: 0,
-      },
-    };
-    createAudioNode(node);
-    setNodes((nds) => [...nds, node]);
-  }, [setNodes]);
+  const addFilter = useAddModule<VcfFlowNode>(
+    "filter",
+    "vcf",
+    { x: 440, y: 460 },
+    () => ({
+      cutoff: 1200,
+      resonance: 2,
+      filterType: "lowpass",
+      cutoffAmount: 2000,
+      resonanceAmount: 0,
+    }),
+    filterCount,
+    setNodes,
+  );
 
-  const addEnvelope = useCallback(() => {
-    envelopeCount.current += 1;
-    const node: EnvelopeFlowNode = {
-      id: `envelope-${envelopeCount.current}`,
-      type: "envelope",
-      position: { x: 440 + Math.random() * 40, y: 460 + Math.random() * 60 },
-      data: { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.5 },
-    };
-    createAudioNode(node);
-    setNodes((nds) => [...nds, node]);
-  }, [setNodes]);
+  const addEnvelope = useAddModule<EnvelopeFlowNode>(
+    "envelope",
+    "envelope",
+    { x: 440, y: 460 },
+    () => ({ attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.5 }),
+    envelopeCount,
+    setNodes,
+  );
 
-  const addLfo = useCallback(() => {
-    lfoCount.current += 1;
-    const node: LfoFlowNode = {
-      id: `lfo-${lfoCount.current}`,
-      type: "lfo",
-      position: { x: 440 + Math.random() * 40, y: 460 + Math.random() * 60 },
-      data: { rate: 4.4, waveform: "sawtooth" },
-    };
-    createAudioNode(node);
-    setNodes((nds) => [...nds, node]);
-  }, [setNodes]);
+  const addLfo = useAddModule<LfoFlowNode>(
+    "lfo",
+    "lfo",
+    { x: 440, y: 460 },
+    () => ({ rate: 4.4, waveform: "sawtooth" }),
+    lfoCount,
+    setNodes,
+  );
 
   console.log(
     "nodes:",
