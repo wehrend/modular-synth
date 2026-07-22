@@ -40,7 +40,7 @@ import EnvelopeNode from "./nodes/EnvelopeNode";
 import LfoNode from "./nodes/LfoNode";
 
 import { serializePatch, toFlow } from "./persist/serialize";
-import { savePreset, loadPreset } from "./persist/localStore";
+import { savePreset, loadPreset, listPresets } from "./persist/localStore";
 import { nextId, seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
 
@@ -134,14 +134,34 @@ initialEdges.forEach((e) => connectAudio(e.source, e.target, e.targetHandle));
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
-
+  const [activePreset, setActivePreset] = useState<string | null>(null);
   const [presetRefresh, setPresetRefresh] = useState(0);
 
   const handleSave = () => {
+    if (activePreset) {
+      // Ein Preset ist geladen → "Speichern" aktualisiert es direkt, ohne Nachfrage
+      savePreset(activePreset, serializePatch(nodes, edges));
+      setPresetRefresh((v) => v + 1);
+      return;
+    }
+    handleSaveAs(); // noch nichts geladen → wie "Speichern unter"
+  };
+
+  const handleSaveAs = () => {
     const name = window.prompt("Preset-Name?");
     if (!name) return;
+
+    const exists = listPresets().some((p) => p.name === name);
+    if (
+      exists &&
+      !window.confirm(`"${name}" existiert bereits. Überschreiben?`)
+    ) {
+      return; // stillschweigendes Überschreiben verhindert (dein dritter Punkt)
+    }
+
     savePreset(name, serializePatch(nodes, edges));
-    setPresetRefresh((v) => v + 1); // Sidebar zum Neuladen anstoßen
+    setActivePreset(name);
+    setPresetRefresh((v) => v + 1);
   };
 
   const loadPresetByName = useCallback(
@@ -165,6 +185,7 @@ export default function App() {
 
         setNodes(newNodes);
         setEdges(newEdges);
+        setActivePreset(name); // ← neu
       } catch (err) {
         window.alert(err instanceof Error ? err.message : "Fehler beim Laden.");
       }
@@ -281,11 +302,11 @@ export default function App() {
         <h1 className={styles.title}>Modular Synth</h1>
         <div className={styles.actions}>
           <button className={styles.btn} onClick={handleSave}>
-            Speichern
+            {activePreset ? `Speichern (${activePreset})` : "Speichern"}
           </button>
-          {/* <button className={styles.btn} onClick={handleLoad}>
-            Laden
-          </button> */}
+          <button className={styles.btn} onClick={handleSaveAs}>
+            Speichern unter…
+          </button>
 
           <button className={styles.btn} onClick={addOscillator}>
             + Oszillator
@@ -309,7 +330,11 @@ export default function App() {
         </div>
       </div>
       <div className={styles.layout}>
-        <PresetSidebar onLoad={loadPresetByName} refreshKey={presetRefresh} />
+        <PresetSidebar
+          onLoad={loadPresetByName}
+          refreshKey={presetRefresh}
+          activeName={activePreset}
+        />
         <ReactFlow<AppNode>
           nodes={nodes}
           edges={edges}

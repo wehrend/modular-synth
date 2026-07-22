@@ -5,10 +5,15 @@ import styles from "./PresetSidebar.module.scss";
 
 type Props = {
   onLoad: (name: string) => void;
-  refreshKey: number; // hochzählen lassen, wenn App etwas gespeichert hat
+  refreshKey: number;
+  activeName: string | null;
 };
 
-export default function PresetSidebar({ onLoad, refreshKey }: Props) {
+export default function PresetSidebar({
+  onLoad,
+  refreshKey,
+  activeName,
+}: Props) {
   const [presets, setPresets] = useState<PresetMeta[]>([]);
 
   const refresh = useCallback(() => setPresets(listPresets()), []);
@@ -25,7 +30,10 @@ export default function PresetSidebar({ onLoad, refreshKey }: Props) {
       )}
       <ul className={styles.list}>
         {presets.map((p) => (
-          <li key={p.name} className={styles.item}>
+          <li
+            key={p.name}
+            className={`${styles.item} ${p.name === activeName ? styles.active : ""}`}
+          >
             <button className={styles.loadBtn} onClick={() => onLoad(p.name)}>
               {p.name}
             </button>

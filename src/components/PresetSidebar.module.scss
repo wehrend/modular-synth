@@ -74,3 +74,13 @@
   font-variant-numeric: tabular-nums;
   @include v.dim-label;
 }
+
+.active {
+  border-color: v.$signal;
+  background: v.$bg;
+
+  .loadBtn {
+    color: v.$signal;
+    font-weight: 600;
+  }
+}
