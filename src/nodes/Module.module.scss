@@ -96,3 +96,20 @@
   padding-top: 10px;
   border-top: 1px solid v.$panel-edge;
 }
+.ioRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  min-height: 16px;
+}
+
+.ioRow :global(.react-flow__handle) {
+  left: -20px;
+}
+
+.ioLabel {
+  font-size: 12px;
+  @include v.dim-label;
+}

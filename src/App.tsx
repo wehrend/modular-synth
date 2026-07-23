@@ -116,10 +116,19 @@ const initialEdges: Edge[] = [
     animated: true,
   },
   {
-    id: "e-env-out",
+    id: "e-env-outL",
     source: "envelope-1",
     sourceHandle: "out",
     target: "out-1",
+    targetHandle: "inL",
+    animated: true,
+  },
+  {
+    id: "e-env-outR",
+    source: "envelope-1",
+    sourceHandle: "out",
+    target: "out-1",
+    targetHandle: "inR",
     animated: true,
   },
 ];

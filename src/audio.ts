@@ -43,7 +43,12 @@ type EnvelopeEntry = {
 };
 type LfoEntry = { type: "lfo"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 
-type OutEntry = { type: "out"; vol: Tone.Volume; in: Tone.ToneAudioNode };
+type OutEntry = {
+  type: "out";
+  vol: Tone.Volume;
+  merge: Tone.Merge;
+  ins: { inL: Tone.Gain; inR: Tone.Gain };
+};
 
 type RegistryEntry =
   | OscEntry
@@ -128,11 +133,19 @@ export function createAudioNode(init: AudioNodeInit): void {
     case "out": {
       const vol = new Tone.Volume(init.data.volume).toDestination();
       vol.mute = init.data.muted;
-      registry.set(init.id, { type: "out", vol, in: vol });
+
+      const merge = new Tone.Merge();
+      merge.connect(vol);
+
+      const inL = new Tone.Gain(1);
+      const inR = new Tone.Gain(1);
+      inL.connect(merge, 0, 0); // Kanal 0 = links
+      inR.connect(merge, 0, 1); // Kanal 1 = rechts
+
+      registry.set(init.id, { type: "out", vol, merge, ins: { inL, inR } });
       break;
     }
   }
-
 }
 
 /** Knoten gelöscht → Tone.js-Ressourcen freigeben. */
@@ -161,6 +174,9 @@ export function removeAudioNode(id: string): void {
       break;
     case "out":
       node.vol.dispose();
+      node.merge.dispose();
+      node.ins.inL.dispose();
+      node.ins.inR.dispose();
       break;
   }
   registry.delete(id);
