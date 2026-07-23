@@ -43,6 +43,8 @@ import { serializePatch, toFlow } from "./persist/serialize";
 import { savePreset, loadPreset, listPresets } from "./persist/localStore";
 import { nextId, seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
+import { Link } from "react-router-dom";
+import { useAuth } from "./auth/AuthContext";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -146,6 +148,9 @@ export default function App() {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [presetRefresh, setPresetRefresh] = useState(0);
+
+  // innerhalb der Komponente:
+  const { user } = useAuth();
 
   const handleSave = () => {
     if (activePreset) {
@@ -313,6 +318,15 @@ export default function App() {
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
       <div className={styles.toolbar}>
         <h1 className={styles.title}>Modular Synth</h1>
+        {user ? (
+          <Link className={styles.btn} to="/account">
+            {user.email}
+          </Link>
+        ) : (
+          <Link className={styles.btn} to="/login">
+            Anmelden
+          </Link>
+        )}
         <div className={styles.actions}>
           <button className={styles.btn} onClick={handleSave}>
             {activePreset ? `Speichern (${activePreset})` : "Speichern"}
