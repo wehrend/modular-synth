@@ -112,6 +112,7 @@ export function toFlow(doc: PatchDocument): {
       // Defaults unterlegen: ein Preset ohne ein neu hinzugekommenes
       // Feld crasht dadurch nicht mehr beim Rendern
       data: { ...(MODULE_DEFAULTS[n.type] ?? {}), ...n.data },
+      deletable: n.type !== "out",
     })) as AppNode[],
     edges: doc.edges.map((e) => ({ ...e, animated: true })),
   };

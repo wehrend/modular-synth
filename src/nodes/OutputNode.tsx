@@ -19,6 +19,7 @@ export default function OutputNode({ id, data }: NodeProps<OutFlowNode>) {
     <div className={styles.module}>
       <header className={styles.head}>
         <span className={styles.title}>OUT</span>
+        <span className={styles.lockedHint} title="Kann nicht gelöscht werden">🔒</span>
         <button
           className={`${styles.power} ${data.muted ? "" : styles.powerOn}`}
           onClick={() => patch({ muted: !data.muted })}

@@ -89,6 +89,7 @@ const initialNodes: AppNode[] = [
     type: "out",
     position: { x: 960, y: 220 },
     data: { volume: -12, muted: false },
+    deletable: false,
   },
 ];
 
@@ -234,7 +235,10 @@ export default function App() {
   );
 
   const onNodesDelete = useCallback((deleted: AppNode[]) => {
-    deleted.forEach((node) => removeAudioNode(node.id));
+    deleted.forEach((node) => {
+      if (node.type === "out") return; // OUT ist unlöschbar, egal wie die Löschung ausgelöst wurde
+      removeAudioNode(node.id);
+    });
   }, []);
 
   function useAddModule<T extends AppNode>(
