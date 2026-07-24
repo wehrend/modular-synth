@@ -2,6 +2,9 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   display_name text,
+  bio text,
+  avatar_url text,
+  website text,
   created_at timestamptz not null default now()
 );
 
@@ -28,3 +31,30 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+  create table if not exists public.patches (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid not null references auth.users (id) on delete cascade,
+  name           text not null,
+  graph          jsonb not null,
+  schema_version int  not null default 1,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+alter table public.patches enable row level security;
+
+create policy "patches_select_own" on public.patches
+  for select using (auth.uid() = user_id);
+
+create policy "patches_insert_own" on public.patches
+  for insert with check (auth.uid() = user_id);
+
+create policy "patches_update_own" on public.patches
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create policy "patches_delete_own" on public.patches
+  for delete using (auth.uid() = user_id);
+
+create index if not exists patches_user_updated
+  on public.patches (user_id, updated_at desc);
