@@ -319,7 +319,7 @@ export default function App() {
       <div className={styles.toolbar}>
         <h1 className={styles.title}>Modular Synth</h1>
         {user ? (
-          <Link className={styles.btn} to="/account">
+          <Link className={styles.btn} to={`/user/${user.id}`}>
             {user.email}
           </Link>
         ) : (
