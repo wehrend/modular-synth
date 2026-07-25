@@ -58,3 +58,6 @@ create policy "patches_delete_own" on public.patches
 
 create index if not exists patches_user_updated
   on public.patches (user_id, updated_at desc);
+
+grant usage on schema public to anon, authenticated;
+grant select on public.profiles to anon, authenticated;

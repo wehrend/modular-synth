@@ -75,3 +75,25 @@
   font-size: 13px;
   margin: 0;
 }
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+// AuthPages.module.scss, ergänzen
+.websiteLink {
+  color: v.$signal;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline; // optionaler Hinweis beim Hovern, dass es klickbar ist
+  }
+}
