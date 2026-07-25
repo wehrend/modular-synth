@@ -43,7 +43,7 @@ import { serializePatch, toFlow } from "./persist/serialize";
 import { savePreset, loadPreset, listPresets } from "./persist/localStore";
 import { nextId, seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 
 const nodeTypes = {
@@ -150,7 +150,13 @@ export default function App() {
   const [presetRefresh, setPresetRefresh] = useState(0);
 
   // innerhalb der Komponente:
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   const handleSave = () => {
     if (activePreset) {
@@ -319,9 +325,14 @@ export default function App() {
       <div className={styles.toolbar}>
         <h1 className={styles.title}>Modular Synth</h1>
         {user ? (
-          <Link className={styles.btn} to={`/user/${user.id}`}>
-            {user.email}
-          </Link>
+          <>
+            <Link className={styles.btn} to={`/user/${user.id}`}>
+              {user.email}
+            </Link>
+            <button className={styles.btn} onClick={handleLogout}>
+              Abmelden
+            </button>
+          </>
         ) : (
           <Link className={styles.btn} to="/login">
             Anmelden

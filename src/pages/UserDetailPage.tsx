@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../auth/AuthContext";
 import styles from "./AuthPages.module.scss";
@@ -39,6 +39,15 @@ export default function UserDetailPage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // in der Komponente:
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   // Formularfelder getrennt vom geladenen `profile` halten — so kann man
   // beim Abbrechen einfach den Edit-State verwerfen, ohne `profile` selbst
@@ -231,9 +240,14 @@ export default function UserDetailPage() {
           </dl>
 
           {isOwnProfile && (
-            <button className={styles.submit} onClick={startEditing}>
-              Profil bearbeiten
-            </button>
+            <div className={styles.actions}>
+              <button className={styles.submit} onClick={startEditing}>
+                Profil bearbeiten
+              </button>
+              <button className={styles.submit} onClick={handleLogout}>
+                Abmelden
+              </button>
+            </div>
           )}
 
           <p className={styles.hint}>
