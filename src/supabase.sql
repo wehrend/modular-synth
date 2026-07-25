@@ -61,3 +61,12 @@ create index if not exists patches_user_updated
 
 grant usage on schema public to anon, authenticated;
 grant select on public.profiles to anon, authenticated;
+
+alter table public.patches
+  add column if not exists is_public boolean not null default false;
+
+-- Zusätzliche Lese-Policy: öffentliche Patches sind für JEDEN sichtbar,
+-- unabhängig vom eigenen user_id. Die bestehende patches_select_own
+-- bleibt unverändert für den privaten Fall.
+create policy "patches_select_public" on public.patches
+  for select using (is_public = true);
