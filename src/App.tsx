@@ -2,7 +2,7 @@
 // Der Flow-Graph ist die "Wahrheit" für die Patch-Struktur.
 // Jede Änderung an Kanten/Knoten wird 1:1 in den Audiographen gespiegelt.
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -40,10 +40,15 @@ import EnvelopeNode from "./nodes/EnvelopeNode";
 import LfoNode from "./nodes/LfoNode";
 
 import { serializePatch, toFlow } from "./persist/serialize";
-import { savePreset, loadPresetById, togglePublic } from "./persist/supabase";
+import {
+  savePreset,
+  loadPresetById,
+  togglePublic,
+  loadPublicPatch,
+} from "./persist/supabase";
 import { nextId, seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 
 const nodeTypes = {
@@ -157,6 +162,37 @@ export default function App() {
     await signOut();
     navigate("/login");
   };
+
+  // innerhalb der App-Komponente:
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const patchId = searchParams.get("patch");
+    if (!patchId) return;
+
+    loadPublicPatch(patchId)
+      .then((doc) => {
+        const { nodes: newNodes, edges: newEdges } = toFlow(doc);
+        nodes.forEach((n) => removeAudioNode(n.id));
+        newNodes.forEach((n) =>
+          createAudioNode({
+            id: n.id,
+            type: n.type as any,
+            data: n.data as any,
+          }),
+        );
+        newEdges.forEach((e) =>
+          connectAudio(e.source, e.target, e.targetHandle),
+        );
+        seedIds(newNodes.map((n) => n.id));
+        setNodes(newNodes);
+        setEdges(newEdges);
+        setSearchParams({}, { replace: true });
+      })
+      .catch((err) =>
+        window.alert(err instanceof Error ? err.message : "Fehler beim Laden."),
+      );
+  }, []); // bewusst nur beim Mount
 
   // App.tsx
   const handleTogglePublic = useCallback(async (id: string, next: boolean) => {
@@ -336,6 +372,9 @@ export default function App() {
     // Erster Klick irgendwo im Canvas weckt den AudioContext auf
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
       <div className={styles.toolbar}>
+        <Link className={styles.btn} to="/discover">
+          Entdecken
+        </Link>
         <h1 className={styles.title}>Modular Synth</h1>
         {user ? (
           <>
@@ -359,7 +398,7 @@ export default function App() {
             Speichern unter…
           </button> */}
           <button className={styles.btn} onClick={handleSaveAs}>
-            Speichern (Supabase-Test)
+            Speichern
           </button>
 
           <button className={styles.btn} onClick={addOscillator}>
