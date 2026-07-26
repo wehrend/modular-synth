@@ -49,6 +49,21 @@ export async function overwritePreset(
   if (error) throw new Error(error.message);
 }
 
+// persist/supabase.ts, ergänzen
+
+export async function loadPresetById(id: string): Promise<PatchDocument> {
+  const { data, error } = await supabase
+    .from("patches")
+    .select("graph")
+    .eq("id", id)
+    .single();
+
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error(`Preset mit ID "${id}" nicht gefunden.`);
+
+  return data.graph as PatchDocument;
+}
+
 export async function deletePreset(id: string): Promise<void> {
   const { error } = await supabase.from("patches").delete().eq("id", id);
   if (error) throw new Error(error.message);

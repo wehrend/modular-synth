@@ -40,7 +40,7 @@ import EnvelopeNode from "./nodes/EnvelopeNode";
 import LfoNode from "./nodes/LfoNode";
 
 import { serializePatch, toFlow } from "./persist/serialize";
-import { savePreset } from "./persist/supabase";
+import { savePreset, loadPresetById } from "./persist/supabase";
 import { nextId, seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
 import { Link, useNavigate } from "react-router-dom";
@@ -146,7 +146,7 @@ initialEdges.forEach((e) => connectAudio(e.source, e.target, e.targetHandle));
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
-  const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const [presetRefresh, setPresetRefresh] = useState(0);
 
   // innerhalb der Komponente:
@@ -181,10 +181,10 @@ export default function App() {
     }
   };
 
-  const loadPresetByName = useCallback(
-    (name: string) => {
+  const loadPresetByIdHandler = useCallback(
+    async (id: string) => {
       try {
-        const doc = loadPreset(name);
+        const doc = await loadPresetById(id);
         const { nodes: newNodes, edges: newEdges } = toFlow(doc);
 
         nodes.forEach((n) => removeAudioNode(n.id));
@@ -202,7 +202,7 @@ export default function App() {
 
         setNodes(newNodes);
         setEdges(newEdges);
-        setActivePreset(name); // ← neu
+        setActivePresetId(id); // ← neu
       } catch (err) {
         window.alert(err instanceof Error ? err.message : "Fehler beim Laden.");
       }
@@ -368,9 +368,10 @@ export default function App() {
       </div>
       <div className={styles.layout}>
         <PresetSidebar
-          onLoad={loadPresetByName}
+          onLoad={loadPresetByIdHandler} // war: onLoad={loadPresetByName}
+          activeId={activePresetId} // war: activeName={activePreset}
           refreshKey={presetRefresh}
-          activeName={activePreset}
+          userId={user?.id ?? null}
         />
         <ReactFlow<AppNode>
           nodes={nodes}
