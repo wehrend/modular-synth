@@ -73,3 +73,20 @@ create policy "patches_select_public" on public.patches
 
 grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on public.patches to authenticated;
+
+alter table public.patches
+  add column if not exists is_public boolean not null default false;
+
+-- Additiv zur bestehenden patches_select_own: öffentliche Patches sind
+-- für JEDEN sichtbar, auch nicht eingeloggte Besucher.
+create policy "patches_select_public" on public.patches
+  for select using (is_public = true);
+
+-- anon braucht jetzt ebenfalls Lesezugriff auf die Tabelle selbst,
+-- sonst greift die Policy nicht (Grant-Ebene vor RLS, wie wir mehrfach
+-- gelernt haben).
+grant select on public.patches to anon;
+
+alter table public.patches
+  add constraint patches_user_id_profiles_fkey
+  foreign key (user_id) references public.profiles (id) on delete cascade;

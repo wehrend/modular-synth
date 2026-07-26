@@ -2,7 +2,7 @@
 // Der Flow-Graph ist die "Wahrheit" für die Patch-Struktur.
 // Jede Änderung an Kanten/Knoten wird 1:1 in den Audiographen gespiegelt.
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -40,7 +40,7 @@ import EnvelopeNode from "./nodes/EnvelopeNode";
 import LfoNode from "./nodes/LfoNode";
 
 import { serializePatch, toFlow } from "./persist/serialize";
-import { savePreset, loadPresetById } from "./persist/supabase";
+import { savePreset, loadPresetById, togglePublic, listDiscoverableProfiles, listPublicPatchesForUser } from "./persist/supabase";
 import { nextId, seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
 import { Link, useNavigate } from "react-router-dom";
@@ -157,6 +157,23 @@ export default function App() {
     await signOut();
     navigate("/login");
   };
+
+  // App.tsx
+  const handleTogglePublic = useCallback(async (id: string, next: boolean) => {
+    console.log("handleTogglePublic aufgerufen:", { id, next });
+    try {
+      await togglePublic(id, next);
+      console.log("togglePublic erfolgreich");
+      setPresetRefresh((v) => v + 1);
+    } catch (err) {
+      console.log("togglePublic Fehler:", err);
+      window.alert(
+        err instanceof Error
+          ? err.message
+          : "Fehler beim Ändern der Sichtbarkeit.",
+      );
+    }
+  }, []);
 
   // handleSave wird vorerst NUR zu handleSaveAs umgebaut (kein Update-Fall,
   // das kommt erst im nächsten Schritt) — bewusst minimal, um isoliert zu testen
@@ -369,6 +386,7 @@ export default function App() {
       <div className={styles.layout}>
         <PresetSidebar
           onLoad={loadPresetByIdHandler} // war: onLoad={loadPresetByName}
+          onTogglePublic={handleTogglePublic}
           activeId={activePresetId} // war: activeName={activePreset}
           refreshKey={presetRefresh}
           userId={user?.id ?? null}
