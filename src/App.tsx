@@ -40,7 +40,7 @@ import EnvelopeNode from "./nodes/EnvelopeNode";
 import LfoNode from "./nodes/LfoNode";
 
 import { serializePatch, toFlow } from "./persist/serialize";
-import { savePreset, loadPreset, listPresets } from "./persist/localStore";
+import { savePreset } from "./persist/supabase";
 import { nextId, seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
 import { Link, useNavigate } from "react-router-dom";
@@ -158,31 +158,27 @@ export default function App() {
     navigate("/login");
   };
 
-  const handleSave = () => {
-    if (activePreset) {
-      // Ein Preset ist geladen → "Speichern" aktualisiert es direkt, ohne Nachfrage
-      savePreset(activePreset, serializePatch(nodes, edges));
-      setPresetRefresh((v) => v + 1);
+  // handleSave wird vorerst NUR zu handleSaveAs umgebaut (kein Update-Fall,
+  // das kommt erst im nächsten Schritt) — bewusst minimal, um isoliert zu testen
+  const handleSaveAs = async () => {
+    console.log("handleSaveAs gestartet, user:", user); // ← temporär
+    if (!user) {
+      window.alert("Bitte zuerst anmelden, um Presets zu speichern.");
       return;
     }
-    handleSaveAs(); // noch nichts geladen → wie "Speichern unter"
-  };
-
-  const handleSaveAs = () => {
     const name = window.prompt("Preset-Name?");
     if (!name) return;
 
-    const exists = listPresets().some((p) => p.name === name);
-    if (
-      exists &&
-      !window.confirm(`"${name}" existiert bereits. Überschreiben?`)
-    ) {
-      return; // stillschweigendes Überschreiben verhindert (dein dritter Punkt)
+    try {
+      await savePreset(user.id, name, serializePatch(nodes, edges));
+      setPresetRefresh((v) => v + 1);
+      window.alert(`"${name}" gespeichert.`); // provisorisches Feedback, da die
+      // Sidebar ja noch localStorage liest
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "Fehler beim Speichern.",
+      );
     }
-
-    savePreset(name, serializePatch(nodes, edges));
-    setActivePreset(name);
-    setPresetRefresh((v) => v + 1);
   };
 
   const loadPresetByName = useCallback(
@@ -339,11 +335,14 @@ export default function App() {
           </Link>
         )}
         <div className={styles.actions}>
-          <button className={styles.btn} onClick={handleSave}>
+          {/* <button className={styles.btn} onClick={handleSave}>
             {activePreset ? `Speichern (${activePreset})` : "Speichern"}
-          </button>
-          <button className={styles.btn} onClick={handleSaveAs}>
+          </button> */}
+          {/* <button className={styles.btn} onClick={handleSaveAs}>
             Speichern unter…
+          </button> */}
+          <button className={styles.btn} onClick={handleSaveAs}>
+            Speichern (Supabase-Test)
           </button>
 
           <button className={styles.btn} onClick={addOscillator}>

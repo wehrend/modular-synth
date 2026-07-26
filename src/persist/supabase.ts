@@ -24,12 +24,13 @@ export async function savePreset(
   name: string,
   graph: PatchDocument,
 ): Promise<void> {
-  const { error } = await supabase.from("patches").insert({
+  const { data, error } = await supabase.from("patches").insert({
     user_id: userId,
     name,
     graph,
     schema_version: SCHEMA_VERSION,
   });
+  console.log("savePreset result:", { data, error }); // ← temporär
   if (error) throw new Error(error.message);
 }
 

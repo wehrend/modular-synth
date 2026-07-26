@@ -22,12 +22,12 @@ export function listPresets(): PresetMeta[] {
   return out.sort((a, b) => b.savedAt.localeCompare(a.savedAt));
 }
 
-export function savePreset(name: string, doc: PatchDocument): void {
-  localStorage.setItem(
-    PREFIX + name,
-    JSON.stringify({ ...doc, savedAt: new Date().toISOString() }),
-  );
-}
+// export function savePreset(name: string, doc: PatchDocument): void {
+//   localStorage.setItem(
+//     PREFIX + name,
+//     JSON.stringify({ ...doc, savedAt: new Date().toISOString() }),
+//   );
+// }
 
 export function loadPreset(name: string): PatchDocument {
   const raw = localStorage.getItem(PREFIX + name);

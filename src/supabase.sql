@@ -70,3 +70,6 @@ alter table public.patches
 -- bleibt unverändert für den privaten Fall.
 create policy "patches_select_public" on public.patches
   for select using (is_public = true);
+
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.patches to authenticated;
