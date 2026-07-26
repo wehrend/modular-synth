@@ -2,7 +2,7 @@
 // Der Flow-Graph ist die "Wahrheit" für die Patch-Struktur.
 // Jede Änderung an Kanten/Knoten wird 1:1 in den Audiographen gespiegelt.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -40,7 +40,7 @@ import EnvelopeNode from "./nodes/EnvelopeNode";
 import LfoNode from "./nodes/LfoNode";
 
 import { serializePatch, toFlow } from "./persist/serialize";
-import { savePreset, loadPresetById, togglePublic, listDiscoverableProfiles, listPublicPatchesForUser } from "./persist/supabase";
+import { savePreset, loadPresetById, togglePublic } from "./persist/supabase";
 import { nextId, seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
 import { Link, useNavigate } from "react-router-dom";
