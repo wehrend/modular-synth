@@ -32,7 +32,7 @@ function PageCard({ children }: { children: React.ReactNode }) {
 
 export default function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, refreshDisplayName, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -42,7 +42,6 @@ export default function UserDetailPage() {
   const [uploading, setUploading] = useState(false);
 
   // in der Komponente:
-  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -187,6 +186,7 @@ export default function UserDetailPage() {
 
     setEditing(false);
     loadProfile(); // frisch nachladen statt lokal zu raten, was gespeichert wurde
+    await refreshDisplayName();
   };
 
   if (loading) {

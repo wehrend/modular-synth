@@ -72,6 +72,7 @@ create policy "patches_select_public" on public.patches
   for select using (is_public = true);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on public.patches to authenticated;
 
@@ -93,6 +94,9 @@ alter table public.patches
 
 
   -- Bucket anlegen, public = true macht die Dateien über eine feste URL
+=======
+-- Bucket anlegen, public = true macht die Dateien über eine feste URL
+>>>>>>> da5526c (fix build errors)
 -- ohne Auth lesbar (wie ein normales <img src="...">).
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
@@ -128,3 +132,4 @@ using (
   bucket_id = 'avatars'
   and auth.uid()::text = (storage.foldername(name))[1]
 );
+grant update on public.profiles to authenticated;
