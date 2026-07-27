@@ -5,8 +5,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import AccountPage from "./pages/AccountPage";
-import RequireAuth from "./auth/RequireAuth";
 import { AuthProvider } from "./auth/AuthContext";
 import "./styles/global.scss";
 import UserDetailPage from "./pages/UserDetailPage";
@@ -23,14 +21,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/user/:id" element={<UserDetailPage />} />
           <Route path="/discover" element={<DiscoverPage />} />
-          <Route
-            path="/account"
-            element={
-              <RequireAuth>
-                <AccountPage />
-              </RequireAuth>
-            }
-          />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

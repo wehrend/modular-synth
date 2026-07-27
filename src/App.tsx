@@ -155,7 +155,7 @@ export default function App() {
   const [presetRefresh, setPresetRefresh] = useState(0);
 
   // innerhalb der Komponente:
-  const { user, signOut } = useAuth();
+  const { user, displayName, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -379,7 +379,7 @@ export default function App() {
         {user ? (
           <>
             <Link className={styles.btn} to={`/user/${user.id}`}>
-              {user.email}
+              {displayName ?? user.email}
             </Link>
             <button className={styles.btn} onClick={handleLogout}>
               Abmelden
