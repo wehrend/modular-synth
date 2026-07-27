@@ -50,6 +50,7 @@ import { nextId, seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
+import { captureFlowThumbnail } from "./lib/captureThumbnail";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -211,10 +212,7 @@ export default function App() {
     }
   }, []);
 
-  // handleSave wird vorerst NUR zu handleSaveAs umgebaut (kein Update-Fall,
-  // das kommt erst im nächsten Schritt) — bewusst minimal, um isoliert zu testen
   const handleSaveAs = async () => {
-    console.log("handleSaveAs gestartet, user:", user); // ← temporär
     if (!user) {
       window.alert("Bitte zuerst anmelden, um Presets zu speichern.");
       return;
@@ -223,10 +221,10 @@ export default function App() {
     if (!name) return;
 
     try {
-      await savePreset(user.id, name, serializePatch(nodes, edges));
+      const thumbnail = await captureFlowThumbnail(nodes);
+      await savePreset(user.id, name, serializePatch(nodes, edges), thumbnail);
       setPresetRefresh((v) => v + 1);
-      window.alert(`"${name}" gespeichert.`); // provisorisches Feedback, da die
-      // Sidebar ja noch localStorage liest
+      window.alert(`"${name}" gespeichert.`);
     } catch (err) {
       window.alert(
         err instanceof Error ? err.message : "Fehler beim Speichern.",
@@ -441,6 +439,7 @@ export default function App() {
           onEdgeDoubleClick={onEdgeDoubleClick}
           onNodesDelete={onNodesDelete}
           deleteKeyCode={["Backspace", "Delete"]}
+          defaultEdgeOptions={{ style: { stroke: "#333", strokeWidth: 2 } }}
           fitView
         >
           <Background variant={BackgroundVariant.Dots} gap={22} size={1.5} />
