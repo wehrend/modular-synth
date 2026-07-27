@@ -71,6 +71,7 @@ alter table public.patches
 create policy "patches_select_public" on public.patches
   for select using (is_public = true);
 
+<<<<<<< HEAD
 grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on public.patches to authenticated;
 
@@ -89,4 +90,41 @@ grant select on public.patches to anon;
 
 alter table public.patches
   add constraint patches_user_id_profiles_fkey
-  foreign key (user_id) references public.profiles (id) on delete cascade;
+
+
+  -- Bucket anlegen, public = true macht die Dateien über eine feste URL
+-- ohne Auth lesbar (wie ein normales <img src="...">).
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+-- Lesen: für JEDEN offen, auch ohne Login — analog zur profiles-Tabelle.
+create policy "avatars_read_all"
+on storage.objects for select
+using (bucket_id = 'avatars');
+
+-- Hochladen: nur eingeloggte Nutzer, und nur in ihren EIGENEN Ordner.
+-- Erwartet einen Dateipfad wie "avatars/<user_id>/irgendeinname.png" —
+-- die Ordner-Konvention ist der Schlüssel zur Absicherung.
+create policy "avatars_insert_own"
+on storage.objects for insert
+with check (
+  bucket_id = 'avatars'
+  and auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- Ersetzen/Überschreiben eines eigenen Bildes.
+create policy "avatars_update_own"
+on storage.objects for update
+using (
+  bucket_id = 'avatars'
+  and auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- Löschen des eigenen Bildes.
+create policy "avatars_delete_own"
+on storage.objects for delete
+using (
+  bucket_id = 'avatars'
+  and auth.uid()::text = (storage.foldername(name))[1]
+);

@@ -39,6 +39,7 @@ export default function UserDetailPage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   // in der Komponente:
   const { signOut } = useAuth();
@@ -113,6 +114,53 @@ export default function UserDetailPage() {
     setEditing(false);
     setError(null);
   };
+  // Bild-Upload: geht sofort hoch, sobald eine Datei gewählt wird.
+  // Erst bei "Speichern" wird die neue URL tatsächlich im Profil übernommen.
+  const uploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Grobe Client-seitige Vorabprüfung -- ersetzt keine serverseitige
+    // Validierung, spart dem Nutzer aber einen fehlgeschlagenen Upload
+    // bei offensichtlich falschen Dateien.
+    if (!file.type.startsWith("image/")) {
+      setError("Bitte eine Bilddatei auswählen.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Bild ist zu groß (max. 2 MB).");
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    // Dateiendung aus dem Originalnamen übernehmen, sonst fixer Name pro
+    // Nutzer -- so überschreibt ein erneuter Upload automatisch das alte
+    // Bild, statt Dateileichen im Bucket anzusammeln.
+    const ext = file.name.split(".").pop();
+    const filePath = `${user.id}/avatar.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      setUploading(false);
+      setError(uploadError.message);
+      return;
+    }
+
+    const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+    // Cache-Buster: ohne das würde der Browser (und CDN-Caches) bei
+    // gleichem Dateinamen weiterhin das alte Bild zeigen, obwohl der
+    // Inhalt sich geändert hat.
+    const bustedUrl = `${data.publicUrl}?t=${Date.now()}`;
+
+    setForm((prev) => ({ ...prev, avatar_url: bustedUrl }));
+    setUploading(false);
+  };
 
   const saveProfile = async () => {
     if (!user) return;
@@ -179,6 +227,18 @@ export default function UserDetailPage() {
             value={form.bio}
             onChange={updateField("bio")}
           />
+
+          <label className={styles.field}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={uploadAvatar}
+              disabled={uploading}
+              hidden
+            />
+            {uploading ? "Lädt hoch…" : "Profilbild wählen"}
+          </label>
+
           <input
             className={styles.field}
             placeholder="Bild-URL"
@@ -198,14 +258,14 @@ export default function UserDetailPage() {
             <button
               className={styles.submit}
               onClick={saveProfile}
-              disabled={saving}
+              disabled={saving || uploading}
             >
               {saving ? "…" : "Speichern"}
             </button>
             <button
               className={styles.submit}
               onClick={cancelEditing}
-              disabled={saving}
+              disabled={saving || uploading}
             >
               Abbrechen
             </button>
