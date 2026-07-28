@@ -74,7 +74,6 @@ export default function DiscoverPage() {
         <Link className={styles.profileLink} to={`/user/${current.id}`}>
           Profil ansehen
         </Link>
-
         <ul className={styles.patchList}>
           {patches.map((p) => (
             <li key={p.id}>
@@ -82,7 +81,16 @@ export default function DiscoverPage() {
                 className={styles.patchBtn}
                 onClick={() => openInSynth(p.id)}
               >
-                {p.name}
+                {p.thumbnail_url ? (
+                  <img
+                    src={p.thumbnail_url}
+                    alt=""
+                    className={styles.patchThumb}
+                  />
+                ) : (
+                  <div className={styles.patchThumbPlaceholder} aria-hidden />
+                )}
+                <span className={styles.patchName}>{p.name}</span>
               </button>
             </li>
           ))}

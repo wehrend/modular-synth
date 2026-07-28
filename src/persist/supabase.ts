@@ -140,6 +140,7 @@ export type DiscoverProfile = {
 export type DiscoverPatch = {
   id: string;
   name: string;
+  thumbnail_url: string | null;
   updated_at: string;
 };
 
@@ -167,7 +168,7 @@ export async function listPublicPatchesForUser(
 ): Promise<DiscoverPatch[]> {
   const { data, error } = await supabase
     .from("patches")
-    .select("id, name, updated_at")
+    .select("id, name, thumbnail_url, updated_at")
     .eq("user_id", userId)
     .eq("is_public", true)
     .order("updated_at", { ascending: false });

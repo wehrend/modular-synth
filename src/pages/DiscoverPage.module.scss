@@ -50,19 +50,40 @@
   flex-direction: column;
   gap: 6px;
 }
-
 .patchBtn {
   @include v.control-base;
   width: 100%;
-  padding: 8px;
+  padding: 0; // Innenabstand übernehmen die Kind-Elemente
   border-radius: 6px;
+  overflow: hidden; // damit das Thumbnail nicht über abgerundete Ecken hinausragt
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 
   &:hover {
     border-color: v.$signal;
-    color: v.$signal;
   }
 }
 
+.patchThumb {
+  width: 100%;
+  aspect-ratio: 8 / 5; // passend zu THUMB_WIDTH/THUMB_HEIGHT (800×500)
+  object-fit: cover;
+  display: block;
+}
+
+.patchThumbPlaceholder {
+  width: 100%;
+  aspect-ratio: 8 / 5;
+  background: v.$bg;
+  border-bottom: 1px solid v.$panel-edge;
+}
+
+.patchName {
+  padding: 8px;
+  font-size: 13px;
+  text-align: left;
+}
 .nav {
   display: flex;
   align-items: center;
