@@ -46,6 +46,7 @@ import {
   togglePublic,
   loadPublicPatch,
   overwritePreset,
+  deletePreset,
 } from "./persist/supabase";
 import { nextId, seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
@@ -293,6 +294,27 @@ export default function App() {
     [nodes, setNodes, setEdges],
   );
 
+  const handleDeletePreset = useCallback(
+    async (id: string) => {
+      try {
+        await deletePreset(id);
+        // Falls gerade das aktive Preset gelöscht wurde, Zustand zurücksetzen —
+        // sonst würde der "Speichern"-Button weiterhin auf eine ID zeigen,
+        // die es in der Datenbank nicht mehr gibt.
+        if (id === activePresetId) {
+          setActivePresetId(null);
+          setActivePresetName(null);
+        }
+        setPresetRefresh((v) => v + 1);
+      } catch (err) {
+        window.alert(
+          err instanceof Error ? err.message : "Fehler beim Löschen.",
+        );
+      }
+    },
+    [activePresetId],
+  );
+
   const onConnect = useCallback(
     (connection: Connection) => {
       // connection.targetHandle sagt, welcher benannte Eingang gemeint ist
@@ -453,6 +475,7 @@ export default function App() {
         <PresetSidebar
           onLoad={loadPresetByIdHandler} // war: onLoad={loadPresetByName}
           onTogglePublic={handleTogglePublic}
+          onDelete={handleDeletePreset}
           activeId={activePresetId} // war: activeName={activePreset}
           refreshKey={presetRefresh}
           userId={user?.id ?? null}

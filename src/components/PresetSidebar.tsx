@@ -6,6 +6,7 @@ import styles from "./PresetSidebar.module.scss";
 type Props = {
   onLoad: (id: string, name: string) => void;
   onTogglePublic: (id: string, next: boolean) => void;
+  onDelete: (id: string) => void;
   activeId: string | null;
   refreshKey: number;
   userId: string | null;
@@ -14,6 +15,7 @@ type Props = {
 export default function PresetSidebar({
   onLoad,
   onTogglePublic,
+  onDelete,
   activeId,
   refreshKey,
   userId,
@@ -64,6 +66,23 @@ export default function PresetSidebar({
             <span className={styles.date}>
               {new Date(p.updated_at).toLocaleDateString()}
             </span>
+
+            <button
+              className={styles.deleteBtn}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `"${p.name}" wirklich löschen? Das kann nicht rückgängig gemacht werden.`,
+                  )
+                ) {
+                  onDelete(p.id);
+                }
+              }}
+              aria-label={`${p.name} löschen`}
+              title="Löschen"
+            >
+              🗑
+            </button>
           </li>
         ))}
       </ul>
