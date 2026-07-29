@@ -39,11 +39,6 @@ body,
   border: 2px solid v.$bg;
 }
 
-.react-flow__edge-path {
-  stroke: v.$signal;
-  stroke-width: 2;
-}
-
 .react-flow__controls {
   box-shadow: none;
 
@@ -89,4 +84,18 @@ body,
 
 .io-row .react-flow__handle {
   left: -20px; /* aus dem Modul-Padding heraus an die Panelkante */
+}
+
+/* Teste das mal direkt in deiner globalen CSS-Datei */
+.react-flow__edge-path {
+  stroke: v.$raw-signal !important;
+  stroke-width: 5px !important;
+}
+
+/* Stoppt die Bewegung und entfernt das gestrichelte Muster */
+.react-flow__edges .react-flow__edge .react-flow__edge-path {
+  stroke: v.$raw-signal !important;
+  stroke: !important;
+  stroke-dasharray: none !important; /* Entfernt Strich-Muster */
+  animation: none !important; /* Stoppt die Keyframe-Animation */
 }
