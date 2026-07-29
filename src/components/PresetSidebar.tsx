@@ -4,7 +4,7 @@ import { listPresets, type PresetRow } from "../persist/supabase";
 import styles from "./PresetSidebar.module.scss";
 
 type Props = {
-  onLoad: (id: string) => void;
+  onLoad: (id: string, name: string) => void;
   onTogglePublic: (id: string, next: boolean) => void;
   activeId: string | null;
   refreshKey: number;
@@ -55,7 +55,10 @@ export default function PresetSidebar({
             >
               {p.is_public ? "🌐" : "🔒"}
             </button>
-            <button className={styles.loadBtn} onClick={() => onLoad(p.id)}>
+            <button
+              className={styles.loadBtn}
+              onClick={() => onLoad(p.id, p.name)}
+            >
               {p.name}
             </button>
             <span className={styles.date}>

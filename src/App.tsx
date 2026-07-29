@@ -45,6 +45,7 @@ import {
   loadPresetById,
   togglePublic,
   loadPublicPatch,
+  overwritePreset,
 } from "./persist/supabase";
 import { nextId, seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
@@ -153,6 +154,7 @@ export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [activePresetName, setActivePresetName] = useState<string | null>(null);
   const [presetRefresh, setPresetRefresh] = useState(0);
 
   // innerhalb der Komponente:
@@ -212,6 +214,35 @@ export default function App() {
     }
   }, []);
 
+  const handleSave = async () => {
+    if (!user) {
+      window.alert("Bitte zuerst anmelden, um Presets zu speichern.");
+      return;
+    }
+
+    // Kein Preset aktiv geladen -> wie "Speichern unter" verhalten,
+    // statt eine ID zu updaten, die es gar nicht gibt.
+    if (!activePresetId) {
+      await handleSaveAs();
+      return;
+    }
+
+    try {
+      const thumbnail = await captureFlowThumbnail(nodes);
+      await overwritePreset(
+        activePresetId,
+        user.id,
+        serializePatch(nodes, edges),
+        thumbnail,
+      );
+      setPresetRefresh((v) => v + 1);
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "Fehler beim Speichern.",
+      );
+    }
+  };
+
   const handleSaveAs = async () => {
     if (!user) {
       window.alert("Bitte zuerst anmelden, um Presets zu speichern.");
@@ -233,7 +264,7 @@ export default function App() {
   };
 
   const loadPresetByIdHandler = useCallback(
-    async (id: string) => {
+    async (id: string, name: string) => {
       try {
         const doc = await loadPresetById(id);
         const { nodes: newNodes, edges: newEdges } = toFlow(doc);
@@ -253,7 +284,8 @@ export default function App() {
 
         setNodes(newNodes);
         setEdges(newEdges);
-        setActivePresetId(id); // ← neu
+        setActivePresetId(id);
+        setActivePresetName(name); // ← ergänzt
       } catch (err) {
         window.alert(err instanceof Error ? err.message : "Fehler beim Laden.");
       }
@@ -389,14 +421,11 @@ export default function App() {
           </Link>
         )}
         <div className={styles.actions}>
-          {/* <button className={styles.btn} onClick={handleSave}>
-            {activePreset ? `Speichern (${activePreset})` : "Speichern"}
-          </button> */}
-          {/* <button className={styles.btn} onClick={handleSaveAs}>
-            Speichern unter…
-          </button> */}
+          <button className={styles.btn} onClick={handleSave}>
+            {activePresetName ? `Speichern (${activePresetName})` : "Speichern"}
+          </button>
           <button className={styles.btn} onClick={handleSaveAs}>
-            Speichern
+            Speichern unter
           </button>
 
           <button className={styles.btn} onClick={addOscillator}>

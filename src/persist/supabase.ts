@@ -21,36 +21,6 @@ export async function listPresets(userId: string): Promise<PresetRow[]> {
   return (data ?? []) as PresetRow[];
 }
 
-// export async function savePreset(
-//   userId: string,
-//   name: string,
-//   graph: PatchDocument,
-// ): Promise<void> {
-//   const { data, error } = await supabase.from("patches").insert({
-//     user_id: userId,
-//     name,
-//     graph,
-//     schema_version: SCHEMA_VERSION,
-//   });
-//   console.log("savePreset result:", { data, error }); // ← temporär
-//   if (error) throw new Error(error.message);
-// }
-
-// export async function overwritePreset(
-//   id: string,
-//   graph: PatchDocument,
-// ): Promise<void> {
-//   const { error } = await supabase
-//     .from("patches")
-//     .update({
-//       graph,
-//       schema_version: SCHEMA_VERSION,
-//       updated_at: new Date().toISOString(),
-//     })
-//     .eq("id", id);
-//   if (error) throw new Error(error.message);
-// }
-
 export async function savePreset(
   userId: string,
   name: string,
