@@ -5,6 +5,7 @@ import { SCHEMA_VERSION } from "./serialize";
 export type PresetRow = {
   id: string;
   name: string;
+  description: string | null;
   graph: PatchDocument;
   is_public: boolean;
   updated_at: string;
@@ -13,8 +14,7 @@ export type PresetRow = {
 export async function listPresets(userId: string): Promise<PresetRow[]> {
   const { data, error } = await supabase
     .from("patches")
-    .select("id, name, graph, is_public, updated_at")
-    .select("id, name, graph, is_public, updated_at")
+    .select("id, name, description, graph, is_public, updated_at")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false });
   if (error) throw new Error(error.message);
@@ -24,6 +24,7 @@ export async function listPresets(userId: string): Promise<PresetRow[]> {
 export async function savePreset(
   userId: string,
   name: string,
+  description: string | null,
   graph: PatchDocument,
   thumbnailBlob: Blob | null,
 ): Promise<string> {
@@ -38,6 +39,7 @@ export async function savePreset(
     id,
     user_id: userId,
     name,
+    description,
     graph,
     schema_version: SCHEMA_VERSION,
     thumbnail_url,
@@ -110,6 +112,7 @@ export type DiscoverProfile = {
 export type DiscoverPatch = {
   id: string;
   name: string;
+  description: string | null;
   thumbnail_url: string | null;
   updated_at: string;
 };
@@ -138,7 +141,7 @@ export async function listPublicPatchesForUser(
 ): Promise<DiscoverPatch[]> {
   const { data, error } = await supabase
     .from("patches")
-    .select("id, name, thumbnail_url, updated_at")
+    .select("id, name, description, thumbnail_url, updated_at")
     .eq("user_id", userId)
     .eq("is_public", true)
     .order("updated_at", { ascending: false });

@@ -63,6 +63,9 @@ export default function PresetSidebar({
             >
               {p.name}
             </button>
+            {p.description && (
+              <p className={styles.presetDescription}>{p.description}</p>
+            )}
             <span className={styles.date}>
               {new Date(p.updated_at).toLocaleDateString()}
             </span>

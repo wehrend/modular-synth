@@ -133,3 +133,7 @@ using (
   and auth.uid()::text = (storage.foldername(name))[1]
 );
 grant update on public.profiles to authenticated;
+
+
+alter table public.patches
+  add column if not exists description text;

@@ -84,3 +84,14 @@
     font-weight: 600;
   }
 }
+
+// PresetSidebar.module.scss, ergänzen
+.presetDescription {
+  margin: 2px 0 0;
+  font-size: 11px;
+  @include v.dim-label;
+  // Lange Beschreibungen abschneiden statt die Sidebar aufzublähen
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

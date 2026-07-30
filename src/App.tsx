@@ -53,6 +53,7 @@ import PresetSidebar from "./components/PresetSidebar";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import { captureFlowThumbnail } from "./lib/captureThumbnail";
+import SavePresetDialog from "./components/SavePresetDialog";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -157,6 +158,7 @@ export default function App() {
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const [activePresetName, setActivePresetName] = useState<string | null>(null);
   const [presetRefresh, setPresetRefresh] = useState(0);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
   // innerhalb der Komponente:
   const { user, displayName, signOut } = useAuth();
@@ -244,19 +246,33 @@ export default function App() {
     }
   };
 
-  const handleSaveAs = async () => {
+  const handleSaveAs = () => {
     if (!user) {
       window.alert("Bitte zuerst anmelden, um Presets zu speichern.");
       return;
     }
-    const name = window.prompt("Preset-Name?");
-    if (!name) return;
+    setSaveDialogOpen(true);
+  };
+
+  const handleConfirmSave = async (
+    name: string,
+    description: string | null,
+  ) => {
+    setSaveDialogOpen(false);
+    if (!user) return;
 
     try {
       const thumbnail = await captureFlowThumbnail(nodes);
-      await savePreset(user.id, name, serializePatch(nodes, edges), thumbnail);
+      const id = await savePreset(
+        user.id,
+        name,
+        description,
+        serializePatch(nodes, edges),
+        thumbnail,
+      );
+      setActivePresetId(id);
+      setActivePresetName(name);
       setPresetRefresh((v) => v + 1);
-      window.alert(`"${name}" gespeichert.`);
     } catch (err) {
       window.alert(
         err instanceof Error ? err.message : "Fehler beim Speichern.",
@@ -423,6 +439,11 @@ export default function App() {
   return (
     // Erster Klick irgendwo im Canvas weckt den AudioContext auf
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
+      <SavePresetDialog
+        open={saveDialogOpen}
+        onCancel={() => setSaveDialogOpen(false)}
+        onConfirm={handleConfirmSave}
+      />
       <div className={styles.toolbar}>
         <Link className={styles.btn} to="/discover">
           Entdecken
