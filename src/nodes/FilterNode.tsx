@@ -2,6 +2,7 @@ import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import Knob from "../Knob";
 import { updateAudioNode } from "../audio";
 import type { VcfData, VcfFlowNode } from "../types";
+import styles from "./Module.module.scss";
 
 // const FILTER_TYPES: ReadonlyArray<{ value: FilterType; label: string }> = [
 //   { value: "lowpass", label: "LP" },
@@ -20,7 +21,7 @@ export default function FilterNode({ id, data }: NodeProps<VcfFlowNode>) {
   return (
     <div className="module module--vcf">
       <header className="module__head">
-        <span className="module__title">VCF</span>
+        <span className={styles.title}>VCF</span>
       </header>
 
       {/* Audio-Eingang */}

@@ -12,7 +12,7 @@
   background: v.$panel;
   border: 1px solid v.$panel-edge;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-  font-size: 13px;
+  font-size: 16px;
 }
 
 // Laufender Zustand: Rahmen und Titel glimmen in Signalfarbe
@@ -37,7 +37,7 @@
 .title {
   font-weight: 700;
   letter-spacing: 0.18em;
-  font-size: 12px;
+  font-size: 18px;
   color: v.$text-dim;
 }
 

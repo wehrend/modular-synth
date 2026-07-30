@@ -3,6 +3,7 @@ import { EnvelopeData, EnvelopeFlowNode } from "../types";
 import { gateOff, gateOn, updateAudioNode } from "../audio";
 import Knob from "../Knob";
 import { useEffect, useRef, useState } from "react";
+import styles from "./Module.module.scss";
 
 const GATE_KEY = " "; // Leertaste; e.key für Space ist ein Leerzeichen
 
@@ -48,7 +49,7 @@ export default function EnvelopeNode({
   return (
     <div className="module module--adsr">
       <header className="module__head">
-        <span className="module__title">ADSR</span>
+        <span className={styles.title}>ADSR</span>
         <span className={`power ${gateActive ? "power--on" : ""}`}>
           {GATE_KEY === " " ? "Leertaste" : GATE_KEY}
         </span>
