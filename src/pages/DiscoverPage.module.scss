@@ -8,7 +8,7 @@
   min-height: 100vh;
   gap: 20px;
   background: v.$bg;
-  touch-action: pan-y; // horizontales Swipen nicht vom Browser scrollen lassen
+  touch-action: pan-y;
 }
 
 .status {
@@ -16,7 +16,7 @@
 }
 
 .card {
-  width: 300px;
+  width: 680px; // deutlich breiter, damit ein einspaltiges Thumbnail groß wird
   padding: 24px;
   border-radius: 10px;
   background: v.$panel;
@@ -45,17 +45,32 @@
 .patchList {
   list-style: none;
   margin: 16px 0 0;
-  padding: 0;
+  padding: 0 4px 0 0; // rechts Platz für die Scrollbar
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: column; // eine Spalte statt Grid, damit jedes Bild volle Breite bekommt
+  gap: 14px;
+
+  max-height: 640px; // größer als vorher, weil jeder Eintrag jetzt viel höher ist
+  overflow-y: auto;
+
+  scrollbar-width: thin;
+  scrollbar-color: v.$panel-edge transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: v.$panel-edge;
+    border-radius: 3px;
+  }
 }
+
 .patchBtn {
   @include v.control-base;
   width: 100%;
-  padding: 0; // Innenabstand übernehmen die Kind-Elemente
-  border-radius: 6px;
-  overflow: hidden; // damit das Thumbnail nicht über abgerundete Ecken hinausragt
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -66,9 +81,10 @@
 }
 
 .patchThumb {
-  width: 100%;
-  aspect-ratio: 8 / 5; // passend zu THUMB_WIDTH/THUMB_HEIGHT (800×500)
-  object-fit: cover;
+  width: 100%; // füllt jetzt die volle ~532px Kartenbreite (580px − 2×24px Padding)
+  aspect-ratio: 8 / 5;
+  object-fit: contain;
+  background: v.$bg;
   display: block;
 }
 
@@ -80,10 +96,14 @@
 }
 
 .patchName {
-  padding: 8px;
+  padding: 8px 10px;
   font-size: 13px;
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
 .nav {
   display: flex;
   align-items: center;
