@@ -1,17 +1,23 @@
 // OscillatorNode.tsx
 // Quelle: ein Tone.Oscillator mit Frequenz, Wellenform und An/Aus.
 
-import { Handle, Position, useReactFlow, type NodeProps } from '@xyflow/react';
-import Knob from '../Knob';
-import styles from './Module.module.scss';
-import { updateAudioNode } from '../audio';
-import { WAVEFORMS, type OscData, type OscFlowNode, type Waveform } from '../types';
+import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import Knob from "../Knob";
+import styles from "./Module.module.scss";
+import { updateAudioNode } from "../audio";
+import {
+  WAVEFORMS,
+  type OscData,
+  type OscFlowNode,
+  type Waveform,
+} from "../types";
+import * as Tone from "tone";
 
 const WAVEFORM_LABELS: Record<Waveform, string> = {
-  sine: 'Sin',
-  triangle: 'Tri',
-  sawtooth: 'Saw',
-  square: 'Sqr',
+  sine: "Sin",
+  triangle: "Tri",
+  sawtooth: "Saw",
+  square: "Sqr",
 };
 
 export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
@@ -24,15 +30,17 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
   };
 
   return (
-    <div className={`${styles.module} ${data.running ? styles.isRunning : ''}`}>
+    <div className={`${styles.module} ${data.running ? styles.isRunning : ""}`}>
       <header className={styles.head}>
         <span className={styles.title}>VCO</span>
         <button
-          className={`${styles.power} ${data.running ? styles.powerOn : ''}`}
+          className={`${styles.power} ${data.running ? styles.powerOn : ""}`}
           onClick={() => patch({ running: !data.running })}
-          aria-label={data.running ? 'Oszillator stoppen' : 'Oszillator starten'}
+          aria-label={
+            data.running ? "Oszillator stoppen" : "Oszillator starten"
+          }
         >
-          {data.running ? 'an' : 'aus'}
+          {data.running ? "an" : "aus"}
         </button>
       </header>
 
@@ -51,7 +59,7 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
         {WAVEFORMS.map((w) => (
           <button
             key={w}
-            className={`${styles.chip} ${data.waveform === w ? styles.chipActive : ''}`}
+            className={`${styles.chip} ${data.waveform === w ? styles.chipActive : ""}`}
             onClick={() => patch({ waveform: w })}
           >
             {WAVEFORM_LABELS[w]}
@@ -62,4 +70,37 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
       <Handle type="source" position={Position.Right} />
     </div>
   );
+}
+const RAMP = 0.04; // Sekunden — knackfreie Parameterwechsel
+
+// OscillatorNode.tsx, ganz oben ergänzen
+export type OscEntry = {
+  type: "osc";
+  osc: Tone.Oscillator;
+  out: Tone.ToneAudioNode;
+};
+
+export function createOscNode(_id: string, data: OscData): OscEntry {
+  const osc = new Tone.Oscillator(data.frequency, data.waveform);
+  return { type: "osc", osc, out: osc };
+}
+
+export function updateOscNode(node: OscEntry, patch: Partial<OscData>) {
+  const p = patch as Partial<OscData>;
+  if (p.frequency !== undefined) {
+    // rampTo statt hartem Setzen vermeidet Knackser beim Schieben
+    node.osc.frequency.rampTo(p.frequency, RAMP);
+  }
+  if (p.waveform !== undefined) {
+    node.osc.type = p.waveform;
+  }
+  if (p.running !== undefined) {
+    if (p.running) node.osc.start();
+    else node.osc.stop();
+  }
+}
+
+export function removeOscNode(node: OscEntry) {
+  node.osc.stop();
+  node.osc.dispose();
 }

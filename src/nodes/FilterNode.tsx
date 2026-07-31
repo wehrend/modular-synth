@@ -1,8 +1,9 @@
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import Knob from "../Knob";
-import { updateAudioNode } from "../audio";
+import { updateAudioNode, VcfEntry } from "../audio";
 import type { VcfData, VcfFlowNode } from "../types";
 import styles from "./Module.module.scss";
+import * as Tone from "tone";
 
 // const FILTER_TYPES: ReadonlyArray<{ value: FilterType; label: string }> = [
 //   { value: "lowpass", label: "LP" },
@@ -88,4 +89,52 @@ export default function FilterNode({ id, data }: NodeProps<VcfFlowNode>) {
       <Handle type="source" position={Position.Right} id="out" />
     </div>
   );
+}
+
+export function createFilterNode(_id: string, data: VcfData): VcfEntry {
+  const filter = new Tone.Filter({
+    frequency: data.cutoff,
+    Q: data.resonance,
+    type: data.filterType,
+  });
+  // CV-Eingänge: Attenuator-Gain → Parameter-Signal
+  const cutoffAmt = new Tone.Gain(data.cutoffAmount);
+  cutoffAmt.connect(filter.frequency);
+  const resAmt = new Tone.Gain(data.resonanceAmount);
+  resAmt.connect(filter.Q);
+
+  return {
+    type: "vcf",
+    filter,
+    ins: {
+      in: filter, // Audio-Eingang
+      cutoff: cutoffAmt, // CV-Eingang 1  ← DAS sind die beiden
+      resonance: resAmt, // CV-Eingang 2  ← Eingänge
+    },
+    out: filter,
+  };
+}
+
+export function updateFilterNode(
+  node: VcfEntry,
+  patch: Partial<VcfData>,
+): void {
+  if (patch.cutoff !== undefined) {
+    node.filter.frequency.value = patch.cutoff;
+  }
+  if (patch.resonance !== undefined) {
+    node.filter.Q.value = patch.resonance;
+  }
+  if (patch.cutoffAmount !== undefined) {
+    node.ins.cutoff.gain.value = patch.cutoffAmount;
+  }
+  if (patch.resonanceAmount !== undefined) {
+    node.ins.resonance.gain.value = patch.resonanceAmount;
+  }
+}
+
+export function removeFilterNode(node: VcfEntry) {
+  node.ins.cutoff.dispose();
+  node.ins.resonance.dispose();
+  node.filter.dispose(); // ins.in ist der Filter selbst — nicht doppelt disposen
 }

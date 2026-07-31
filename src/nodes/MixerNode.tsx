@@ -8,8 +8,15 @@
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { updateAudioNode } from "../audio";
 import Knob from "../Knob";
-import { MIXER_CHANNELS, type MixerData, type MixerFlowNode } from "../types";
+import {
+  MIXER_CHANNELS,
+  MixerChannel,
+  type MixerData,
+  type MixerFlowNode,
+} from "../types";
 import styles from "./Module.module.scss";
+
+import * as Tone from "tone";
 
 const asPercent = (v: number) => `${Math.round(v * 100)} %`;
 
@@ -71,4 +78,47 @@ export default function MixerNode({ id, data }: NodeProps<MixerFlowNode>) {
       <Handle type="source" position={Position.Right} />
     </div>
   );
+}
+
+const RAMP = 0.04; // Sekunden — knackfreie Parameterwechsel
+
+type MixerEntry = {
+  type: "mixer";
+  ins: Record<MixerChannel, Tone.Gain>;
+  sum: Tone.Gain;
+  out: Tone.ToneAudioNode;
+};
+
+export function createMixerNode(_id: string, data: MixerData): MixerEntry {
+  // Drei Eingangskanäle mit eigenem Gain, die auf eine Summe laufen.
+  // `ins` bildet Handle-IDs auf Audio-Eingänge ab (siehe connectAudio).
+  const sum = new Tone.Gain(data.master ?? 0.8);
+  const ins = {
+    ch1: new Tone.Gain(data.ch1 ?? 0.8),
+    ch2: new Tone.Gain(data.ch2 ?? 0.8),
+    ch3: new Tone.Gain(data.ch3 ?? 0.8),
+  };
+  Object.values(ins).forEach((ch) => ch.connect(sum));
+  return { type: "mixer", ins, sum, out: sum };
+}
+
+export function updateMixerNode(
+  entry: MixerEntry,
+  patch: Partial<MixerData>,
+): void {
+  const p = patch as Partial<MixerData>;
+  (Object.keys(entry.ins) as MixerChannel[]).forEach((ch) => {
+    const value = p[ch];
+    if (value !== undefined) {
+      entry.ins[ch].gain.rampTo(value, RAMP);
+    }
+  });
+  if (p.master !== undefined) {
+    entry.sum.gain.rampTo(p.master, RAMP);
+  }
+}
+
+export function removeMixerNode(node: MixerEntry) {
+  Object.values(node.ins).forEach((ch) => ch.dispose());
+  node.sum.dispose();
 }

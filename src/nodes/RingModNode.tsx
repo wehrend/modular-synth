@@ -6,6 +6,7 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { RingModFlowNode } from "../types";
 import styles from "./Module.module.scss";
+import * as Tone from "tone";
 
 export default function RingModNode({}: NodeProps<RingModFlowNode>) {
   return (
@@ -26,4 +27,34 @@ export default function RingModNode({}: NodeProps<RingModFlowNode>) {
       <Handle type="source" position={Position.Right} id="out" />
     </div>
   );
+}
+
+type RingModEntry = {
+  type: "ringmod";
+  multiply: Tone.Multiply;
+  ins: { carrier: Tone.Gain; modulator: Tone.Gain };
+  out: Tone.ToneAudioNode;
+};
+
+export function createRingModNode(_id: string): RingModEntry {
+  const multiply = new Tone.Multiply();
+
+  const carrierIn = new Tone.Gain(1);
+  carrierIn.connect(multiply); // normaler Audioeingang, Index 0
+
+  const modulatorIn = new Tone.Gain(1);
+  modulatorIn.connect(multiply.factor); // auf den Faktor-Parameter, nicht auf Input-Index 1
+
+  return {
+    type: "ringmod",
+    multiply,
+    ins: { carrier: carrierIn, modulator: modulatorIn },
+    out: multiply,
+  };
+}
+
+export function removeRingModNode(node: RingModEntry) {
+  node.multiply.dispose();
+  node.ins.carrier.dispose();
+  node.ins.modulator.dispose();
 }

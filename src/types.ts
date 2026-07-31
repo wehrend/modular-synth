@@ -95,6 +95,6 @@ export type NodePatch =
   | Partial<MixerData>
   | Partial<VcfData>
   | Partial<EnvelopeData>
-  | Partial<RingModData>
+ | Partial<RingModData>
   | Partial<LfoData>
   | Partial<OutData>;

@@ -6,15 +6,41 @@ import * as Tone from "tone";
 import {
   EnvelopeData,
   LfoData,
+  MixerData,
+  OutData,
   VcfData,
-  Waveform,
   type AudioNodeInit,
   type MixerChannel,
-  type MixerData,
   type NodePatch,
   type OscData,
-  type OutData,
 } from "./types";
+import {
+  createOscNode,
+  removeOscNode,
+  updateOscNode,
+} from "./nodes/OscillatorNode";
+import {
+  createMixerNode,
+  removeMixerNode,
+  updateMixerNode,
+} from "./nodes/MixerNode";
+import {
+  createFilterNode,
+  removeFilterNode,
+  updateFilterNode,
+} from "./nodes/FilterNode";
+import {
+  createEnvelopeNode,
+  removeEnvelopeNode,
+  updateEnvelopeNode,
+} from "./nodes/EnvelopeNode";
+import {
+  createOutputNode,
+  removeOutputNode,
+  updateOutputNode,
+} from "./nodes/OutputNode";
+import { createLfoNode, removeLfoNode, updateLfoNode } from "./nodes/LfoNode";
+import { createRingModNode, removeRingModNode } from "./nodes/RingModNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -24,7 +50,7 @@ type MixerEntry = {
   out: Tone.ToneAudioNode;
 };
 
-type VcfEntry = {
+export type VcfEntry = {
   type: "vcf";
   filter: Tone.Filter;
   ins: {
@@ -41,22 +67,21 @@ type EnvelopeEntry = {
   in: Tone.ToneAudioNode;
   out: Tone.ToneAudioNode;
 };
-type RingModEntry = {
-  type: "ringmod";
-  multiply: Tone.Multiply;
-  ins: { carrier: Tone.Gain; modulator: Tone.Gain };
-  out: Tone.ToneAudioNode;
-};
-
 type LfoEntry = { type: "lfo"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 
-type OutEntry = {
+export type OutEntry = {
   type: "out";
   vol: Tone.Volume;
   merge: Tone.Merge;
   ins: { inL: Tone.Gain; inR: Tone.Gain };
 };
 
+type RingModEntry = {
+  type: "ringmod";
+  multiply: Tone.Multiply;
+  ins: { carrier: Tone.Gain; modulator: Tone.Gain };
+  out: Tone.ToneAudioNode;
+};
 type RegistryEntry =
   | OscEntry
   | MixerEntry
@@ -81,93 +106,31 @@ export function createAudioNode(init: AudioNodeInit): void {
 
   switch (init.type) {
     case "osc": {
-      const osc = new Tone.Oscillator(init.data.frequency, init.data.waveform);
-      registry.set(init.id, { type: "osc", osc, out: osc });
+      registry.set(init.id, createOscNode(init.id, init.data));
       break;
     }
     case "mixer": {
-      // Drei Eingangskanäle mit eigenem Gain, die auf eine Summe laufen.
-      // `ins` bildet Handle-IDs auf Audio-Eingänge ab (siehe connectAudio).
-      const sum = new Tone.Gain(init.data.master ?? 0.8);
-      const ins = {
-        ch1: new Tone.Gain(init.data.ch1 ?? 0.8),
-        ch2: new Tone.Gain(init.data.ch2 ?? 0.8),
-        ch3: new Tone.Gain(init.data.ch3 ?? 0.8),
-      };
-      Object.values(ins).forEach((ch) => ch.connect(sum));
-      registry.set(init.id, { type: "mixer", ins, sum, out: sum });
+      registry.set(init.id, createMixerNode(init.id, init.data));
       break;
     }
     case "vcf": {
-      const filter = new Tone.Filter({
-        frequency: init.data.cutoff,
-        Q: init.data.resonance,
-        type: init.data.filterType,
-      });
-      // CV-Eingänge: Attenuator-Gain → Parameter-Signal
-      const cutoffAmt = new Tone.Gain(init.data.cutoffAmount);
-      cutoffAmt.connect(filter.frequency);
-      const resAmt = new Tone.Gain(init.data.resonanceAmount);
-      resAmt.connect(filter.Q);
-
-      registry.set(init.id, {
-        type: "vcf",
-        filter,
-        ins: {
-          in: filter, // Audio-Eingang
-          cutoff: cutoffAmt, // CV-Eingang 1  ← DAS sind die beiden
-          resonance: resAmt, // CV-Eingang 2  ← Eingänge
-        },
-        out: filter,
-      });
+      registry.set(init.id, createFilterNode(init.id, init.data));
       break;
     }
     case "envelope": {
-      const env = new Tone.AmplitudeEnvelope({
-        attack: init.data.attack,
-        decay: init.data.decay,
-        sustain: init.data.sustain,
-        release: init.data.release,
-      });
-      registry.set(init.id, { type: "envelope", env, in: env, out: env });
+      registry.set(init.id, createEnvelopeNode(init.id, init.data));
       break;
     }
     case "ringmod": {
-      const multiply = new Tone.Multiply();
-
-      const carrierIn = new Tone.Gain(1);
-      carrierIn.connect(multiply); // normaler Audioeingang, Index 0
-
-      const modulatorIn = new Tone.Gain(1);
-      modulatorIn.connect(multiply.factor); // auf den Faktor-Parameter, nicht auf Input-Index 1
-
-      registry.set(init.id, {
-        type: "ringmod",
-        multiply,
-        ins: { carrier: carrierIn, modulator: modulatorIn },
-        out: multiply,
-      });
+      registry.set(init.id, createRingModNode(init.id));
       break;
     }
     case "lfo": {
-      const osc = makeOscillator(init.data.rate, init.data.waveform);
-      osc.start(); // free-running ab Geburt
-      registry.set(init.id, { type: "lfo", osc, out: osc });
+      registry.set(init.id, createLfoNode(init.id, init.data));
       break;
     }
     case "out": {
-      const vol = new Tone.Volume(init.data.volume).toDestination();
-      vol.mute = init.data.muted;
-
-      const merge = new Tone.Merge();
-      merge.connect(vol);
-
-      const inL = new Tone.Gain(1);
-      const inR = new Tone.Gain(1);
-      inL.connect(merge, 0, 0); // Kanal 0 = links
-      inR.connect(merge, 0, 1); // Kanal 1 = rechts
-
-      registry.set(init.id, { type: "out", vol, merge, ins: { inL, inR } });
+      registry.set(init.id, createOutputNode(init.id, init.data));
       break;
     }
   }
@@ -180,33 +143,25 @@ export function removeAudioNode(id: string): void {
 
   switch (node.type) {
     case "osc":
-      node.osc.dispose();
+      removeOscNode(node); // rekursiv, um den Oscillator zu stoppen
       break;
     case "mixer":
-      Object.values(node.ins).forEach((g) => g.dispose());
-      node.sum.dispose();
+      removeMixerNode(node);
       break;
     case "vcf":
-      node.ins.cutoff.dispose();
-      node.ins.resonance.dispose();
-      node.filter.dispose(); // ins.in ist der Filter selbst — nicht doppelt disposen
+      removeFilterNode(node);
       break;
     case "envelope":
-      node.env.dispose();
+      removeEnvelopeNode(node);
       break;
     case "ringmod":
-      node.multiply.dispose();
-      node.ins.carrier.dispose();
-      node.ins.modulator.dispose();
+      removeRingModNode(node);
       break;
     case "lfo":
-      node.osc.dispose();
+      removeLfoNode(node);
       break;
     case "out":
-      node.vol.dispose();
-      node.merge.dispose();
-      node.ins.inL.dispose();
-      node.ins.inR.dispose();
+      removeOutputNode(node);
       break;
   }
   registry.delete(id);
@@ -218,103 +173,38 @@ export function removeAudioNode(id: string): void {
  * Zweig stellt sie wieder her.
  */
 
-const RAMP = 0.04; // Sekunden — knackfreie Parameterwechsel
-
 export function updateAudioNode(id: string, patch: NodePatch): void {
   const node = registry.get(id);
   if (!node) return;
 
   switch (node.type) {
     case "osc": {
-      const p = patch as Partial<OscData>;
-      if (p.frequency !== undefined) {
-        // rampTo statt hartem Setzen vermeidet Knackser beim Schieben
-        node.osc.frequency.rampTo(p.frequency, RAMP);
-      }
-      if (p.waveform !== undefined) {
-        node.osc.type = p.waveform;
-      }
-      if (p.running !== undefined) {
-        if (p.running) node.osc.start();
-        else node.osc.stop();
-      }
+      updateOscNode(node, patch as Partial<OscData>);
       break;
     }
     case "vcf": {
-      const p = patch as Partial<VcfData>;
-      if (p.cutoff !== undefined) {
-        node.filter.frequency.rampTo(p.cutoff, RAMP);
-      }
-      if (p.resonance !== undefined) {
-        node.filter.Q.rampTo(p.resonance, RAMP);
-      }
-      if (p.filterType !== undefined) {
-        node.filter.type = p.filterType;
-      }
-      // Mod-Hub der CV-Eingänge (Attenuator-Gains in `ins`)
-      if (p.cutoffAmount !== undefined) {
-        node.ins.cutoff.gain.rampTo(p.cutoffAmount, RAMP);
-      }
-      if (p.resonanceAmount !== undefined) {
-        node.ins.resonance.gain.rampTo(p.resonanceAmount, RAMP);
-      }
+      updateFilterNode(node, patch as Partial<VcfData>);
       break;
     }
 
     case "envelope": {
-      const p = patch as Partial<EnvelopeData>;
-      // Kein rampTo: A/D/S/R sind gewöhnliche Zahlen-Properties (Form
-      // künftiger Verläufe), keine laufenden Audio-Signale
-      if (p.attack !== undefined) node.env.attack = p.attack;
-      if (p.decay !== undefined) node.env.decay = p.decay;
-      if (p.sustain !== undefined) node.env.sustain = p.sustain;
-      if (p.release !== undefined) node.env.release = p.release;
+      updateEnvelopeNode(node, patch as Partial<EnvelopeData>);
       break;
     }
 
     case "mixer": {
-      const p = patch as Partial<MixerData>;
-      (Object.keys(node.ins) as MixerChannel[]).forEach((ch) => {
-        const value = p[ch];
-        if (value !== undefined) {
-          node.ins[ch].gain.rampTo(value, RAMP);
-        }
-      });
-      if (p.master !== undefined) {
-        node.sum.gain.rampTo(p.master, RAMP);
-      }
+      updateMixerNode(node, patch as Partial<MixerData>);
       break;
     }
     case "lfo": {
-      const p = patch as Partial<LfoData>;
-      if (p.rate !== undefined) {
-        // rampTo statt hartem Setzen vermeidet Knackser beim Schieben
-        node.osc.frequency.rampTo(p.rate, RAMP);
-      }
-      if (p.waveform !== undefined) {
-        node.osc.type = p.waveform;
-      }
+      updateLfoNode(node, patch as Partial<LfoData>);
       break;
     }
     case "out": {
-      const p = patch as Partial<OutData>;
-      if (p.volume !== undefined) {
-        node.vol.volume.rampTo(p.volume, RAMP);
-      }
-      if (p.muted !== undefined) {
-        node.vol.mute = p.muted;
-      }
+      updateOutputNode(node, patch as Partial<OutData>);
       break;
     }
   }
-}
-
-/** Gemeinsamer Kern von VCO und LFO — die "Vererbung" als Funktion. */
-function makeOscillator(
-  frequency: number,
-  waveform: Waveform,
-): Tone.Oscillator {
-  return new Tone.Oscillator(frequency, waveform);
 }
 
 /** Gate an: Attack-Phase starten (Taste gedrückt). */
