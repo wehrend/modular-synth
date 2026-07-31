@@ -33,6 +33,7 @@ import type {
   OscFlowNode,
   EnvelopeFlowNode,
   LfoFlowNode,
+  RingModFlowNode,
 } from "./types";
 import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
@@ -54,12 +55,14 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
 import { captureFlowThumbnail } from "./lib/captureThumbnail";
 import SavePresetDialog from "./components/SavePresetDialog";
+import RingModNode from "./nodes/RingModNode";
 
 const nodeTypes = {
   osc: OscillatorNode,
   mixer: MixerNode,
   vcf: FilterNode,
   envelope: EnvelopeNode,
+  ringmod: RingModNode,
   lfo: LfoNode,
   out: OutputNode,
 };
@@ -427,7 +430,13 @@ export default function App() {
     () => ({ attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.5 }),
     setNodes,
   );
-
+  const addRingMod = useAddModule<RingModFlowNode>(
+    "ringmod",
+    "ringmod",
+    { x: 440, y: 460 },
+    () => ({}),
+    setNodes,
+  );
   const addLfo = useAddModule<LfoFlowNode>(
     "lfo",
     "lfo",
@@ -482,6 +491,9 @@ export default function App() {
           </button>
           <button className={styles.btn} onClick={addEnvelope}>
             + ADSR / Envelope
+          </button>
+          <button className={styles.btn} onClick={addRingMod}>
+            + Ring Mod
           </button>
           <button className={styles.btn} onClick={addLfo}>
             + LFO

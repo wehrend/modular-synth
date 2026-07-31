@@ -15,7 +15,6 @@ export const WAVEFORM_LABELS: Record<Waveform, string> = {
   square: "Sqr",
 };
 
-
 export type Waveform = (typeof WAVEFORMS)[number];
 
 export type OscData = {
@@ -55,6 +54,10 @@ export type EnvelopeData = {
   release: number; // Sekunden
 };
 
+export type RingModData = Record<string, never>; // keine eigenen Regler
+
+export type RingModFlowNode = Node<RingModData, "ringmod">;
+
 export type OscFlowNode = Node<OscData, "osc">;
 export type MixerFlowNode = Node<MixerData, "mixer">;
 export type OutFlowNode = Node<OutData, "out">;
@@ -72,6 +75,7 @@ export type AppNode =
   | MixerFlowNode
   | VcfFlowNode
   | EnvelopeFlowNode
+  | RingModFlowNode
   | LfoFlowNode
   | OutFlowNode;
 
@@ -81,6 +85,7 @@ export type AudioNodeInit =
   | { id: string; type: "mixer"; data: MixerData }
   | { id: string; type: "vcf"; data: VcfData }
   | { id: string; type: "envelope"; data: EnvelopeData }
+  | { id: string; type: "ringmod"; data: RingModData }
   | { id: string; type: "lfo"; data: LfoData }
   | { id: string; type: "out"; data: OutData };
 
@@ -90,5 +95,6 @@ export type NodePatch =
   | Partial<MixerData>
   | Partial<VcfData>
   | Partial<EnvelopeData>
+  | Partial<RingModData>
   | Partial<LfoData>
   | Partial<OutData>;

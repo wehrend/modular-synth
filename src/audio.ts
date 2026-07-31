@@ -41,6 +41,13 @@ type EnvelopeEntry = {
   in: Tone.ToneAudioNode;
   out: Tone.ToneAudioNode;
 };
+type RingModEntry = {
+  type: "ringmod";
+  multiply: Tone.Multiply;
+  ins: { carrier: Tone.Gain; modulator: Tone.Gain };
+  out: Tone.ToneAudioNode;
+};
+
 type LfoEntry = { type: "lfo"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 
 type OutEntry = {
@@ -55,6 +62,7 @@ type RegistryEntry =
   | MixerEntry
   | VcfEntry
   | EnvelopeEntry
+  | RingModEntry
   | LfoEntry
   | OutEntry;
 
@@ -124,6 +132,23 @@ export function createAudioNode(init: AudioNodeInit): void {
       registry.set(init.id, { type: "envelope", env, in: env, out: env });
       break;
     }
+    case "ringmod": {
+      const multiply = new Tone.Multiply();
+
+      const carrierIn = new Tone.Gain(1);
+      carrierIn.connect(multiply); // normaler Audioeingang, Index 0
+
+      const modulatorIn = new Tone.Gain(1);
+      modulatorIn.connect(multiply.factor); // auf den Faktor-Parameter, nicht auf Input-Index 1
+
+      registry.set(init.id, {
+        type: "ringmod",
+        multiply,
+        ins: { carrier: carrierIn, modulator: modulatorIn },
+        out: multiply,
+      });
+      break;
+    }
     case "lfo": {
       const osc = makeOscillator(init.data.rate, init.data.waveform);
       osc.start(); // free-running ab Geburt
@@ -168,6 +193,11 @@ export function removeAudioNode(id: string): void {
       break;
     case "envelope":
       node.env.dispose();
+      break;
+    case "ringmod":
+      node.multiply.dispose();
+      node.ins.carrier.dispose();
+      node.ins.modulator.dispose();
       break;
     case "lfo":
       node.osc.dispose();
