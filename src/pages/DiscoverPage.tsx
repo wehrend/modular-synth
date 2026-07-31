@@ -91,6 +91,7 @@ export default function DiscoverPage() {
                   <div className={styles.patchThumbPlaceholder} aria-hidden />
                 )}
                 <span className={styles.patchName}>{p.name}</span>
+                <span className={styles.patchDescription}>{p.description}</span>
               </button>
             </li>
           ))}

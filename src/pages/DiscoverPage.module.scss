@@ -104,6 +104,15 @@
   white-space: nowrap;
 }
 
+.patchDescription {
+  padding: 8px 10px;
+  font-size: 13px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .nav {
   display: flex;
   align-items: center;
