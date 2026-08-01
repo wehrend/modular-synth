@@ -9,6 +9,7 @@ import {
   MixerData,
   OutData,
   VcfData,
+  WaspData,
   type AudioNodeInit,
   type MixerChannel,
   type NodePatch,
@@ -41,6 +42,11 @@ import {
 } from "./nodes/OutputNode";
 import { createLfoNode, removeLfoNode, updateLfoNode } from "./nodes/LfoNode";
 import { createRingModNode, removeRingModNode } from "./nodes/RingModNode";
+import { WaspEntry,
+  createWaspNode,
+  disposeWaspNode,
+  updateWaspNode,
+} from "./nodes/WaspNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -89,6 +95,7 @@ type RegistryEntry =
   | EnvelopeEntry
   | RingModEntry
   | LfoEntry
+  | WaspEntry
   | OutEntry;
 
 const registry = new Map<string, RegistryEntry>();
@@ -129,6 +136,10 @@ export function createAudioNode(init: AudioNodeInit): void {
       registry.set(init.id, createLfoNode(init.id, init.data));
       break;
     }
+    case "wasp": {
+      registry.set(init.id, createWaspNode(init.id, init.data));
+      break;
+    }
     case "out": {
       registry.set(init.id, createOutputNode(init.id, init.data));
       break;
@@ -159,6 +170,9 @@ export function removeAudioNode(id: string): void {
       break;
     case "lfo":
       removeLfoNode(node);
+      break;
+    case "wasp":
+      disposeWaspNode(node);
       break;
     case "out":
       removeOutputNode(node);
@@ -198,6 +212,10 @@ export function updateAudioNode(id: string, patch: NodePatch): void {
     }
     case "lfo": {
       updateLfoNode(node, patch as Partial<LfoData>);
+      break;
+    }
+    case "wasp": {
+      updateWaspNode(node, patch as Partial<WaspData>);
       break;
     }
     case "out": {

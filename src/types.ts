@@ -58,6 +58,15 @@ export type RingModData = Record<string, never>; // keine eigenen Regler
 
 export type RingModFlowNode = Node<RingModData, "ringmod">;
 
+export type WaspData = {
+  cutoff: number;
+  resonance: number;
+  drive: number;
+  cutoffAmount: number;
+};
+
+export type WaspFlowNode = Node<WaspData, "wasp">;
+
 export type OscFlowNode = Node<OscData, "osc">;
 export type MixerFlowNode = Node<MixerData, "mixer">;
 export type OutFlowNode = Node<OutData, "out">;
@@ -76,6 +85,7 @@ export type AppNode =
   | VcfFlowNode
   | EnvelopeFlowNode
   | RingModFlowNode
+  | WaspFlowNode
   | LfoFlowNode
   | OutFlowNode;
 
@@ -86,6 +96,7 @@ export type AudioNodeInit =
   | { id: string; type: "vcf"; data: VcfData }
   | { id: string; type: "envelope"; data: EnvelopeData }
   | { id: string; type: "ringmod"; data: RingModData }
+  | { id: string; type: "wasp"; data: WaspData }
   | { id: string; type: "lfo"; data: LfoData }
   | { id: string; type: "out"; data: OutData };
 
@@ -95,6 +106,7 @@ export type NodePatch =
   | Partial<MixerData>
   | Partial<VcfData>
   | Partial<EnvelopeData>
- | Partial<RingModData>
+  | Partial<RingModData>
+  | Partial<WaspData>
   | Partial<LfoData>
   | Partial<OutData>;
