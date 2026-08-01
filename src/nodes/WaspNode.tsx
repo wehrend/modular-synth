@@ -18,7 +18,7 @@ export type WaspEntry = {
   feedback: Tone.Gain;
   feedbackDelay: Tone.Delay;
   cutoffAmt: Tone.Gain;
-  ins: { in: Tone.ToneAudioNode; cutoff: Tone.Gain };
+  ins: { in: Tone.Gain; cutoff: Tone.Gain };
   out: Tone.ToneAudioNode;
 };
 
@@ -36,32 +36,40 @@ function waspCurve(drive: number): Float32Array {
 }
 
 export function createWaspNode(_id: string, data: WaspData): WaspEntry {
+  const input = new Tone.Gain(1);
+
+  // Kaskadierte Lowpass-Filter (12dB/oct pro Stufe)
   const stage1 = new Tone.Filter({
     frequency: data.cutoff,
     type: "lowpass",
-    Q: 1,
+    Q: 0.707,
   });
   const stage2 = new Tone.Filter({
     frequency: data.cutoff,
     type: "lowpass",
-    Q: 1,
+    Q: 0.707,
   });
+
   const shaper = new Tone.WaveShaper(waspCurve(data.drive));
 
-  const input = new Tone.Gain(1);
+  // Hauptsignalpfad: Input -> Stage1 -> Shaper -> Stage2
   input.connect(stage1);
   stage1.connect(shaper);
   shaper.connect(stage2);
 
-  // Resonanz als Rückkopplung, die durch dieselbe Sättigung läuft --
-  // dadurch klingt Resonanz kratzig statt sauber-sinusartig.
-  const feedback = new Tone.Gain(data.resonance * 3.5);
-  const feedbackDelay = new Tone.Delay(0.001); // 1ms, gerade genug um den Zyklus aufzubrechen
+  // Resonanz als Rückkopplung über den gesättigten Shaper zurück an Stage1.
+  // Faktor 0.95 hält das Signal in der Sättigungszone ohne extremes Hart-Clipping.
+  const feedback = new Tone.Gain(data.resonance * 0.95);
+
+  // 1-Sample-Delay (statt 1ms), um Kammfilter-Effekte im Audio-Graph zu vermeiden.
+  const sampleRate = Tone.getContext().sampleRate || 44100;
+  const feedbackDelay = new Tone.Delay(1 / sampleRate);
 
   stage2.connect(feedback);
   feedback.connect(feedbackDelay);
-  feedbackDelay.connect(shaper);
+  feedbackDelay.connect(stage1); // Zurück an den Anfang von Stage 1
 
+  // Cutoff CV-Modulation
   const cutoffAmt = new Tone.Gain(data.cutoffAmount);
   cutoffAmt.connect(stage1.frequency);
   cutoffAmt.connect(stage2.frequency);
@@ -88,7 +96,7 @@ export function updateWaspNode(
     entry.stage2.frequency.rampTo(patch.cutoff, RAMP);
   }
   if (patch.resonance !== undefined) {
-    entry.feedback.gain.rampTo(patch.resonance * 3.5, RAMP);
+    entry.feedback.gain.rampTo(patch.resonance * 0.95, RAMP);
   }
   if (patch.drive !== undefined) {
     entry.shaper.curve = waspCurve(patch.drive);
@@ -99,13 +107,13 @@ export function updateWaspNode(
 }
 
 export function disposeWaspNode(entry: WaspEntry): void {
+  entry.ins.in.dispose();
   entry.stage1.dispose();
   entry.stage2.dispose();
   entry.shaper.dispose();
   entry.feedback.dispose();
   entry.feedbackDelay.dispose();
   entry.cutoffAmt.dispose();
-  entry.ins.in.dispose();
 }
 
 /* ---------- UI-Seite ---------- */
