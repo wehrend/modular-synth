@@ -34,6 +34,7 @@ import type {
   EnvelopeFlowNode,
   LfoFlowNode,
   RingModFlowNode,
+  WaspFlowNode,
 } from "./types";
 import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
@@ -56,6 +57,7 @@ import { useAuth } from "./auth/AuthContext";
 import { captureFlowThumbnail } from "./lib/captureThumbnail";
 import SavePresetDialog from "./components/SavePresetDialog";
 import RingModNode from "./nodes/RingModNode";
+import WaspNode from "./nodes/WaspNode";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -64,6 +66,7 @@ const nodeTypes = {
   envelope: EnvelopeNode,
   ringmod: RingModNode,
   lfo: LfoNode,
+  wasp: WaspNode,
   out: OutputNode,
 };
 
@@ -437,6 +440,13 @@ export default function App() {
     () => ({}),
     setNodes,
   );
+  const addWasp = useAddModule<WaspFlowNode>(
+    "wasp",
+    "wasp",
+    { x: 440, y: 460 },
+    () => ({ cutoff: 1200, resonance: 0.3, drive: 0.4, cutoffAmount: 2000 }),
+    setNodes,
+  );
   const addLfo = useAddModule<LfoFlowNode>(
     "lfo",
     "lfo",
@@ -494,6 +504,9 @@ export default function App() {
           </button>
           <button className={styles.btn} onClick={addRingMod}>
             + Ring Mod
+          </button>
+          <button className={styles.btn} onClick={addWasp}>
+            + Wasp Filter
           </button>
           <button className={styles.btn} onClick={addLfo}>
             + LFO
