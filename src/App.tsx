@@ -444,7 +444,7 @@ export default function App() {
     "wasp",
     "wasp",
     { x: 440, y: 460 },
-    () => ({ cutoff: 1200, resonance: 0.3, drive: 0.4, cutoffAmount: 0 }),
+    () => ({ cutoff: 1200, resonance: 0.3, drive: 0.4, cutoffAmount: 2000 }),
     setNodes,
   );
   const addLfo = useAddModule<LfoFlowNode>(

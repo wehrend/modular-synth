@@ -169,7 +169,17 @@ export default function WaspNode({ id, data }: NodeProps<WaspFlowNode>) {
           onChange={(drive) => patch({ drive })}
         />
       </div>
-
+      <div className={styles.row}>
+        <Knob
+          label="CV Amount"
+          value={data.cutoffAmount}
+          min={0}
+          max={5000}
+          step={10}
+          format={(v) => `±${v}`}
+          onChange={(cutoffAmount) => patch({ cutoffAmount })}
+        />
+      </div>
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="cutoff" />
         <span className={styles.ioLabel}>Cutoff CV</span>
