@@ -7,7 +7,7 @@
 
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { updateAudioNode } from "../audio";
-import Knob from "../Knob";
+import Knob from "../components/Knob";
 import {
   MIXER_CHANNELS,
   MixerChannel,

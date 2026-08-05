@@ -2,7 +2,7 @@
 // Quelle: ein Tone.Oscillator mit Frequenz, Wellenform und An/Aus.
 
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
-import Knob from "../Knob";
+import Knob from "../components/Knob";
 import styles from "./Module.module.scss";
 import { updateAudioNode } from "../audio";
 import {

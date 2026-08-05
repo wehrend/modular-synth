@@ -1,7 +1,7 @@
 import { Handle, NodeProps, Position, useReactFlow } from "@xyflow/react";
 import { EnvelopeData, EnvelopeFlowNode } from "../types";
 import { gateOff, gateOn, updateAudioNode } from "../audio";
-import Knob from "../Knob";
+import Knob from "../components/Knob";
 import { useEffect, useRef, useState } from "react";
 import styles from "./Module.module.scss";
 import * as Tone from "tone";

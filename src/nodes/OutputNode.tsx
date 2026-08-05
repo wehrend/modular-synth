@@ -2,7 +2,7 @@
 // Senke: Tone.Volume → Lautsprecher (Destination).
 
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
-import Knob from "../Knob";
+import Knob from "../components/Knob";
 import styles from "./Module.module.scss";
 import { OutEntry, updateAudioNode } from "../audio";
 import type { OutData, OutFlowNode } from "../types";

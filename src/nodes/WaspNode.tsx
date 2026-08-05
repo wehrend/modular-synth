@@ -1,7 +1,7 @@
 // WaspNode.tsx
 import * as Tone from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
-import Knob from "../Knob";
+import Knob from "../components/Knob";
 import { updateAudioNode } from "../audio";
 import type { WaspData, WaspFlowNode } from "../types";
 import styles from "./Module.module.scss";

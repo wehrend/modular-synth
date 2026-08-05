@@ -1,5 +1,5 @@
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
-import Knob from "../Knob";
+import Knob from "../components/Knob";
 import { updateAudioNode, VcfEntry } from "../audio";
 import type { VcfData, VcfFlowNode } from "../types";
 import styles from "./Module.module.scss";

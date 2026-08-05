@@ -2,7 +2,7 @@
 // Label und Wert gehören jetzt dem Knob selbst (vorher hingen sie an
 // den globalen .module__*-Klassen — das war eine versteckte Kopplung).
 
-@use './styles/variables' as v;
+@use '../styles/variables' as v;
 
 .knob {
   display: flex;
