@@ -118,7 +118,7 @@ export function updateMixerNode(
   }
 }
 
-export function removeMixerNode(node: MixerEntry) {
+export function disposeMixerNode(node: MixerEntry) {
   Object.values(node.ins).forEach((ch) => ch.dispose());
   node.sum.dispose();
 }

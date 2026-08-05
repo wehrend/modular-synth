@@ -80,7 +80,7 @@ export function updateOutputNode(entry: OutEntry, patch: Partial<OutData>) {
   }
 }
 
-export function removeOutputNode(node: OutEntry) {
+export function disposeOutputNode(node: OutEntry) {
   node.vol.dispose();
   node.merge.dispose();
   node.ins.inL.dispose();

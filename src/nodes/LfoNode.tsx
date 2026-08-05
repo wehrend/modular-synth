@@ -88,6 +88,6 @@ export function updateLfoNode(entry: LfoEntry, patch: Partial<LfoData>): void {
   }
 }
 
-export function removeLfoNode(entry: LfoEntry): void {
+export function disposeLfoNode(entry: LfoEntry): void {
   entry.osc.dispose();
 }

@@ -3,46 +3,40 @@
 // Eine Kante im Flow-Graph entspricht genau einem connect() im Audiograph.
 
 import * as Tone from "tone";
-import {
-  EnvelopeData,
-  LfoData,
-  MixerData,
-  OutData,
-  VcfData,
-  WaspData,
-  type AudioNodeInit,
-  type MixerChannel,
-  type NodePatch,
-  type OscData,
-} from "./types";
+import { AudioNodeInit, NodePatch, type MixerChannel } from "./types";
 import {
   createOscNode,
-  removeOscNode,
+  disposeOscNode,
   updateOscNode,
 } from "./nodes/OscillatorNode";
 import {
   createMixerNode,
-  removeMixerNode,
+  disposeMixerNode,
   updateMixerNode,
 } from "./nodes/MixerNode";
 import {
   createFilterNode,
-  removeFilterNode,
+  disposeFilterNode,
   updateFilterNode,
 } from "./nodes/FilterNode";
 import {
   createEnvelopeNode,
-  removeEnvelopeNode,
+  disposeEnvelopeNode,
   updateEnvelopeNode,
 } from "./nodes/EnvelopeNode";
 import {
   createOutputNode,
-  removeOutputNode,
+  disposeOutputNode,
   updateOutputNode,
 } from "./nodes/OutputNode";
-import { createLfoNode, removeLfoNode, updateLfoNode } from "./nodes/LfoNode";
-import { createRingModNode, removeRingModNode } from "./nodes/RingModNode";
-import { WaspEntry,
+import { createLfoNode, disposeLfoNode, updateLfoNode } from "./nodes/LfoNode";
+import {
+  createRingModNode,
+  disposeRingModNode,
+  updateRingModNode,
+} from "./nodes/RingModNode";
+import {
+  WaspEntry,
   createWaspNode,
   disposeWaspNode,
   updateWaspNode,
@@ -107,122 +101,77 @@ export async function resumeAudio(): Promise<void> {
   }
 }
 
-/** Legt für einen Flow-Knoten das passende Tone.js-Gegenstück an. */
+type ModuleHandler<TData, TEntry> = {
+  create: (id: string, data: TData) => TEntry;
+  update: (entry: TEntry, patch: Partial<TData>) => void;
+  dispose: (entry: TEntry) => void;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- s. Erklärung unten
+const MODULE_HANDLERS: Record<string, ModuleHandler<any, any>> = {
+  osc: {
+    create: createOscNode,
+    update: updateOscNode,
+    dispose: disposeOscNode,
+  },
+  mixer: {
+    create: createMixerNode,
+    update: updateMixerNode,
+    dispose: disposeMixerNode,
+  },
+  vcf: {
+    create: createFilterNode,
+    update: updateFilterNode,
+    dispose: disposeFilterNode,
+  },
+  envelope: {
+    create: createEnvelopeNode,
+    update: updateEnvelopeNode,
+    dispose: disposeEnvelopeNode,
+  },
+  ringmod: {
+    create: createRingModNode,
+    update: updateRingModNode,
+    dispose: disposeRingModNode,
+  },
+  lfo: {
+    create: createLfoNode,
+    update: updateLfoNode,
+    dispose: disposeLfoNode,
+  },
+  wasp: {
+    create: createWaspNode,
+    update: updateWaspNode,
+    dispose: disposeWaspNode,
+  },
+  out: {
+    create: createOutputNode,
+    update: updateOutputNode,
+    dispose: disposeOutputNode,
+  },
+};
+
 export function createAudioNode(init: AudioNodeInit): void {
   if (registry.has(init.id)) return;
-
-  switch (init.type) {
-    case "osc": {
-      registry.set(init.id, createOscNode(init.id, init.data));
-      break;
-    }
-    case "mixer": {
-      registry.set(init.id, createMixerNode(init.id, init.data));
-      break;
-    }
-    case "vcf": {
-      registry.set(init.id, createFilterNode(init.id, init.data));
-      break;
-    }
-    case "envelope": {
-      registry.set(init.id, createEnvelopeNode(init.id, init.data));
-      break;
-    }
-    case "ringmod": {
-      registry.set(init.id, createRingModNode(init.id));
-      break;
-    }
-    case "lfo": {
-      registry.set(init.id, createLfoNode(init.id, init.data));
-      break;
-    }
-    case "wasp": {
-      registry.set(init.id, createWaspNode(init.id, init.data));
-      break;
-    }
-    case "out": {
-      registry.set(init.id, createOutputNode(init.id, init.data));
-      break;
-    }
+  const handler = MODULE_HANDLERS[init.type];
+  if (!handler) {
+    console.warn(`Unbekannter Modultyp: ${init.type}`);
+    return;
   }
+  registry.set(init.id, handler.create(init.id, init.data));
 }
-
-/** Knoten gelöscht → Tone.js-Ressourcen freigeben. */
-export function removeAudioNode(id: string): void {
-  const node = registry.get(id);
-  if (!node) return;
-
-  switch (node.type) {
-    case "osc":
-      removeOscNode(node); // rekursiv, um den Oscillator zu stoppen
-      break;
-    case "mixer":
-      removeMixerNode(node);
-      break;
-    case "vcf":
-      removeFilterNode(node);
-      break;
-    case "envelope":
-      removeEnvelopeNode(node);
-      break;
-    case "ringmod":
-      removeRingModNode(node);
-      break;
-    case "lfo":
-      removeLfoNode(node);
-      break;
-    case "wasp":
-      disposeWaspNode(node);
-      break;
-    case "out":
-      removeOutputNode(node);
-      break;
-  }
-  registry.delete(id);
-}
-/**
- * Überträgt Parameteränderungen aus der UI auf den Audio-Knoten.
- * Die Casts pro Zweig sind nötig, weil die Map die Verbindung zwischen
- * Knotentyp und Patch-Typ nicht kennt — der per node.type abgesicherte
- * Zweig stellt sie wieder her.
- */
 
 export function updateAudioNode(id: string, patch: NodePatch): void {
   const node = registry.get(id);
   if (!node) return;
+  MODULE_HANDLERS[node.type]?.update(node, patch);
+}
 
-  switch (node.type) {
-    case "osc": {
-      updateOscNode(node, patch as Partial<OscData>);
-      break;
-    }
-    case "vcf": {
-      updateFilterNode(node, patch as Partial<VcfData>);
-      break;
-    }
-
-    case "envelope": {
-      updateEnvelopeNode(node, patch as Partial<EnvelopeData>);
-      break;
-    }
-
-    case "mixer": {
-      updateMixerNode(node, patch as Partial<MixerData>);
-      break;
-    }
-    case "lfo": {
-      updateLfoNode(node, patch as Partial<LfoData>);
-      break;
-    }
-    case "wasp": {
-      updateWaspNode(node, patch as Partial<WaspData>);
-      break;
-    }
-    case "out": {
-      updateOutputNode(node, patch as Partial<OutData>);
-      break;
-    }
-  }
+export function removeAudioNode(id: string): void {
+  const node = registry.get(id);
+  if (!node) return;
+  MODULE_HANDLERS[node.type]?.dispose(node);
+  registry.delete(id);
 }
 
 /** Gate an: Attack-Phase starten (Taste gedrückt). */

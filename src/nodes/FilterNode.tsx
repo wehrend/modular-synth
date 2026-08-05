@@ -133,7 +133,7 @@ export function updateFilterNode(
   }
 }
 
-export function removeFilterNode(node: VcfEntry) {
+export function disposeFilterNode(node: VcfEntry) {
   node.ins.cutoff.dispose();
   node.ins.resonance.dispose();
   node.filter.dispose(); // ins.in ist der Filter selbst — nicht doppelt disposen

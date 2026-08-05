@@ -100,7 +100,7 @@ export function updateOscNode(node: OscEntry, patch: Partial<OscData>) {
   }
 }
 
-export function removeOscNode(node: OscEntry) {
+export function disposeOscNode(node: OscEntry) {
   node.osc.stop();
   node.osc.dispose();
 }

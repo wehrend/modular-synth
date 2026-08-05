@@ -139,6 +139,6 @@ export function updateEnvelopeNode(
   if (p.release !== undefined) node.env.release = p.release;
 }
 
-export function removeEnvelopeNode(node: EnvelopeEntry) {
+export function disposeEnvelopeNode(node: EnvelopeEntry) {
    node.env.dispose();
 }

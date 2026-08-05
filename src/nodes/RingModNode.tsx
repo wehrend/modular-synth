@@ -52,8 +52,14 @@ export function createRingModNode(_id: string): RingModEntry {
     out: multiply,
   };
 }
+export function updateRingModNode(
+  _node: RingModEntry,
+  _p: Partial<RingModFlowNode["data"]>,
+) {
+  // pass;
+}
 
-export function removeRingModNode(node: RingModEntry) {
+export function disposeRingModNode(node: RingModEntry) {
   node.multiply.dispose();
   node.ins.carrier.dispose();
   node.ins.modulator.dispose();
