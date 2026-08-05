@@ -13,6 +13,40 @@ import {
 } from "../types";
 import * as Tone from "tone";
 
+const RAMP = 0.04; // Sekunden — knackfreie Parameterwechsel
+
+// OscillatorNode.tsx, ganz oben ergänzen
+export type OscEntry = {
+  type: "osc";
+  osc: Tone.Oscillator;
+  out: Tone.ToneAudioNode;
+};
+
+export function createOscNode(_id: string, data: OscData): OscEntry {
+  const osc = new Tone.Oscillator(data.frequency, data.waveform);
+  return { type: "osc", osc, out: osc };
+}
+
+export function updateOscNode(node: OscEntry, patch: Partial<OscData>) {
+  const p = patch as Partial<OscData>;
+  if (p.frequency !== undefined) {
+    // rampTo statt hartem Setzen vermeidet Knackser beim Schieben
+    node.osc.frequency.rampTo(p.frequency, RAMP);
+  }
+  if (p.waveform !== undefined) {
+    node.osc.type = p.waveform;
+  }
+  if (p.running !== undefined) {
+    if (p.running) node.osc.start();
+    else node.osc.stop();
+  }
+}
+
+export function disposeOscNode(node: OscEntry) {
+  node.osc.stop();
+  node.osc.dispose();
+}
+
 const WAVEFORM_LABELS: Record<Waveform, string> = {
   sine: "Sin",
   triangle: "Tri",
@@ -70,37 +104,4 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
       <Handle type="source" position={Position.Right} />
     </div>
   );
-}
-const RAMP = 0.04; // Sekunden — knackfreie Parameterwechsel
-
-// OscillatorNode.tsx, ganz oben ergänzen
-export type OscEntry = {
-  type: "osc";
-  osc: Tone.Oscillator;
-  out: Tone.ToneAudioNode;
-};
-
-export function createOscNode(_id: string, data: OscData): OscEntry {
-  const osc = new Tone.Oscillator(data.frequency, data.waveform);
-  return { type: "osc", osc, out: osc };
-}
-
-export function updateOscNode(node: OscEntry, patch: Partial<OscData>) {
-  const p = patch as Partial<OscData>;
-  if (p.frequency !== undefined) {
-    // rampTo statt hartem Setzen vermeidet Knackser beim Schieben
-    node.osc.frequency.rampTo(p.frequency, RAMP);
-  }
-  if (p.waveform !== undefined) {
-    node.osc.type = p.waveform;
-  }
-  if (p.running !== undefined) {
-    if (p.running) node.osc.start();
-    else node.osc.stop();
-  }
-}
-
-export function disposeOscNode(node: OscEntry) {
-  node.osc.stop();
-  node.osc.dispose();
 }
