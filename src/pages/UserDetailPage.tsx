@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "../persist/supabaseClient";
 import { useAuth } from "../auth/AuthContext";
 import styles from "./AuthPages.module.scss";
+import { loadProfile } from "../persist/supabase";
 
 type Profile = {
   id: string;
@@ -61,33 +62,28 @@ export default function UserDetailPage() {
 
   const isOwnProfile = user?.id === id;
 
-  const loadProfile = () => {
+  const fetchProfile = useCallback(() => {
     if (!id) return;
     setLoading(true);
     setNotFound(false);
 
-    supabase
-      .from("profiles")
-      .select("id, display_name, bio, avatar_url, website, created_at")
-      .eq("id", id)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error || !data) {
-          setNotFound(true);
-        } else {
-          setProfile(data);
-          setForm({
-            display_name: data.display_name ?? "",
-            bio: data.bio ?? "",
-            avatar_url: data.avatar_url ?? "",
-            website: data.website ?? "",
-          });
-        }
-        setLoading(false);
-      });
-  };
+    loadProfile(id).then((data) => {
+      if (!data) {
+        setNotFound(true);
+      } else {
+        setProfile(data);
+        setForm({
+          display_name: data.display_name ?? "",
+          bio: data.bio ?? "",
+          avatar_url: data.avatar_url ?? "",
+          website: data.website ?? "",
+        });
+      }
+      setLoading(false);
+    });
+  }, [id]);
 
-  useEffect(loadProfile, [id]);
+  useEffect(fetchProfile, [fetchProfile]);
 
   // Generischer Feld-Updater statt vier fast identischer onChange-Handler.
   const updateField =
@@ -185,7 +181,7 @@ export default function UserDetailPage() {
     }
 
     setEditing(false);
-    loadProfile(); // frisch nachladen statt lokal zu raten, was gespeichert wurde
+    fetchProfile(); // frisch nachladen statt lokal zu raten, was gespeichert wurde
     await refreshDisplayName();
   };
 

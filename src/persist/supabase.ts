@@ -179,3 +179,23 @@ export async function uploadPatchThumbnail(
     .getPublicUrl(filePath);
   return `${data.publicUrl}?t=${Date.now()}`; // Cache-Buster, wie beim Avatar
 }
+
+export type Profile = {
+  id: string;
+  display_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  website: string | null;
+  created_at: string;
+};
+
+export async function loadProfile(id: string): Promise<Profile | null> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, display_name, bio, avatar_url, website, created_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data;
+}
