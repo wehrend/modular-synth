@@ -1,4 +1,4 @@
-import { supabase } from "../supabaseClient";
+import { supabase } from "./supabaseClient";
 import type { PatchDocument } from "./serialize";
 import { SCHEMA_VERSION } from "./serialize";
 

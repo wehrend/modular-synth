@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { supabase } from "../persist/supabaseClient";
 import { useAuth } from "../auth/AuthContext";
 import styles from "./AuthPages.module.scss";
 
