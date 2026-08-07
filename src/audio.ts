@@ -41,6 +41,11 @@ import {
   disposeWaspNode,
   updateWaspNode,
 } from "./nodes/WaspNode";
+import {
+  createNoiseNode,
+  disposeNoiseNode,
+  updateNoiseNode,
+} from "./nodes/NoiseNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -82,6 +87,19 @@ type RingModEntry = {
   ins: { carrier: Tone.Gain; modulator: Tone.Gain };
   out: Tone.ToneAudioNode;
 };
+
+export type NoiseEntry = {
+  type: "noise";
+  white: Tone.Noise;
+  pink: Tone.Noise;
+  brown: Tone.Noise;
+  outs: {
+    white: Tone.ToneAudioNode;
+    pink: Tone.ToneAudioNode;
+    brown: Tone.ToneAudioNode;
+  };
+};
+
 type RegistryEntry =
   | OscEntry
   | MixerEntry
@@ -90,6 +108,7 @@ type RegistryEntry =
   | RingModEntry
   | LfoEntry
   | WaspEntry
+  | NoiseEntry
   | OutEntry;
 
 const registry = new Map<string, RegistryEntry>();
@@ -143,6 +162,11 @@ const MODULE_HANDLERS: Record<string, ModuleHandler<any, any>> = {
     create: createWaspNode,
     update: updateWaspNode,
     dispose: disposeWaspNode,
+  },
+  noise: {
+    create: createNoiseNode,
+    update: updateNoiseNode,
+    dispose: disposeNoiseNode,
   },
   out: {
     create: createOutputNode,
@@ -203,28 +227,55 @@ function resolveInput(
   return target && "in" in target ? target.in : null;
 }
 
+function resolveOutput(
+  source: RegistryEntry | undefined,
+  sourceHandle?: string | null,
+): Tone.ToneAudioNode | null {
+  if (!source) return null;
+  if (sourceHandle && "outs" in source) {
+    return (
+      (source.outs as Record<string, Tone.ToneAudioNode>)[sourceHandle] ?? null
+    );
+  }
+  return "out" in source ? source.out : null;
+}
+
 /** Kante verbunden → Audiosignal verbinden. */
 export function connectAudio(
   sourceId: string,
   targetId: string,
+  sourceHandle?: string | null,
   targetHandle?: string | null,
 ): void {
-  const source = registry.get(sourceId);
+  const output = resolveOutput(registry.get(sourceId), sourceHandle);
   const input = resolveInput(registry.get(targetId), targetHandle);
-  if (source && "out" in source && input) {
-    source.out.connect(input);
-  }
+  if (output && input) output.connect(input);
 }
 
 /** Kante gelöscht → Audiosignal trennen. */
 export function disconnectAudio(
   sourceId: string,
   targetId: string,
+  sourceHandle?: string | null,
   targetHandle?: string | null,
 ): void {
-  const source = registry.get(sourceId);
+  const output = resolveOutput(registry.get(sourceId), sourceHandle);
   const input = resolveInput(registry.get(targetId), targetHandle);
-  if (source && "out" in source && input) {
-    source.out.disconnect(input);
+
+  if (!output) return;
+
+  try {
+    if (input) {
+      // Gezieltes Trennen, falls der Ziel-Node noch existiert
+      output.disconnect(input);
+    } else {
+      // Fallback: Alle Verbindungen des Ausgangs trennen
+      output.disconnect();
+    }
+  } catch (error) {
+    console.warn(
+      `[disconnectAudio] Konnte Signal von ${sourceId} nicht trennen:`,
+      error,
+    );
   }
 }
