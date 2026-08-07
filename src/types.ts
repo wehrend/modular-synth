@@ -78,6 +78,16 @@ export type LfoData = {
 };
 
 export type LfoFlowNode = Node<LfoData, "lfo">;
+
+export type NoiseData = {
+  whiteVolume: number;
+  pinkVolume: number;
+  brownVolume: number;
+};
+
+export type NoiseFlowNode = Node<NoiseData, "noise">;
+// -> in AppNode, AudioNodeInit, NodePatch aufnehmen, wie gewohnt
+
 /** Diskriminierte Union aller Knoten der App. */
 export type AppNode =
   | OscFlowNode
@@ -87,6 +97,7 @@ export type AppNode =
   | RingModFlowNode
   | WaspFlowNode
   | LfoFlowNode
+  | NoiseFlowNode
   | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
@@ -98,6 +109,7 @@ export type AudioNodeInit =
   | { id: string; type: "ringmod"; data: RingModData }
   | { id: string; type: "wasp"; data: WaspData }
   | { id: string; type: "lfo"; data: LfoData }
+  | { id: string; type: "noise"; data: NoiseData }
   | { id: string; type: "out"; data: OutData };
 
 /** Partielle Parameter-Updates, wie sie von den Reglern kommen. */
@@ -109,4 +121,5 @@ export type NodePatch =
   | Partial<RingModData>
   | Partial<WaspData>
   | Partial<LfoData>
+  | Partial<NoiseData>
   | Partial<OutData>;

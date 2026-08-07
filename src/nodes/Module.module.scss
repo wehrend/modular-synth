@@ -113,3 +113,24 @@
   font-size: 12px;
   @include v.dim-label;
 }
+
+// Module.module.scss, ergänzen
+
+.ioRowOut {
+  position: relative;
+  display: flex;
+  flex-direction: column; // Label oben, Knob darunter mittig -- statt nebeneinander
+  align-items: center;
+  gap: 4px;
+  margin: 10px 0;
+  min-height: 16px;
+}
+
+.ioRowOut .react-flow__handle {
+  right: -20px;
+}
+
+.ioRowOut .ioLabel {
+  text-align: right; // Label läuft zum Handle hin, wie die Leserichtung bei Ausgängen
+  width: 100%;
+}

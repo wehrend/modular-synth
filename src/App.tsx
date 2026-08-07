@@ -35,6 +35,7 @@ import type {
   LfoFlowNode,
   RingModFlowNode,
   WaspFlowNode,
+  NoiseFlowNode,
 } from "./types";
 import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
@@ -60,6 +61,7 @@ import RingModNode from "./nodes/RingModNode";
 import WaspNode from "./nodes/WaspNode";
 // App.tsx, oben bei den anderen Imports
 import { initialNodes, initialEdges } from "./defaultPatch";
+import NoiseNode from "./nodes/NoiseNode";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -69,6 +71,7 @@ const nodeTypes = {
   ringmod: RingModNode,
   lfo: LfoNode,
   wasp: WaspNode,
+  noise: NoiseNode,
   out: OutputNode,
 };
 
@@ -265,6 +268,7 @@ export default function App() {
       connectAudio(
         connection.source,
         connection.target,
+        connection.sourceHandle,
         connection.targetHandle,
       );
       setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
@@ -274,7 +278,12 @@ export default function App() {
 
   const onEdgesDelete = useCallback((deleted: Edge[]) => {
     deleted.forEach((edge) =>
-      disconnectAudio(edge.source, edge.target, edge.targetHandle),
+      disconnectAudio(
+        edge.source,
+        edge.target,
+        edge.sourceHandle,
+        edge.targetHandle,
+      ),
     );
   }, []);
 
@@ -283,7 +292,12 @@ export default function App() {
   // Audio-Trennen hier explizit passieren.
   const onEdgeDoubleClick = useCallback(
     (_event: React.MouseEvent, edge: Edge) => {
-      disconnectAudio(edge.source, edge.target, edge.targetHandle); // ← ergänzt
+      disconnectAudio(
+        edge.source,
+        edge.target,
+        edge.sourceHandle,
+        edge.targetHandle,
+      ); // ← ergänzt
       setEdges((eds) => eds.filter((e) => e.id !== edge.id));
     },
     [setEdges],
@@ -376,6 +390,14 @@ export default function App() {
     setNodes,
   );
 
+  const addNoise = useAddModule<NoiseFlowNode>(
+    "noise",
+    "noise",
+    { x: 440, y: 460 },
+    () => ({ whiteVolume: -20, pinkVolume: -20, brownVolume: -20 }),
+    setNodes,
+  );
+
   return (
     // Erster Klick irgendwo im Canvas weckt den AudioContext auf
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
@@ -431,6 +453,9 @@ export default function App() {
           </button>
           <button className={styles.btn} onClick={addLfo}>
             + LFO
+          </button>
+          <button className={styles.btn} onClick={addNoise}>
+            + Noise
           </button>
           <p className={styles.hint}>
             Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick
