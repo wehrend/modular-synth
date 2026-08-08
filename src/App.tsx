@@ -2,7 +2,7 @@
 // Der Flow-Graph ist die "Wahrheit" für die Patch-Struktur.
 // Jede Änderung an Kanten/Knoten wird 1:1 in den Audiographen gespiegelt.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -28,15 +28,6 @@ import {
 } from "./audio";
 import type {
   AppNode,
-  VcfFlowNode,
-  MixerFlowNode,
-  OscFlowNode,
-  EnvelopeFlowNode,
-  LfoFlowNode,
-  RingModFlowNode,
-  WaspFlowNode,
-  NoiseFlowNode,
-  VcaFlowNode,
 } from "./types";
 import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
@@ -52,7 +43,7 @@ import {
   overwritePreset,
   deletePreset,
 } from "./persist/supabase";
-import { nextId, seedIds } from "./persist/ids";
+import { seedIds } from "./persist/ids";
 import PresetSidebar from "./components/PresetSidebar";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
@@ -64,6 +55,9 @@ import WaspNode from "./nodes/WaspNode";
 import { initialNodes, initialEdges } from "./defaultPatch";
 import NoiseNode from "./nodes/NoiseNode";
 import VcaNode from "./nodes/VcaNode";
+import ModuleToolbar from "./components/ModuleToolbar";
+import { createAddModuleHandler } from "./lib/addModule";
+import { MODULE_CATALOG } from "./moduleCatalog";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -313,100 +307,14 @@ export default function App() {
     });
   }, []);
 
-  function useAddModule<T extends AppNode>(
-    idPrefix: string,
-    nodeType: T["type"],
-    basePosition: { x: number; y: number },
-    makeDefaults: () => T["data"],
-    setNodes: React.Dispatch<React.SetStateAction<AppNode[]>>,
-  ) {
-    return useCallback(() => {
-      const node = {
-        id: nextId(idPrefix), // ersetzt: countRef.current += 1; `${idPrefix}-${countRef.current}`
-        type: nodeType,
-        position: {
-          x: basePosition.x + Math.random() * 40,
-          y: basePosition.y + Math.random() * 60,
-        },
-        data: makeDefaults(),
-      } as T;
-      createAudioNode(node);
-      setNodes((nds) => [...nds, node]);
-    }, [idPrefix, nodeType, basePosition, setNodes]);
-  }
-  const addOscillator = useAddModule<OscFlowNode>(
-    "osc",
-    "osc",
-    { x: 60, y: 320 },
-    () => ({ frequency: 440, waveform: "sine", running: false }),
-    setNodes,
-  );
-
-  const addMixer = useAddModule<MixerFlowNode>(
-    "mixer",
-    "mixer",
-    { x: 300, y: 320 },
-    () => ({ ch1: 0.8, ch2: 0.8, ch3: 0.8, master: 0.8 }),
-    setNodes,
-  );
-
-  const addFilter = useAddModule<VcfFlowNode>(
-    "filter",
-    "vcf",
-    { x: 440, y: 460 },
-    () => ({
-      cutoff: 1200,
-      resonance: 2,
-      filterType: "lowpass",
-      cutoffAmount: 2000,
-      resonanceAmount: 0,
-    }),
-    setNodes,
-  );
-
-  const addEnvelope = useAddModule<EnvelopeFlowNode>(
-    "envelope",
-    "envelope",
-    { x: 440, y: 460 },
-    () => ({ attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.5 }),
-    setNodes,
-  );
-  const addRingMod = useAddModule<RingModFlowNode>(
-    "ringmod",
-    "ringmod",
-    { x: 440, y: 460 },
-    () => ({}),
-    setNodes,
-  );
-  const addWasp = useAddModule<WaspFlowNode>(
-    "wasp",
-    "wasp",
-    { x: 440, y: 460 },
-    () => ({ cutoff: 1200, resonance: 0.3, drive: 0.4, cutoffAmount: 2000 }),
-    setNodes,
-  );
-  const addLfo = useAddModule<LfoFlowNode>(
-    "lfo",
-    "lfo",
-    { x: 440, y: 460 },
-    () => ({ rate: 4.4, waveform: "sawtooth" }),
-    setNodes,
-  );
-
-  const addNoise = useAddModule<NoiseFlowNode>(
-    "noise",
-    "noise",
-    { x: 440, y: 460 },
-    () => ({ whiteVolume: -20, pinkVolume: -20, brownVolume: -20 }),
-    setNodes,
-  );
-
-  const addVca = useAddModule<VcaFlowNode>(
-    "vca",
-    "vca",
-    { x: 440, y: 460 },
-    () => ({ gain: 0.5 }), 
-    setNodes,
+  // innerhalb der Komponente, ersetzt alle neun addXxx-Konstanten und useAddModule:
+  const moduleButtons = useMemo(
+    () =>
+      MODULE_CATALOG.map((entry) => ({
+        label: entry.label,
+        onClick: createAddModuleHandler(entry, setNodes),
+      })),
+    [setNodes],
   );
 
   return (
@@ -443,34 +351,7 @@ export default function App() {
           <button className={styles.btn} onClick={handleSaveAs}>
             Speichern unter
           </button>
-
-          <button className={styles.btn} onClick={addOscillator}>
-            + Oszillator
-          </button>
-          <button className={styles.btn} onClick={addMixer}>
-            + Mixer
-          </button>
-          <button className={styles.btn} onClick={addFilter}>
-            + Filter
-          </button>
-          <button className={styles.btn} onClick={addEnvelope}>
-            + ADSR / Envelope
-          </button>
-          <button className={styles.btn} onClick={addRingMod}>
-            + Ring Mod
-          </button>
-          <button className={styles.btn} onClick={addWasp}>
-            + Wasp Filter
-          </button>
-          <button className={styles.btn} onClick={addLfo}>
-            + LFO
-          </button>
-          <button className={styles.btn} onClick={addNoise}>
-            + Noise
-          </button>
-          <button className={styles.btn} onClick={addVca}>
-            + VCA
-          </button>
+          <ModuleToolbar modules={moduleButtons} />
           <p className={styles.hint}>
             Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick
             entfernen — oder auswählen und Entf/Backspace.
