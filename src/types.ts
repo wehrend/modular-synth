@@ -88,6 +88,12 @@ export type NoiseData = {
 export type NoiseFlowNode = Node<NoiseData, "noise">;
 // -> in AppNode, AudioNodeInit, NodePatch aufnehmen, wie gewohnt
 
+export type VcaData = {
+  gain: number;
+};
+export type VcaFlowNode = Node<VcaData, "vca">;
+// -> in AppNode, AudioNodeInit, NodePatch aufnehmen
+
 /** Diskriminierte Union aller Knoten der App. */
 export type AppNode =
   | OscFlowNode
@@ -98,6 +104,7 @@ export type AppNode =
   | WaspFlowNode
   | LfoFlowNode
   | NoiseFlowNode
+  | VcaFlowNode
   | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
@@ -110,6 +117,7 @@ export type AudioNodeInit =
   | { id: string; type: "wasp"; data: WaspData }
   | { id: string; type: "lfo"; data: LfoData }
   | { id: string; type: "noise"; data: NoiseData }
+  | { id: string; type: "vca"; data: VcaData }
   | { id: string; type: "out"; data: OutData };
 
 /** Partielle Parameter-Updates, wie sie von den Reglern kommen. */
@@ -122,4 +130,5 @@ export type NodePatch =
   | Partial<WaspData>
   | Partial<LfoData>
   | Partial<NoiseData>
+  | Partial<VcaData>
   | Partial<OutData>;
