@@ -36,6 +36,7 @@ import type {
   RingModFlowNode,
   WaspFlowNode,
   NoiseFlowNode,
+  VcaFlowNode,
 } from "./types";
 import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
@@ -62,6 +63,7 @@ import WaspNode from "./nodes/WaspNode";
 // App.tsx, oben bei den anderen Imports
 import { initialNodes, initialEdges } from "./defaultPatch";
 import NoiseNode from "./nodes/NoiseNode";
+import VcaNode from "./nodes/VcaNode";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -72,6 +74,7 @@ const nodeTypes = {
   lfo: LfoNode,
   wasp: WaspNode,
   noise: NoiseNode,
+  vca: VcaNode,
   out: OutputNode,
 };
 
@@ -398,6 +401,14 @@ export default function App() {
     setNodes,
   );
 
+  const addVca = useAddModule<VcaFlowNode>(
+    "vca",
+    "vca",
+    { x: 440, y: 460 },
+    () => ({ gain: 0.5 }), 
+    setNodes,
+  );
+
   return (
     // Erster Klick irgendwo im Canvas weckt den AudioContext auf
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
@@ -456,6 +467,9 @@ export default function App() {
           </button>
           <button className={styles.btn} onClick={addNoise}>
             + Noise
+          </button>
+          <button className={styles.btn} onClick={addVca}>
+            + VCA
           </button>
           <p className={styles.hint}>
             Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick

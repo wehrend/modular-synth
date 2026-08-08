@@ -46,6 +46,7 @@ import {
   disposeNoiseNode,
   updateNoiseNode,
 } from "./nodes/NoiseNode";
+import { createVcaNode, disposeVcaNode, updateVcaNode, VcaEntry } from "./nodes/VcaNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -109,6 +110,7 @@ type RegistryEntry =
   | LfoEntry
   | WaspEntry
   | NoiseEntry
+  | VcaEntry
   | OutEntry;
 
 const registry = new Map<string, RegistryEntry>();
@@ -167,6 +169,11 @@ const MODULE_HANDLERS: Record<string, ModuleHandler<any, any>> = {
     create: createNoiseNode,
     update: updateNoiseNode,
     dispose: disposeNoiseNode,
+  },
+  vca: {
+    create: createVcaNode,
+    update: updateVcaNode,
+    dispose: disposeVcaNode,
   },
   out: {
     create: createOutputNode,
