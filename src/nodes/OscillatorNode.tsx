@@ -31,6 +31,10 @@ export function createOscNode(_id: string, data: OscData): OscEntry {
   const cvAmt = new Tone.Gain(data.cvAmount);
   cvAmt.connect(osc.frequency); // addiert sich auf den Grundwert, wie bei deinem VCF
 
+  setInterval(() => {
+    console.log("VCO frequency.value:", osc.frequency.value);
+  }, 500);
+
   return { type: "osc", osc, cvAmt, ins: { cv: cvAmt }, out: osc };
 }
 

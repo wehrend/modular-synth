@@ -95,6 +95,15 @@ export type VcaData = {
 export type VcaFlowNode = Node<VcaData, "vca">;
 // -> in AppNode, AudioNodeInit, NodePatch aufnehmen
 
+export type SequencerData = {
+  steps: number; // Frequenzen pro Step
+  bpm: number;
+  running: boolean;
+  cvValues: number[];
+};
+
+export type SequencerFlowNode = Node<SequencerData, "sequencer">;
+
 /** Diskriminierte Union aller Knoten der App. */
 export type AppNode =
   | OscFlowNode
@@ -106,6 +115,7 @@ export type AppNode =
   | LfoFlowNode
   | NoiseFlowNode
   | VcaFlowNode
+  | SequencerFlowNode
   | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
@@ -119,6 +129,7 @@ export type AudioNodeInit =
   | { id: string; type: "lfo"; data: LfoData }
   | { id: string; type: "noise"; data: NoiseData }
   | { id: string; type: "vca"; data: VcaData }
+  | { id: string; type: "sequencer"; data: SequencerData }
   | { id: string; type: "out"; data: OutData };
 
 /** Partielle Parameter-Updates, wie sie von den Reglern kommen. */
@@ -132,4 +143,5 @@ export type NodePatch =
   | Partial<LfoData>
   | Partial<NoiseData>
   | Partial<VcaData>
+  | Partial<SequencerData>
   | Partial<OutData>;

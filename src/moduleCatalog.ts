@@ -89,4 +89,16 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
     basePosition: { x: 440, y: 460 },
     defaults: () => ({ gain: 0.5 }),
   },
+  {
+    type: "sequencer",
+    idPrefix: "sequencer",
+    label: "+ Sequencer",
+    basePosition: { x: 440, y: 460 },
+    defaults: () => ({
+      steps: 8,
+      bpm: 120,
+      running: false,
+      cvValues: [220, 262, 294, 330, 349, 330, 294, 262],
+    }),
+  },
 ];

@@ -92,7 +92,10 @@ export default function EnvelopeNode({
           {GATE_KEY === " " ? "Leertaste" : GATE_KEY}
         </span>
       </header>
-
+      <div className={styles.ioRow}>
+        <Handle type="target" position={Position.Left} id="gate" />
+        <span className={styles.ioLabel}>Gate</span>
+      </div>
       <div className="module__row module__row--gap">
         <Knob
           label="A"

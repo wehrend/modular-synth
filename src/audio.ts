@@ -46,7 +46,18 @@ import {
   disposeNoiseNode,
   updateNoiseNode,
 } from "./nodes/NoiseNode";
-import { createVcaNode, disposeVcaNode, updateVcaNode, VcaEntry } from "./nodes/VcaNode";
+import {
+  createVcaNode,
+  disposeVcaNode,
+  updateVcaNode,
+  VcaEntry,
+} from "./nodes/VcaNode";
+import {
+  createSequencerNode,
+  disposeSequencerNode,
+  SequencerEntry,
+  updateSequencerNode,
+} from "./nodes/SequencerNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -111,6 +122,7 @@ type RegistryEntry =
   | WaspEntry
   | NoiseEntry
   | VcaEntry
+  | SequencerEntry
   | OutEntry;
 
 const registry = new Map<string, RegistryEntry>();
@@ -175,6 +187,11 @@ const MODULE_HANDLERS: Record<string, ModuleHandler<any, any>> = {
     update: updateVcaNode,
     dispose: disposeVcaNode,
   },
+  sequencer: {
+    create: createSequencerNode,
+    update: updateSequencerNode,
+    dispose: disposeSequencerNode,
+  },
   out: {
     create: createOutputNode,
     update: updateOutputNode,
@@ -197,12 +214,17 @@ export function updateAudioNode(id: string, patch: NodePatch): void {
   if (!node) return;
   MODULE_HANDLERS[node.type]?.update(node, patch);
 }
-
 export function removeAudioNode(id: string): void {
   const node = registry.get(id);
   if (!node) return;
   MODULE_HANDLERS[node.type]?.dispose(node);
   registry.delete(id);
+
+  // Alle Gate-Routen entfernen, in denen dieser Knoten Quelle ODER Ziel war
+  for (const [key, targets] of gateRoutes) {
+    if (key.startsWith(`${id}::`)) gateRoutes.delete(key);
+    else targets.delete(id);
+  }
 }
 
 /** Gate an: Attack-Phase starten (Taste gedrückt). */
@@ -215,6 +237,29 @@ export function gateOn(id: string): void {
 export function gateOff(id: string): void {
   const node = registry.get(id);
   if (node?.type === "envelope") node.env.triggerRelease();
+}
+
+// Gate-Routing: parallel zum Audiographen, aber ohne echte Tone.js-Verbindung.
+// sourceId -> Menge der Envelope-IDs, die dieses Gate-Signal empfangen.
+// Schlüssel jetzt "sourceId::sourceHandle" statt nur "sourceId" --
+// ein Knoten kann mehrere unabhängige Gate-Ausgänge haben (CD4017: bis zu 10).
+// Schlüssel jetzt "sourceId::sourceHandle" statt nur "sourceId" --
+// ein Knoten kann mehrere unabhängige Gate-Ausgänge haben (CD4017: bis zu 10).
+const gateRoutes = new Map<string, Set<string>>();
+
+function gateKey(sourceId: string, sourceHandle: string): string {
+  return `${sourceId}::${sourceHandle}`;
+}
+
+export function fireGate(
+  sourceId: string,
+  sourceHandle: string,
+  on: boolean,
+): void {
+  gateRoutes.get(gateKey(sourceId, sourceHandle))?.forEach((targetId) => {
+    if (on) gateOn(targetId);
+    else gateOff(targetId);
+  });
 }
 
 /**
@@ -254,6 +299,13 @@ export function connectAudio(
   sourceHandle?: string | null,
   targetHandle?: string | null,
 ): void {
+  if (targetHandle === "gate" && sourceHandle) {
+    const key = gateKey(sourceId, sourceHandle);
+    if (!gateRoutes.has(key)) gateRoutes.set(key, new Set());
+    gateRoutes.get(key)!.add(targetId);
+    return;
+  }
+
   const output = resolveOutput(registry.get(sourceId), sourceHandle);
   const input = resolveInput(registry.get(targetId), targetHandle);
   if (output && input) output.connect(input);
@@ -266,6 +318,14 @@ export function disconnectAudio(
   sourceHandle?: string | null,
   targetHandle?: string | null,
 ): void {
+  // Gate-Verbindungen laufen nicht über den Audiographen -- eigener Zweig,
+  // muss VOR resolveOutput/resolveInput geprüft werden, sonst würde
+  // versucht, ein nicht existierendes Tone-Objekt zu trennen.
+  if (targetHandle === "gate" && sourceHandle) {
+    gateRoutes.get(gateKey(sourceId, sourceHandle))?.delete(targetId);
+    return;
+  }
+
   const output = resolveOutput(registry.get(sourceId), sourceHandle);
   const input = resolveInput(registry.get(targetId), targetHandle);
 
@@ -273,10 +333,8 @@ export function disconnectAudio(
 
   try {
     if (input) {
-      // Gezieltes Trennen, falls der Ziel-Node noch existiert
       output.disconnect(input);
     } else {
-      // Fallback: Alle Verbindungen des Ausgangs trennen
       output.disconnect();
     }
   } catch (error) {
