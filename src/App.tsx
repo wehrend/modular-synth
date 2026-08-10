@@ -26,9 +26,7 @@ import {
   removeAudioNode,
   resumeAudio,
 } from "./audio";
-import type {
-  AppNode,
-} from "./types";
+import type { AppNode } from "./types";
 import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
 import EnvelopeNode from "./nodes/EnvelopeNode";
@@ -58,6 +56,7 @@ import VcaNode from "./nodes/VcaNode";
 import ModuleToolbar from "./components/ModuleToolbar";
 import { createAddModuleHandler } from "./lib/addModule";
 import { MODULE_CATALOG } from "./moduleCatalog";
+import SequencerNode from "./nodes/SequencerNode";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -69,6 +68,7 @@ const nodeTypes = {
   wasp: WaspNode,
   noise: NoiseNode,
   vca: VcaNode,
+  sequencer: SequencerNode,
   out: OutputNode,
 };
 
