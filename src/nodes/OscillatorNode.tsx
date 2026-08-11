@@ -19,12 +19,19 @@ const RAMP = 0.04; // Sekunden — knackfreie Parameterwechsel
 export type OscEntry = {
   type: "osc";
   osc: Tone.Oscillator;
+  cvAmt: Tone.Gain;
+  ins: { cv: Tone.Gain };
   out: Tone.ToneAudioNode;
 };
 
 export function createOscNode(_id: string, data: OscData): OscEntry {
   const osc = new Tone.Oscillator(data.frequency, data.waveform);
-  return { type: "osc", osc, out: osc };
+  if (data.running) osc.start();
+
+  const cvAmt = new Tone.Gain(data.cvAmount);
+  cvAmt.connect(osc.frequency); // addiert sich auf den Grundwert, wie bei deinem VCF
+
+  return { type: "osc", osc, cvAmt, ins: { cv: cvAmt }, out: osc };
 }
 
 export function updateOscNode(node: OscEntry, patch: Partial<OscData>) {
@@ -36,6 +43,8 @@ export function updateOscNode(node: OscEntry, patch: Partial<OscData>) {
   if (p.waveform !== undefined) {
     node.osc.type = p.waveform;
   }
+  if (patch.cvAmount !== undefined)
+    node.cvAmt.gain.rampTo(patch.cvAmount, RAMP);
   if (p.running !== undefined) {
     if (p.running) node.osc.start();
     else node.osc.stop();
@@ -77,7 +86,6 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
           {data.running ? "an" : "aus"}
         </button>
       </header>
-
       <Knob
         label="Frequenz"
         value={data.frequency}
@@ -88,7 +96,19 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
         format={(v) => `${v} Hz`}
         onChange={(frequency) => patch({ frequency })}
       />
-
+      <div className={styles.ioRow}>
+        <Handle type="target" position={Position.Right} id="cv" />
+        <span className={styles.ioLabel}>CV</span>
+      </div>
+      <Knob
+        label="Amount"
+        value={data.cvAmount}
+        min={0}
+        max={2000}
+        step={10}
+        format={(v) => `±${v}`}
+        onChange={(cvAmount) => patch({ cvAmount })}
+      />
       <div className={`${styles.row} ${styles.rowGap}`}>
         {WAVEFORMS.map((w) => (
           <button

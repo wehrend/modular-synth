@@ -21,6 +21,7 @@ export type OscData = {
   frequency: number;
   waveform: Waveform;
   running: boolean;
+  cvAmount: number;
 };
 
 export type OutData = {
