@@ -6,7 +6,8 @@ export const initialNodes: AppNode[] = [
     id: "osc-1",
     type: "osc",
     position: { x: 40, y: 60 },
-    data: { frequency: 220, waveform: "sawtooth", running: true },
+    // defaultPatch.tsx
+    data: { frequency: 220, waveform: "sawtooth", running: true, cvAmount: 0.5 },
   },
   {
     id: "lfo-1",

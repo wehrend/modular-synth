@@ -14,7 +14,13 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
     idPrefix: "osc",
     label: "+ Oszillator",
     basePosition: { x: 60, y: 320 },
-    defaults: () => ({ frequency: 440, waveform: "sine", running: false }),
+    // moduleCatalog.ts
+    defaults: () => ({
+      frequency: 440,
+      waveform: "sine",
+      running: false,
+      cvAmount: 0.5,
+    }),
   },
   {
     type: "mixer",
