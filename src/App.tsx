@@ -57,6 +57,7 @@ import ModuleToolbar from "./components/ModuleToolbar";
 import { createAddModuleHandler } from "./lib/addModule";
 import { MODULE_CATALOG } from "./moduleCatalog";
 import SequencerNode from "./nodes/SequencerNode";
+import SamplerNode from "./nodes/SamplerNode";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -69,6 +70,7 @@ const nodeTypes = {
   noise: NoiseNode,
   vca: VcaNode,
   sequencer: SequencerNode,
+  sampler: SamplerNode, // Platzhalter, noch kein UI-Modul
   out: OutputNode,
 };
 

@@ -101,4 +101,11 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
       cvValues: [220, 262, 294, 330, 349, 330, 294, 262],
     }),
   },
+  {
+    type: "sampler",
+    idPrefix: "sampler",
+    label: "+ Sampler",
+    basePosition: { x: 440, y: 460 },
+    defaults: () => ({ recording: false, hasSample: false, playbackRate: 1 }),
+  },
 ];

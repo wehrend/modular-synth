@@ -58,6 +58,7 @@ import {
   SequencerEntry,
   updateSequencerNode,
 } from "./nodes/SequencerNode";
+import { createSamplerNode, disposeSamplerNode, updateSamplerNode } from "./nodes/SamplerNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -112,6 +113,14 @@ export type NoiseEntry = {
   };
 };
 
+export type SamplerEntry = {
+  type: "sampler";
+  mic: Tone.UserMedia;
+  recorder: Tone.Recorder;
+  player: Tone.Player;
+  out: Tone.ToneAudioNode;
+};
+
 type RegistryEntry =
   | OscEntry
   | MixerEntry
@@ -123,6 +132,7 @@ type RegistryEntry =
   | NoiseEntry
   | VcaEntry
   | SequencerEntry
+  | SamplerEntry
   | OutEntry;
 
 const registry = new Map<string, RegistryEntry>();
@@ -192,6 +202,11 @@ const MODULE_HANDLERS: Record<string, ModuleHandler<any, any>> = {
     update: updateSequencerNode,
     dispose: disposeSequencerNode,
   },
+  sampler: {
+    create: createSamplerNode,
+    update: updateSamplerNode,
+    dispose: disposeSamplerNode,
+  },
   out: {
     create: createOutputNode,
     update: updateOutputNode,
@@ -231,6 +246,7 @@ export function removeAudioNode(id: string): void {
 export function gateOn(id: string): void {
   const node = registry.get(id);
   if (node?.type === "envelope") node.env.triggerAttack();
+  if (node?.type === "sampler") node.player.start();
 }
 
 /** Gate aus: Release-Phase starten (Taste losgelassen). */
@@ -260,6 +276,28 @@ export function fireGate(
     if (on) gateOn(targetId);
     else gateOff(targetId);
   });
+}
+
+export async function startSamplerRecording(id: string): Promise<void> {
+  const node = registry.get(id);
+  if (node?.type !== "sampler") return;
+  await node.mic.open(); // fragt bei Bedarf nach Mikrofonberechtigung
+  node.recorder.start();
+}
+
+export async function stopSamplerRecording(id: string): Promise<void> {
+  const node = registry.get(id);
+  if (node?.type !== "sampler") return;
+  const blob = await node.recorder.stop();
+  const url = URL.createObjectURL(blob);
+  await node.player.load(url); // asynchron: neuer Buffer ersetzt den alten
+  URL.revokeObjectURL(url); // Speicher freigeben, sobald geladen
+}
+
+export function triggerSamplerPlayback(id: string): void {
+  const node = registry.get(id);
+  if (node?.type !== "sampler") return;
+  node.player.start();
 }
 
 /**
