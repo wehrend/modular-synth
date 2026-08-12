@@ -19,6 +19,11 @@ export function createSequencerNode(
   id: string,
   data: SequencerData,
 ): SequencerEntry {
+  console.log("createSequencerNode aufgerufen:", {
+    id,
+    steps: data.steps,
+    running: data.running,
+  });
   let current = 0;
 
   const pitchSignal = new Tone.Signal({
@@ -28,6 +33,7 @@ export function createSequencerNode(
   // Vorherigen Ausgang abschalten, aktuellen einschalten -- Ring-Prinzip
   // des CD4017: immer nur EIN Ausgang gleichzeitig "high".
   const loop = new Tone.Loop((time) => {
+    console.log("LOOP TICK");
     const prev = (current - 1 + data.steps) % data.steps;
     fireGate(id, `gate${prev}`, false);
     fireGate(id, `gate${current}`, true);
@@ -38,11 +44,12 @@ export function createSequencerNode(
   }, "8n");
 
   Tone.getTransport().bpm.value = data.bpm;
+  console.log("Transport state vor start:", Tone.getTransport().state);
   if (data.running) {
     loop.start(0);
     Tone.getTransport().start();
   }
-
+  console.log("Transport state nach start:", Tone.getTransport().state);
   return {
     type: "sequencer",
     loop,

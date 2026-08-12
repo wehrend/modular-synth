@@ -107,12 +107,16 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
       <Knob
         label="Amount"
         value={data.cvAmount}
-        min={0}
-        max={2000}
+        min={1}
+        max={1000}
         step={10}
         format={(v) => `±${v}`}
         onChange={(cvAmount) => patch({ cvAmount })}
       />
+      <span className={styles.ioLabel}>
+        Bei Sequencer-CV: niedrig einstellen (~1). 
+        Bei LFO-CV: höher für hörbaren Hub.
+      </span>
       <div className={`${styles.row} ${styles.rowGap}`}>
         {WAVEFORMS.map((w) => (
           <button
