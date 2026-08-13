@@ -124,6 +124,7 @@ export type SamplerEntry = {
   player: Tone.Player;
   out: Tone.ToneAudioNode;
   gainNode: Tone.Gain;
+  pendingLoad: Promise<void>;
 };
 
 type RegistryEntry =
@@ -264,8 +265,6 @@ export function gateOff(id: string): void {
 // sourceId -> Menge der Envelope-IDs, die dieses Gate-Signal empfangen.
 // Schlüssel jetzt "sourceId::sourceHandle" statt nur "sourceId" --
 // ein Knoten kann mehrere unabhängige Gate-Ausgänge haben (CD4017: bis zu 10).
-// Schlüssel jetzt "sourceId::sourceHandle" statt nur "sourceId" --
-// ein Knoten kann mehrere unabhängige Gate-Ausgänge haben (CD4017: bis zu 10).
 const gateRoutes = new Map<string, Set<string>>();
 
 function gateKey(sourceId: string, sourceHandle: string): string {
@@ -286,17 +285,36 @@ export function fireGate(
 export async function startSamplerRecording(id: string): Promise<void> {
   const node = registry.get(id);
   if (node?.type !== "sampler") return;
-  await node.mic.open(); // fragt bei Bedarf nach Mikrofonberechtigung
-  node.recorder.start();
+
+  // Mikro nur öffnen, wenn es nicht schon offen ist -- unnötiges
+  // erneutes getUserMedia() bei jeder Aufnahme vermeiden.
+  if (node.mic.state !== "started") {
+    await node.mic.open(); // fragt bei Bedarf nach Mikrofonberechtigung
+  }
+
+  // Falls der Recorder aus irgendeinem Grund schon läuft (z.B. State
+  // durch einen vorherigen Fehler nicht sauber zurückgesetzt), nicht
+  // nochmal start() aufrufen -- das würde einen Assert werfen.
+  if (node.recorder.state === "started") return;
+
+  await node.recorder.start();
 }
 
-export async function stopSamplerRecording(id: string): Promise<void> {
+export async function stopSamplerRecording(id: string): Promise<Blob | null> {
   const node = registry.get(id);
-  if (node?.type !== "sampler") return;
+  if (node?.type !== "sampler") return null;
+
+  // Wurde nie erfolgreich gestartet (z.B. weil startSamplerRecording
+  // vorher geworfen hat) -- nichts zu stoppen, sonst Assert-Fehler.
+  if (node.recorder.state !== "started") return null;
+
+  await node.pendingLoad;
+
   const blob = await node.recorder.stop();
   const url = URL.createObjectURL(blob);
-  await node.player.load(url); // asynchron: neuer Buffer ersetzt den alten
-  URL.revokeObjectURL(url); // Speicher freigeben, sobald geladen
+  await node.player.load(url);
+  URL.revokeObjectURL(url);
+  return blob;
 }
 
 export function triggerSamplerPlayback(id: string): void {

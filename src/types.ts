@@ -109,6 +109,7 @@ export type SamplerData = {
   hasSample: boolean; // reiner UI-Zustand: gibt es schon eine Aufnahme?
   playbackRate: number; // Pitch/Geschwindigkeit der Wiedergabe
   gain: number;
+  sampleUrl: string | null;
 };
 
 export type SamplerFlowNode = Node<SamplerData, "sampler">;

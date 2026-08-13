@@ -10,8 +10,23 @@ import {
 } from "../audio";
 import type { SamplerData, SamplerFlowNode } from "../types";
 import styles from "./Module.module.scss";
+import { uploadSamplerRecording } from "../persist/supabase";
+import { useAuth } from "../auth/AuthContext";
 
 /* ---------- Audio-Seite ---------- */
+
+async function loadIfPresent(
+  player: Tone.Player,
+  url: string | null,
+): Promise<void> {
+  if (!url) return;
+  try {
+    await player.load(url);
+  } catch (err) {
+    console.error("Sample konnte nicht geladen werden:", err);
+  }
+}
+
 export function createSamplerNode(
   _id: string,
   data: SamplerData,
@@ -23,10 +38,20 @@ export function createSamplerNode(
   const player = new Tone.Player();
   player.playbackRate = data.playbackRate;
 
+  const pendingLoad: Promise<void> = loadIfPresent(player, data.sampleUrl);
+
   const gainNode = new Tone.Gain(data.gain);
   player.connect(gainNode); // Verstärkung sitzt NACH dem Player, vor dem Ausgang
 
-  return { type: "sampler", mic, recorder, player, gainNode, out: gainNode };
+  return {
+    type: "sampler",
+    mic,
+    recorder,
+    player,
+    gainNode,
+    out: gainNode,
+    pendingLoad,
+  };
 }
 
 export function updateSamplerNode(
@@ -57,6 +82,7 @@ export function disposeSamplerNode(entry: SamplerEntry): void {
 
 export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
   const { updateNodeData } = useReactFlow();
+  const { user } = useAuth();
 
   const patch = (changes: Partial<SamplerData>) => {
     updateNodeData(id, changes);
@@ -66,11 +92,34 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
   const handleRecordToggle = async () => {
     if (data.recording) {
       patch({ recording: false });
-      await stopSamplerRecording(id);
-      updateNodeData(id, { hasSample: true }); // erst nach erfolgreichem Laden bekannt
+      const blob = await stopSamplerRecording(id);
+
+      if (!blob) {
+        console.warn("Keine Aufnahme zum Hochladen vorhanden.");
+        return; // hasSample NICHT faelschlich auf true setzen
+      }
+      updateNodeData(id, { hasSample: true });
+
+      if (user) {
+        try {
+          const url = await uploadSamplerRecording(user.id, id, blob);
+          patch({ sampleUrl: url });
+        } catch (err) {
+          console.error("Aufnahme konnte nicht gespeichert werden:", err);
+        }
+      } else {
+        console.warn("Nicht eingeloggt -- Aufnahme wird nicht persistiert.");
+      }
     } else {
       patch({ recording: true });
-      await startSamplerRecording(id);
+      try {
+        await startSamplerRecording(id);
+      } catch (err) {
+        console.error("Aufnahme konnte nicht gestartet werden:", err);
+        // Zustand zurücksetzen -- sonst denkt die UI weiter, es wird
+        // aufgenommen, während der Recorder in Wirklichkeit nie lief.
+        patch({ recording: false });
+      }
     }
   };
 

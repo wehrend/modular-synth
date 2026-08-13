@@ -199,3 +199,20 @@ export async function loadProfile(id: string): Promise<Profile | null> {
   if (error || !data) return null;
   return data;
 }
+
+export async function uploadSamplerRecording(
+  userId: string,
+  sampleId: string,
+  blob: Blob
+): Promise<string> {
+  const filePath = `${userId}/${sampleId}.webm`; // Tone.Recorder liefert meist webm
+
+  const { error } = await supabase.storage
+    .from("sampler-recordings")
+    .upload(filePath, blob, { upsert: true, contentType: "audio/webm" });
+
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage.from("sampler-recordings").getPublicUrl(filePath);
+  return `${data.publicUrl}?t=${Date.now()}`;
+}

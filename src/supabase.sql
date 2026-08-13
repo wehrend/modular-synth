@@ -153,3 +153,33 @@ where p.id is null;
 drop policy if exists "profiles_insert_own" on public.profiles;
 create policy "profiles_insert_own" on public.profiles
   for insert with check (auth.uid() = id);
+
+-- =========================================================
+-- Storage: Sampler-Recordings-Bucket
+-- =========================================================
+
+insert into storage.buckets (id, name, public)
+values ('sampler-recordings', 'sampler-recordings', true)
+on conflict (id) do nothing;
+
+create policy "sampler_recordings_read_all"
+on storage.objects for select
+using (bucket_id = 'sampler-recordings');
+
+create policy "sampler_recordings_insert_own"
+on storage.objects for insert
+with check (
+  bucket_id = 'sampler-recordings'
+  and auth.uid()::text = (storage.foldername(name))[1]
+);
+
+create policy "sampler_recordings_update_own"
+on storage.objects for update
+using (
+  bucket_id = 'sampler-recordings'
+  and auth.uid()::text = (storage.foldername(name))[1]
+);
+
+grant usage on schema storage to anon, authenticated;
+grant select on storage.objects to anon, authenticated;
+grant insert, update on storage.objects to authenticated;

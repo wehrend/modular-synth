@@ -106,6 +106,12 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
     idPrefix: "sampler",
     label: "+ Sampler",
     basePosition: { x: 440, y: 460 },
-    defaults: () => ({ recording: false, hasSample: false, playbackRate: 1, gain: 1 }),
+    defaults: () => ({
+      recording: false,
+      hasSample: false,
+      playbackRate: 1,
+      gain: 1,
+      sampleUrl: null,
+    }),
   },
 ];
