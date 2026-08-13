@@ -58,7 +58,11 @@ import {
   SequencerEntry,
   updateSequencerNode,
 } from "./nodes/SequencerNode";
-import { createSamplerNode, disposeSamplerNode, updateSamplerNode } from "./nodes/SamplerNode";
+import {
+  createSamplerNode,
+  disposeSamplerNode,
+  updateSamplerNode,
+} from "./nodes/SamplerNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -119,6 +123,7 @@ export type SamplerEntry = {
   recorder: Tone.Recorder;
   player: Tone.Player;
   out: Tone.ToneAudioNode;
+  gainNode: Tone.Gain;
 };
 
 type RegistryEntry =

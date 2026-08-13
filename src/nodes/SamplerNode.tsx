@@ -12,20 +12,21 @@ import type { SamplerData, SamplerFlowNode } from "../types";
 import styles from "./Module.module.scss";
 
 /* ---------- Audio-Seite ---------- */
-
 export function createSamplerNode(
   _id: string,
   data: SamplerData,
 ): SamplerEntry {
   const mic = new Tone.UserMedia();
   const recorder = new Tone.Recorder();
-  mic.connect(recorder); // NUR zum Aufnehmen -- bewusst NICHT an out/Destination,
-  // damit kein Live-Monitoring-Feedback entstehen kann
+  mic.connect(recorder);
 
   const player = new Tone.Player();
   player.playbackRate = data.playbackRate;
 
-  return { type: "sampler", mic, recorder, player, out: player };
+  const gainNode = new Tone.Gain(data.gain);
+  player.connect(gainNode); // Verstärkung sitzt NACH dem Player, vor dem Ausgang
+
+  return { type: "sampler", mic, recorder, player, gainNode, out: gainNode };
 }
 
 export function updateSamplerNode(
@@ -34,6 +35,9 @@ export function updateSamplerNode(
 ): void {
   if (patch.playbackRate !== undefined) {
     entry.player.playbackRate = patch.playbackRate;
+  }
+  if (patch.gain !== undefined) {
+    entry.gainNode.gain.rampTo(patch.gain, 0.04);
   }
   // "recording" wird bewusst NICHT hier behandelt -- Start/Stop läuft über
   // die eigenständigen async-Funktionen startSamplerRecording/stopSamplerRecording,
@@ -46,6 +50,7 @@ export function disposeSamplerNode(entry: SamplerEntry): void {
   entry.mic.dispose();
   entry.recorder.dispose();
   entry.player.dispose();
+  entry.gainNode.dispose();
 }
 
 /* ---------- UI-Seite ---------- */
@@ -84,7 +89,6 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
       <span className={styles.hint}>
         {data.hasSample ? "Sample bereit" : "Noch keine Aufnahme"}
       </span>
-
       <Knob
         label="Rate"
         value={data.playbackRate}
@@ -94,6 +98,15 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
         log
         format={(v) => `${v.toFixed(2)}×`}
         onChange={(playbackRate) => patch({ playbackRate })}
+      />
+      <Knob
+        label="Gain"
+        value={data.gain}
+        min={0}
+        max={2.5}
+        step={0.05}
+        format={(v) => `${Math.round(v * 100)}%`}
+        onChange={(gain) => patch({ gain })}
       />
 
       <button
