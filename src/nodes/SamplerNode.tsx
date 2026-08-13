@@ -37,6 +37,11 @@ export function createSamplerNode(
 
   const player = new Tone.Player();
   player.playbackRate = data.playbackRate;
+  // Kurze Fades gegen Klick-Artefakte beim (Re-)Triggern -- ohne das
+  // knackt jeder Start/Stop bei abrupter Wellenform (v.a. bei schnellem
+  // Retriggern via Gate/Sequencer).
+  player.fadeIn = 0.005;
+  player.fadeOut = 0.02;
 
   const pendingLoad: Promise<void> = loadIfPresent(player, data.sampleUrl);
 
