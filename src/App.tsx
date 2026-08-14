@@ -77,7 +77,9 @@ const nodeTypes = {
 initialNodes.forEach((n) =>
   createAudioNode({ id: n.id, type: n.type as any, data: n.data as any }),
 );
-initialEdges.forEach((e) => connectAudio(e.source, e.target, e.targetHandle));
+initialEdges.forEach((e) =>
+  connectAudio(e.source, e.target, e.sourceHandle, e.targetHandle),
+);
 
 export default function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
@@ -115,7 +117,7 @@ export default function App() {
           }),
         );
         newEdges.forEach((e) =>
-          connectAudio(e.source, e.target, e.targetHandle),
+          connectAudio(e.source, e.target, e.sourceHandle, e.targetHandle),
         );
         seedIds(newNodes.map((n) => n.id));
         setNodes(newNodes);
@@ -222,7 +224,7 @@ export default function App() {
           }),
         );
         newEdges.forEach((e) =>
-          connectAudio(e.source, e.target, e.targetHandle),
+          connectAudio(e.source, e.target, e.sourceHandle, e.targetHandle),
         );
         seedIds(newNodes.map((n) => n.id));
 
