@@ -252,7 +252,10 @@ export function removeAudioNode(id: string): void {
 export function gateOn(id: string): void {
   const node = registry.get(id);
   if (node?.type === "envelope") node.env.triggerAttack();
-  if (node?.type === "sampler") node.player.start();
+  if (node?.type === "sampler") {
+    if (node.player.state === "started") node.player.stop();
+    node.player.start();
+  }
 }
 
 /** Gate aus: Release-Phase starten (Taste losgelassen). */
@@ -320,6 +323,7 @@ export async function stopSamplerRecording(id: string): Promise<Blob | null> {
 export function triggerSamplerPlayback(id: string): void {
   const node = registry.get(id);
   if (node?.type !== "sampler") return;
+  if (node.player.state === "started") node.player.stop();
   node.player.start();
 }
 

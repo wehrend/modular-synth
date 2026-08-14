@@ -6,6 +6,7 @@ import {
   startSamplerRecording,
   stopSamplerRecording,
   triggerSamplerPlayback,
+  resumeAudio,
   SamplerEntry,
 } from "../audio";
 import type { SamplerData, SamplerFlowNode } from "../types";
@@ -37,9 +38,7 @@ export function createSamplerNode(
 
   const player = new Tone.Player();
   player.playbackRate = data.playbackRate;
-  // Kurze Fades gegen Klick-Artefakte beim (Re-)Triggern -- ohne das
-  // knackt jeder Start/Stop bei abrupter Wellenform (v.a. bei schnellem
-  // Retriggern via Gate/Sequencer).
+  // Kurze Fades gegen Klick-Artefakte beim (Re-)Triggern.
   player.fadeIn = 0.005;
   player.fadeOut = 0.02;
 
@@ -95,6 +94,8 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
   };
 
   const handleRecordToggle = async () => {
+    await resumeAudio(); // s. Kommentar beim Play-Button weiter unten
+
     if (data.recording) {
       patch({ recording: false });
       const blob = await stopSamplerRecording(id);
@@ -133,7 +134,7 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
       <header className={styles.head}>
         <span className={styles.title}>SAMPLER</span>
         <button
-          className={`${styles.power} ${data.recording ? styles.powerOn : ""}`}
+          className={`nodrag ${styles.power} ${data.recording ? styles.powerOn : ""}`}
           onClick={handleRecordToggle}
         >
           {data.recording ? "● rec" : "rec"}
@@ -164,8 +165,14 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
       />
 
       <button
-        className={styles.power}
-        onClick={() => triggerSamplerPlayback(id)}
+        className={`nodrag ${styles.power}`}
+        onClick={async () => {
+          // AudioContext explizit aufwecken -- pointerdown auf Buttons
+          // innerhalb eines React-Flow-Node erreicht sonst wegen des
+          // Node-Drag-Handlings nie das äußere onPointerDown in App.tsx.
+          await resumeAudio();
+          triggerSamplerPlayback(id);
+        }}
         disabled={!data.hasSample}
       >
         ▶ Play
