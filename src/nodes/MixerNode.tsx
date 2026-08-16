@@ -6,6 +6,7 @@
 // der Audio-Engine, welcher Kanal-Gain gemeint ist.
 
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import { updateAudioNode } from "../audio";
 import Knob from "../components/Knob";
 import {
@@ -64,6 +65,7 @@ export function disposeMixerNode(node: MixerEntry) {
 const asPercent = (v: number) => `${Math.round(v * 100)} %`;
 
 export default function MixerNode({ id, data }: NodeProps<MixerFlowNode>) {
+  const { t } = useTranslation();
   const { updateNodeData } = useReactFlow();
 
   const patch = (changes: Partial<MixerData>) => {
@@ -74,7 +76,7 @@ export default function MixerNode({ id, data }: NodeProps<MixerFlowNode>) {
   return (
     <div className={styles.module}>
       <header className={styles.head}>
-        <span className={styles.title}>MIX</span>
+        <span className={styles.title}>{t("modules.mixer.title")}</span>
       </header>
 
       {/* Buchsenleiste: Handles gleichmäßig über die Modulhöhe verteilt.
@@ -95,7 +97,7 @@ export default function MixerNode({ id, data }: NodeProps<MixerFlowNode>) {
         {MIXER_CHANNELS.map((ch, i) => (
           <Knob
             key={ch}
-            label={`In ${i + 1}`}
+            label={t("modules.mixer.inLabel", { n: i + 1 })}
             value={data[ch]}
             min={0}
             max={1}
@@ -108,7 +110,7 @@ export default function MixerNode({ id, data }: NodeProps<MixerFlowNode>) {
 
       <div className={styles.mixerMaster}>
         <Knob
-          label="Master"
+          label={t("modules.mixer.masterLabel")}
           value={data.master}
           min={0}
           max={1}

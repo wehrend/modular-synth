@@ -4,6 +4,7 @@
 // Klänge -- klassischer Sci-Fi-/Roboterstimmen-Sound.
 
 import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import type { RingModFlowNode } from "../types";
 import styles from "./Module.module.scss";
 import * as Tone from "tone";
@@ -45,19 +46,22 @@ export function disposeRingModNode(node: RingModEntry) {
 }
 
 export default function RingModNode({}: NodeProps<RingModFlowNode>) {
+  const { t } = useTranslation();
   return (
     <div className={styles.module}>
       <header className={styles.head}>
-        <span className={styles.title}>RING-MOD</span>
+        <span className={styles.title}>{t("modules.ringmod.title")}</span>
       </header>
 
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="carrier" />
-        <span className={styles.ioLabel}>Träger</span>
+        <span className={styles.ioLabel}>
+          {t("modules.ringmod.carrierLabel")}
+        </span>
       </div>
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="modulator" />
-        <span className={styles.ioLabel}>Mod</span>
+        <span className={styles.ioLabel}>{t("modules.ringmod.modLabel")}</span>
       </div>
 
       <Handle type="source" position={Position.Right} id="out" />

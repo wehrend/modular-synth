@@ -3,7 +3,9 @@ import type { AppNode } from "./types";
 export type ModuleCatalogEntry = {
   type: AppNode["type"];
   idPrefix: string;
-  label: string;
+  labelKey: string; // i18next-Schlüssel, z.B. "modules.catalog.osc" -- Katalog liegt im
+  // Modul-Scope (kein Hook-Kontext), deshalb wird hier NICHT übersetzt,
+  // sondern erst beim Rendern in App.tsx via t(entry.labelKey).
   basePosition: { x: number; y: number };
   defaults: () => AppNode["data"];
 };
@@ -12,7 +14,7 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
   {
     type: "osc",
     idPrefix: "osc",
-    label: "+ Oszillator",
+    labelKey: "modules.catalog.osc",
     basePosition: { x: 60, y: 320 },
     // moduleCatalog.ts
     defaults: () => ({
@@ -25,14 +27,14 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
   {
     type: "mixer",
     idPrefix: "mixer",
-    label: "+ Mixer",
+    labelKey: "modules.catalog.mixer",
     basePosition: { x: 300, y: 320 },
     defaults: () => ({ ch1: 0.8, ch2: 0.8, ch3: 0.8, master: 0.8 }),
   },
   {
     type: "vcf",
     idPrefix: "filter",
-    label: "+ Filter",
+    labelKey: "modules.catalog.vcf",
     basePosition: { x: 440, y: 460 },
     defaults: () => ({
       cutoff: 1200,
@@ -45,21 +47,21 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
   {
     type: "envelope",
     idPrefix: "envelope",
-    label: "+ ADSR / Envelope",
+    labelKey: "modules.catalog.envelope",
     basePosition: { x: 440, y: 460 },
     defaults: () => ({ attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.5 }),
   },
   {
     type: "ringmod",
     idPrefix: "ringmod",
-    label: "+ Ring Mod",
+    labelKey: "modules.catalog.ringmod",
     basePosition: { x: 440, y: 460 },
     defaults: () => ({}),
   },
   {
     type: "wasp",
     idPrefix: "wasp",
-    label: "+ Wasp Filter",
+    labelKey: "modules.catalog.wasp",
     basePosition: { x: 440, y: 460 },
     defaults: () => ({
       cutoff: 1200,
@@ -71,28 +73,28 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
   {
     type: "lfo",
     idPrefix: "lfo",
-    label: "+ LFO",
+    labelKey: "modules.catalog.lfo",
     basePosition: { x: 440, y: 460 },
     defaults: () => ({ rate: 4.4, waveform: "sawtooth" }),
   },
   {
     type: "noise",
     idPrefix: "noise",
-    label: "+ Noise",
+    labelKey: "modules.catalog.noise",
     basePosition: { x: 440, y: 460 },
     defaults: () => ({ whiteVolume: -20, pinkVolume: -20, brownVolume: -20 }),
   },
   {
     type: "vca",
     idPrefix: "vca",
-    label: "+ VCA",
+    labelKey: "modules.catalog.vca",
     basePosition: { x: 440, y: 460 },
     defaults: () => ({ gain: 0.5 }),
   },
   {
     type: "sequencer",
     idPrefix: "sequencer",
-    label: "+ Sequencer",
+    labelKey: "modules.catalog.sequencer",
     basePosition: { x: 440, y: 460 },
     defaults: () => ({
       steps: 8,
@@ -100,5 +102,5 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
       running: false,
       cvValues: [220, 262, 294, 330, 349, 330, 294, 262],
     }),
-  },
+  }
 ];

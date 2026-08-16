@@ -2,6 +2,7 @@
 // Quelle: ein Tone.Oscillator mit Frequenz, Wellenform und An/Aus.
 
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
 import styles from "./Module.module.scss";
 import { updateAudioNode } from "../audio";
@@ -30,11 +31,7 @@ export function createOscNode(_id: string, data: OscData): OscEntry {
 
   const cvAmt = new Tone.Gain(data.cvAmount);
   cvAmt.connect(osc.frequency); // addiert sich auf den Grundwert, wie bei deinem VCF
-
-  setInterval(() => {
-    console.log("VCO frequency.value:", osc.frequency.value);
-  }, 500);
-
+  
   return { type: "osc", osc, cvAmt, ins: { cv: cvAmt }, out: osc };
 }
 
@@ -60,14 +57,15 @@ export function disposeOscNode(node: OscEntry) {
   node.osc.dispose();
 }
 
-const WAVEFORM_LABELS: Record<Waveform, string> = {
-  sine: "Sin",
-  triangle: "Tri",
-  sawtooth: "Saw",
-  square: "Sqr",
+const WAVEFORM_KEYS: Record<Waveform, string> = {
+  sine: "common.waveforms.sine",
+  triangle: "common.waveforms.triangle",
+  sawtooth: "common.waveforms.sawtooth",
+  square: "common.waveforms.square",
 };
 
 export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
+  const { t } = useTranslation();
   const { updateNodeData } = useReactFlow();
 
   // UI-State und Audiograph immer gemeinsam aktualisieren
@@ -79,19 +77,19 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
   return (
     <div className={`${styles.module} ${data.running ? styles.isRunning : ""}`}>
       <header className={styles.head}>
-        <span className={styles.title}>VCO</span>
+        <span className={styles.title}>{t("modules.vco.title")}</span>
         <button
           className={`${styles.power} ${data.running ? styles.powerOn : ""}`}
           onClick={() => patch({ running: !data.running })}
           aria-label={
-            data.running ? "Oszillator stoppen" : "Oszillator starten"
+            data.running ? t("modules.vco.ariaStop") : t("modules.vco.ariaStart")
           }
         >
-          {data.running ? "an" : "aus"}
+          {data.running ? t("modules.vco.on") : t("modules.vco.off")}
         </button>
       </header>
       <Knob
-        label="Frequenz"
+        label={t("common.frequencyLabel")}
         value={data.frequency}
         min={40}
         max={1600}
@@ -102,10 +100,10 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
       />
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="cv" />
-        <span className={styles.ioLabel}>CV</span>
+        <span className={styles.ioLabel}>{t("common.cv")}</span>
       </div>
       <Knob
-        label="Amount"
+        label={t("common.amountLabel")}
         value={data.cvAmount}
         min={1}
         max={1000}
@@ -113,10 +111,7 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
         format={(v) => `±${v}`}
         onChange={(cvAmount) => patch({ cvAmount })}
       />
-      <span className={styles.ioLabel}>
-        Bei Sequencer-CV: niedrig einstellen (~1). 
-        Bei LFO-CV: höher für hörbaren Hub.
-      </span>
+      <span className={styles.ioLabel}>{t("modules.vco.cvHint")}</span>
       <div className={`${styles.row} ${styles.rowGap}`}>
         {WAVEFORMS.map((w) => (
           <button
@@ -124,7 +119,7 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
             className={`${styles.chip} ${data.waveform === w ? styles.chipActive : ""}`}
             onClick={() => patch({ waveform: w })}
           >
-            {WAVEFORM_LABELS[w]}
+            {t(WAVEFORM_KEYS[w])}
           </button>
         ))}
       </div>
