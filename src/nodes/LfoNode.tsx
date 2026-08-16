@@ -2,6 +2,7 @@
 // Quelle: ein Tone.Oscillator mit Frequenz, Wellenform und An/Aus.
 
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
 import styles from "./Module.module.scss";
 import { updateAudioNode } from "../audio";
@@ -42,14 +43,15 @@ export function disposeLfoNode(entry: LfoEntry): void {
   entry.osc.dispose();
 }
 
-const WAVEFORM_LABELS: Record<Waveform, string> = {
-  sine: "Sin",
-  triangle: "Tri",
-  sawtooth: "Saw",
-  square: "Sqr",
+const WAVEFORM_KEYS: Record<Waveform, string> = {
+  sine: "common.waveforms.sine",
+  triangle: "common.waveforms.triangle",
+  sawtooth: "common.waveforms.sawtooth",
+  square: "common.waveforms.square",
 };
 
 export default function LfoNode({ id, data }: NodeProps<LfoFlowNode>) {
+  const { t } = useTranslation();
   const { updateNodeData } = useReactFlow();
 
   // UI-State und Audiograph immer gemeinsam aktualisieren
@@ -61,11 +63,11 @@ export default function LfoNode({ id, data }: NodeProps<LfoFlowNode>) {
   return (
     <div className={`${styles.module} ${styles.isRunning}`}>
       <header className={styles.head}>
-        <span className={styles.title}>LFO</span>
+        <span className={styles.title}>{t("modules.lfo.title")}</span>
       </header>
 
       <Knob
-        label="Frequenz"
+        label={t("common.frequencyLabel")}
         value={data.rate}
         min={0.2}
         max={40}
@@ -82,7 +84,7 @@ export default function LfoNode({ id, data }: NodeProps<LfoFlowNode>) {
             className={`${styles.chip} ${data.waveform === w ? styles.chipActive : ""}`}
             onClick={() => patch({ waveform: w })}
           >
-            {WAVEFORM_LABELS[w]}
+            {t(WAVEFORM_KEYS[w])}
           </button>
         ))}
       </div>

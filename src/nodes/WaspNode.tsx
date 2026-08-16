@@ -1,6 +1,7 @@
 // WaspNode.tsx
 import * as Tone from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
 import { updateAudioNode } from "../audio";
 import type { WaspData, WaspFlowNode } from "../types";
@@ -119,6 +120,7 @@ export function disposeWaspNode(entry: WaspEntry): void {
 /* ---------- UI-Seite ---------- */
 
 export default function WaspNode({ id, data }: NodeProps<WaspFlowNode>) {
+  const { t } = useTranslation();
   const { updateNodeData } = useReactFlow();
 
   const patch = (changes: Partial<WaspData>) => {
@@ -129,17 +131,17 @@ export default function WaspNode({ id, data }: NodeProps<WaspFlowNode>) {
   return (
     <div className={styles.module}>
       <header className={styles.head}>
-        <span className={styles.title}>WASP</span>
+        <span className={styles.title}>{t("modules.wasp.title")}</span>
       </header>
 
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="in" />
-        <span className={styles.ioLabel}>In</span>
+        <span className={styles.ioLabel}>{t("common.in")}</span>
       </div>
 
       <div className={styles.row}>
         <Knob
-          label="Cutoff"
+          label={t("modules.vcf.cutoffLabel")}
           value={data.cutoff}
           min={40}
           max={12000}
@@ -151,7 +153,7 @@ export default function WaspNode({ id, data }: NodeProps<WaspFlowNode>) {
           onChange={(cutoff) => patch({ cutoff })}
         />
         <Knob
-          label="Res"
+          label={t("modules.wasp.resonanceLabel")}
           value={data.resonance}
           min={0}
           max={1}
@@ -160,7 +162,7 @@ export default function WaspNode({ id, data }: NodeProps<WaspFlowNode>) {
           onChange={(resonance) => patch({ resonance })}
         />
         <Knob
-          label="Drive"
+          label={t("modules.wasp.driveLabel")}
           value={data.drive}
           min={0}
           max={1}
@@ -171,7 +173,7 @@ export default function WaspNode({ id, data }: NodeProps<WaspFlowNode>) {
       </div>
       <div className={styles.row}>
         <Knob
-          label="CV Amount"
+          label={t("modules.wasp.cvAmountLabel")}
           value={data.cutoffAmount}
           min={0}
           max={5000}
@@ -182,7 +184,9 @@ export default function WaspNode({ id, data }: NodeProps<WaspFlowNode>) {
       </div>
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="cutoff" />
-        <span className={styles.ioLabel}>Cutoff CV</span>
+        <span className={styles.ioLabel}>
+          {t("modules.wasp.cutoffCvLabel")}
+        </span>
       </div>
 
       <Handle type="source" position={Position.Right} id="out" />

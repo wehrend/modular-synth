@@ -1,5 +1,6 @@
 import * as Tone from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
 import { updateAudioNode, fireGate } from "../audio";
 import type { SequencerData, SequencerFlowNode } from "../types";
@@ -33,23 +34,19 @@ export function createSequencerNode(
   // Vorherigen Ausgang abschalten, aktuellen einschalten -- Ring-Prinzip
   // des CD4017: immer nur EIN Ausgang gleichzeitig "high".
   const loop = new Tone.Loop((time) => {
-    console.log("LOOP TICK");
     const prev = (current - 1 + data.steps) % data.steps;
     fireGate(id, `gate${prev}`, false);
     fireGate(id, `gate${current}`, true);
     const freq = data.cvValues[current] ?? 220;
-    console.log("Sequencer step:", { current, freq }); // ← temporär
     pitchSignal.setValueAtTime(data.cvValues[current] ?? 220, time);
     current = (current + 1) % data.steps;
   }, "8n");
 
   Tone.getTransport().bpm.value = data.bpm;
-  console.log("Transport state vor start:", Tone.getTransport().state);
   if (data.running) {
     loop.start(0);
     Tone.getTransport().start();
   }
-  console.log("Transport state nach start:", Tone.getTransport().state);
   return {
     type: "sequencer",
     loop,
@@ -88,6 +85,7 @@ export default function SequencerNode({
   id,
   data,
 }: NodeProps<SequencerFlowNode>) {
+  const { t } = useTranslation();
   const { updateNodeData } = useReactFlow();
 
   const patch = (changes: Partial<SequencerData>) => {
@@ -100,17 +98,19 @@ export default function SequencerNode({
   return (
     <div className={styles.module}>
       <header className={styles.head}>
-        <span className={styles.title}>Sequencer</span>
+        <span className={styles.title}>{t("modules.sequencer.title")}</span>
         <button
           className={`${styles.power} ${data.running ? styles.powerOn : ""}`}
           onClick={() => patch({ running: !data.running })}
         >
-          {data.running ? "läuft" : "aus"}
+          {data.running
+            ? t("modules.sequencer.running")
+            : t("modules.sequencer.stopped")}
         </button>
       </header>
 
       <Knob
-        label="BPM"
+        label={t("modules.sequencer.bpmLabel")}
         value={data.bpm}
         min={40}
         max={240}
@@ -120,9 +120,11 @@ export default function SequencerNode({
       />
       {activeOutputs.map((i) => (
         <div className={styles.ioRow} key={i}>
-          <span className={styles.ioLabel}>Q{i}</span>
+          <span className={styles.ioLabel}>
+            {t("modules.sequencer.stepLabel", { n: i })}
+          </span>
           <Knob
-            label="CV"
+            label={t("common.cv")}
             value={data.cvValues[i] ?? 220}
             min={40}
             max={1600}
@@ -140,7 +142,9 @@ export default function SequencerNode({
       ))}
 
       <div className={styles.ioRow}>
-        <span className={styles.ioLabel}>CV Out</span>
+        <span className={styles.ioLabel}>
+          {t("modules.sequencer.cvOutLabel")}
+        </span>
         <Handle type="source" position={Position.Right} id="cv" />
       </div>
     </div>

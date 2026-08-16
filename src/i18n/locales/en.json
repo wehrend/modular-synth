@@ -40,7 +40,16 @@
     "cv": "CV",
     "amountLabel": "Amount",
     "rateLabel": "Rate",
-    "gainLabel": "Gain"
+    "gainLabel": "Gain",
+    "volLabel": "Vol",
+    "audioLabel": "Audio",
+    "frequencyLabel": "Frequency",
+    "waveforms": {
+      "sine": "Sin",
+      "triangle": "Tri",
+      "sawtooth": "Saw",
+      "square": "Sqr"
+    }
   },
   "modules": {
     "catalog": {
@@ -61,14 +70,53 @@
       "off": "off",
       "ariaStart": "Start oscillator",
       "ariaStop": "Stop oscillator",
-      "frequencyLabel": "Frequency",
-      "cvHint": "With sequencer CV: set low (~1). With LFO CV: higher for an audible sweep.",
-      "waveforms": {
-        "sine": "Sin",
-        "triangle": "Tri",
-        "sawtooth": "Saw",
-        "square": "Sqr"
-      }
+      "cvHint": "With sequencer CV: set low (~1). With LFO CV: higher for an audible sweep."
+    },
+    "lfo": {
+      "title": "LFO"
+    },
+    "mixer": {
+      "title": "MIX",
+      "inLabel": "In {{n}}",
+      "masterLabel": "Master"
+    },
+    "noise": {
+      "title": "NOISE",
+      "white": "White",
+      "pink": "Pink",
+      "brown": "Brown"
+    },
+    "vca": {
+      "title": "VCA"
+    },
+    "ringmod": {
+      "title": "RING-MOD",
+      "carrierLabel": "Carrier",
+      "modLabel": "Mod"
+    },
+    "wasp": {
+      "title": "WASP",
+      "resonanceLabel": "Res",
+      "driveLabel": "Drive",
+      "cvAmountLabel": "CV Amount",
+      "cutoffCvLabel": "Cutoff CV"
+    },
+    "sequencer": {
+      "title": "Sequencer",
+      "running": "running",
+      "stopped": "off",
+      "bpmLabel": "BPM",
+      "stepLabel": "Q{{n}}",
+      "cvOutLabel": "CV Out"
+    },
+    "output": {
+      "title": "OUT",
+      "lockedHint": "Cannot be deleted",
+      "muted": "muted",
+      "unmuted": "loud",
+      "levelLabel": "Level",
+      "left": "L",
+      "right": "R"
     },
     "vcf": {
       "title": "VCF",

@@ -31,7 +31,7 @@ export function createOscNode(_id: string, data: OscData): OscEntry {
 
   const cvAmt = new Tone.Gain(data.cvAmount);
   cvAmt.connect(osc.frequency); // addiert sich auf den Grundwert, wie bei deinem VCF
-
+  
   return { type: "osc", osc, cvAmt, ins: { cv: cvAmt }, out: osc };
 }
 
@@ -58,10 +58,10 @@ export function disposeOscNode(node: OscEntry) {
 }
 
 const WAVEFORM_KEYS: Record<Waveform, string> = {
-  sine: "modules.vco.waveforms.sine",
-  triangle: "modules.vco.waveforms.triangle",
-  sawtooth: "modules.vco.waveforms.sawtooth",
-  square: "modules.vco.waveforms.square",
+  sine: "common.waveforms.sine",
+  triangle: "common.waveforms.triangle",
+  sawtooth: "common.waveforms.sawtooth",
+  square: "common.waveforms.square",
 };
 
 export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
@@ -82,16 +82,14 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
           className={`${styles.power} ${data.running ? styles.powerOn : ""}`}
           onClick={() => patch({ running: !data.running })}
           aria-label={
-            data.running
-              ? t("modules.vco.ariaStop")
-              : t("modules.vco.ariaStart")
+            data.running ? t("modules.vco.ariaStop") : t("modules.vco.ariaStart")
           }
         >
           {data.running ? t("modules.vco.on") : t("modules.vco.off")}
         </button>
       </header>
       <Knob
-        label={t("modules.vco.frequencyLabel")}
+        label={t("common.frequencyLabel")}
         value={data.frequency}
         min={40}
         max={1600}

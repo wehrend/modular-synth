@@ -1,6 +1,7 @@
 // VcaNode.tsx
 import * as Tone from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
 import { updateAudioNode } from "../audio";
 import type { VcaData, VcaFlowNode } from "../types";
@@ -52,6 +53,7 @@ export function disposeVcaNode(entry: VcaEntry): void {
 /* ---------- UI-Seite ---------- */
 
 export default function VcaNode({ id, data }: NodeProps<VcaFlowNode>) {
+  const { t } = useTranslation();
   const { updateNodeData } = useReactFlow();
 
   const patch = (changes: Partial<VcaData>) => {
@@ -62,16 +64,16 @@ export default function VcaNode({ id, data }: NodeProps<VcaFlowNode>) {
   return (
     <div className={styles.module}>
       <header className={styles.head}>
-        <span className={styles.title}>VCA</span>
+        <span className={styles.title}>{t("modules.vca.title")}</span>
       </header>
 
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="audio" />
-        <span className={styles.ioLabel}>Audio</span>
+        <span className={styles.ioLabel}>{t("common.audioLabel")}</span>
       </div>
 
       <Knob
-        label="Gain"
+        label={t("common.gainLabel")}
         value={data.gain}
         min={0}
         max={1}
@@ -82,7 +84,7 @@ export default function VcaNode({ id, data }: NodeProps<VcaFlowNode>) {
 
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="cv" />
-        <span className={styles.ioLabel}>CV</span>
+        <span className={styles.ioLabel}>{t("common.cv")}</span>
       </div>
 
       <Handle type="source" position={Position.Right} id="out" />

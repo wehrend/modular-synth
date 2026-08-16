@@ -40,20 +40,29 @@
     "cv": "CV",
     "amountLabel": "Amount",
     "rateLabel": "Rate",
-    "gainLabel": "Gain"
+    "gainLabel": "Gain",
+    "volLabel": "Vol",
+    "audioLabel": "Audio",
+    "frequencyLabel": "Frequenz",
+    "waveforms": {
+      "sine": "Sin",
+      "triangle": "Tri",
+      "sawtooth": "Saw",
+      "square": "Sqr"
+    }
   },
   "modules": {
     "catalog": {
       "osc": "+ Oszillator",
       "mixer": "+ Mixer",
       "vcf": "+ Filter",
-      "envelope": "+ ADSR / Hüllkurve",
+      "envelope": "+ ADSR / Envelope",
       "ringmod": "+ Ring Mod",
       "wasp": "+ Wasp Filter",
       "lfo": "+ LFO",
       "noise": "+ Noise",
       "vca": "+ VCA",
-      "sequencer": "+ Sequenzer"
+      "sequencer": "+ Sequencer"
     },
     "vco": {
       "title": "VCO",
@@ -61,14 +70,53 @@
       "off": "aus",
       "ariaStart": "Oszillator starten",
       "ariaStop": "Oszillator stoppen",
-      "frequencyLabel": "Frequenz",
-      "cvHint": "Bei Sequencer-CV: niedrig einstellen (~1). Bei LFO-CV: höher für hörbaren Hub.",
-      "waveforms": {
-        "sine": "Sin",
-        "triangle": "Tri",
-        "sawtooth": "Saw",
-        "square": "Sqr"
-      }
+      "cvHint": "Bei Sequencer-CV: niedrig einstellen (~1). Bei LFO-CV: höher für hörbaren Hub."
+    },
+    "lfo": {
+      "title": "LFO"
+    },
+    "mixer": {
+      "title": "MIX",
+      "inLabel": "In {{n}}",
+      "masterLabel": "Master"
+    },
+    "noise": {
+      "title": "NOISE",
+      "white": "White",
+      "pink": "Pink",
+      "brown": "Brown"
+    },
+    "vca": {
+      "title": "VCA"
+    },
+    "ringmod": {
+      "title": "RING-MOD",
+      "carrierLabel": "Träger",
+      "modLabel": "Mod"
+    },
+    "wasp": {
+      "title": "WASP",
+      "resonanceLabel": "Res",
+      "driveLabel": "Drive",
+      "cvAmountLabel": "CV Amount",
+      "cutoffCvLabel": "Cutoff CV"
+    },
+    "sequencer": {
+      "title": "Sequencer",
+      "running": "läuft",
+      "stopped": "aus",
+      "bpmLabel": "BPM",
+      "stepLabel": "Q{{n}}",
+      "cvOutLabel": "CV Out"
+    },
+    "output": {
+      "title": "OUT",
+      "lockedHint": "Kann nicht gelöscht werden",
+      "muted": "stumm",
+      "unmuted": "laut",
+      "levelLabel": "Pegel",
+      "left": "L",
+      "right": "R"
     },
     "vcf": {
       "title": "VCF",
