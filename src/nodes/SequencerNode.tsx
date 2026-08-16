@@ -37,7 +37,6 @@ export function createSequencerNode(
     const prev = (current - 1 + data.steps) % data.steps;
     fireGate(id, `gate${prev}`, false);
     fireGate(id, `gate${current}`, true);
-    const freq = data.cvValues[current] ?? 220;
     pitchSignal.setValueAtTime(data.cvValues[current] ?? 220, time);
     current = (current + 1) % data.steps;
   }, "8n");

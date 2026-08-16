@@ -57,7 +57,6 @@ import ModuleToolbar from "./components/ModuleToolbar";
 import { createAddModuleHandler } from "./lib/addModule";
 import { MODULE_CATALOG } from "./moduleCatalog";
 import SequencerNode from "./nodes/SequencerNode";
-
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./components/LanguageSwitcher";
 
@@ -129,30 +128,31 @@ export default function App() {
         setSearchParams({}, { replace: true });
       })
       .catch((err) =>
-        window.alert(err instanceof Error ? err.message : "Fehler beim Laden."),
+        window.alert(
+          err instanceof Error ? err.message : t("app.errors.loadFailed"),
+        ),
       );
   }, []); // bewusst nur beim Mount
 
-  // App.tsx
-  const handleTogglePublic = useCallback(async (id: string, next: boolean) => {
-    console.log("handleTogglePublic aufgerufen:", { id, next });
-    try {
-      await togglePublic(id, next);
-      console.log("togglePublic erfolgreich");
-      setPresetRefresh((v) => v + 1);
-    } catch (err) {
-      console.log("togglePublic Fehler:", err);
-      window.alert(
-        err instanceof Error
-          ? err.message
-          : "Fehler beim Ändern der Sichtbarkeit.",
-      );
-    }
-  }, []);
+  const handleTogglePublic = useCallback(
+    async (id: string, next: boolean) => {
+      try {
+        await togglePublic(id, next);
+        setPresetRefresh((v) => v + 1);
+      } catch (err) {
+        window.alert(
+          err instanceof Error
+            ? err.message
+            : t("app.errors.visibilityChangeFailed"),
+        );
+      }
+    },
+    [t],
+  );
 
   const handleSave = async () => {
     if (!user) {
-      window.alert("Bitte zuerst anmelden, um Presets zu speichern.");
+      window.alert(t("app.errors.loginRequiredToSave"));
       return;
     }
 
@@ -174,14 +174,14 @@ export default function App() {
       setPresetRefresh((v) => v + 1);
     } catch (err) {
       window.alert(
-        err instanceof Error ? err.message : "Fehler beim Speichern.",
+        err instanceof Error ? err.message : t("app.errors.saveFailed"),
       );
     }
   };
 
   const handleSaveAs = () => {
     if (!user) {
-      window.alert("Bitte zuerst anmelden, um Presets zu speichern.");
+      window.alert(t("app.errors.loginRequiredToSave"));
       return;
     }
     setSaveDialogOpen(true);
@@ -208,7 +208,7 @@ export default function App() {
       setPresetRefresh((v) => v + 1);
     } catch (err) {
       window.alert(
-        err instanceof Error ? err.message : "Fehler beim Speichern.",
+        err instanceof Error ? err.message : t("app.errors.saveFailed"),
       );
     }
   };
@@ -237,10 +237,12 @@ export default function App() {
         setActivePresetId(id);
         setActivePresetName(name); // ← ergänzt
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : "Fehler beim Laden.");
+        window.alert(
+          err instanceof Error ? err.message : t("app.errors.loadFailed"),
+        );
       }
     },
-    [nodes, setNodes, setEdges],
+    [nodes, setNodes, setEdges, t],
   );
 
   const handleDeletePreset = useCallback(
@@ -257,11 +259,11 @@ export default function App() {
         setPresetRefresh((v) => v + 1);
       } catch (err) {
         window.alert(
-          err instanceof Error ? err.message : "Fehler beim Löschen.",
+          err instanceof Error ? err.message : t("app.errors.deleteFailed"),
         );
       }
     },
-    [activePresetId],
+    [activePresetId, t],
   );
 
   const onConnect = useCallback(

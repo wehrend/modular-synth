@@ -1,4 +1,15 @@
 {
+  "app": {
+    "errors": {
+      "loadFailed": "Fehler beim Laden.",
+      "visibilityChangeFailed": "Fehler beim Ändern der Sichtbarkeit.",
+      "loginRequiredToSave": "Bitte zuerst anmelden, um Presets zu speichern.",
+      "saveFailed": "Fehler beim Speichern.",
+      "deleteFailed": "Fehler beim Löschen.",
+      "presetNotFound": "Preset mit ID \"{{id}}\" nicht gefunden.",
+      "patchNotFoundOrPrivate": "Patch nicht gefunden oder nicht öffentlich."
+    }
+  },
   "toolbar": {
     "discover": "Entdecken",
     "title": "Modular Synth",
