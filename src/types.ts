@@ -7,14 +7,6 @@ import type { Node } from "@xyflow/react";
 
 export const WAVEFORMS = ["sine", "triangle", "sawtooth", "square"] as const;
 
-// types.ts
-export const WAVEFORM_LABELS: Record<Waveform, string> = {
-  sine: "Sin",
-  triangle: "Tri",
-  sawtooth: "Saw",
-  square: "Sqr",
-};
-
 export type Waveform = (typeof WAVEFORMS)[number];
 
 export type OscData = {
@@ -104,6 +96,16 @@ export type SequencerData = {
 
 export type SequencerFlowNode = Node<SequencerData, "sequencer">;
 
+export type SamplerData = {
+  recording: boolean;
+  hasSample: boolean; // reiner UI-Zustand: gibt es schon eine Aufnahme?
+  playbackRate: number; // Pitch/Geschwindigkeit der Wiedergabe
+  gain: number;
+  sampleUrl: string | null;
+};
+
+export type SamplerFlowNode = Node<SamplerData, "sampler">;
+
 /** Diskriminierte Union aller Knoten der App. */
 export type AppNode =
   | OscFlowNode
@@ -116,6 +118,7 @@ export type AppNode =
   | NoiseFlowNode
   | VcaFlowNode
   | SequencerFlowNode
+  | SamplerFlowNode
   | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
@@ -130,6 +133,7 @@ export type AudioNodeInit =
   | { id: string; type: "noise"; data: NoiseData }
   | { id: string; type: "vca"; data: VcaData }
   | { id: string; type: "sequencer"; data: SequencerData }
+  | { id: string; type: "sampler"; data: SamplerData }
   | { id: string; type: "out"; data: OutData };
 
 /** Partielle Parameter-Updates, wie sie von den Reglern kommen. */
@@ -144,4 +148,5 @@ export type NodePatch =
   | Partial<NoiseData>
   | Partial<VcaData>
   | Partial<SequencerData>
+  | Partial<SamplerData>
   | Partial<OutData>;
