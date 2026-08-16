@@ -1,4 +1,5 @@
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
 import { updateAudioNode, VcfEntry } from "../audio";
 import type { VcfData, VcfFlowNode } from "../types";
@@ -53,7 +54,6 @@ export function disposeFilterNode(node: VcfEntry) {
   node.filter.dispose(); // ins.in ist der Filter selbst — nicht doppelt disposen
 }
 
-
 // const FILTER_TYPES: ReadonlyArray<{ value: FilterType; label: string }> = [
 //   { value: "lowpass", label: "LP" },
 //   { value: "highpass", label: "HP" },
@@ -61,6 +61,7 @@ export function disposeFilterNode(node: VcfEntry) {
 // ];
 
 export default function FilterNode({ id, data }: NodeProps<VcfFlowNode>) {
+  const { t } = useTranslation();
   const { updateNodeData } = useReactFlow();
 
   const patch = (changes: Partial<VcfData>) => {
@@ -71,19 +72,19 @@ export default function FilterNode({ id, data }: NodeProps<VcfFlowNode>) {
   return (
     <div className="module module--vcf">
       <header className="module__head">
-        <span className={styles.title}>VCF</span>
+        <span className={styles.title}>{t("modules.vcf.title")}</span>
       </header>
 
       {/* Audio-Eingang */}
       <div className="io-row">
         <Handle type="target" position={Position.Left} id="in" />
-        <span className="module__label">In</span>
+        <span className="module__label">{t("common.in")}</span>
       </div>
 
       {/* Hauptregler */}
       <div className="module__row module__row--gap">
         <Knob
-          label="Cutoff"
+          label={t("modules.vcf.cutoffLabel")}
           value={data.cutoff}
           min={40}
           max={12000}
@@ -95,7 +96,7 @@ export default function FilterNode({ id, data }: NodeProps<VcfFlowNode>) {
           onChange={(cutoff) => patch({ cutoff })}
         />
         <Knob
-          label="Resonanz"
+          label={t("modules.vcf.resonanceLabel")}
           value={data.resonance}
           min={0}
           max={15}
@@ -108,9 +109,9 @@ export default function FilterNode({ id, data }: NodeProps<VcfFlowNode>) {
       {/* CV-Eingang 1: Cutoff */}
       <div className="io-row">
         <Handle type="target" position={Position.Left} id="cutoff" />
-        <span className="module__label">Cutoff CV</span>
+        <span className="module__label">{t("modules.vcf.cutoffCvLabel")}</span>
         <Knob
-          label="Hub"
+          label={t("common.amountLabel")}
           value={data.cutoffAmount}
           min={0}
           max={5000}
@@ -123,9 +124,11 @@ export default function FilterNode({ id, data }: NodeProps<VcfFlowNode>) {
       {/* CV-Eingang 2: Resonanz */}
       <div className="io-row">
         <Handle type="target" position={Position.Left} id="resonance" />
-        <span className="module__label">Res CV</span>
+        <span className="module__label">
+          {t("modules.vcf.resonanceCvLabel")}
+        </span>
         <Knob
-          label="Hub"
+          label={t("common.amountLabel")}
           value={data.resonanceAmount}
           min={0}
           max={10}

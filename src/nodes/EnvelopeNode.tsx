@@ -1,4 +1,5 @@
 import { Handle, NodeProps, Position, useReactFlow } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import { EnvelopeData, EnvelopeFlowNode } from "../types";
 import { gateOff, gateOn, updateAudioNode } from "../audio";
 import Knob from "../components/Knob";
@@ -49,7 +50,9 @@ export default function EnvelopeNode({
   id,
   data,
 }: NodeProps<EnvelopeFlowNode>) {
+  const { t } = useTranslation();
   const { updateNodeData } = useReactFlow();
+
   const gateHeld = useRef(false); // Wächter gegen Key-Repeat
   const [gateActive, setGateActive] = useState(false); // nur fürs UI
 
@@ -87,18 +90,18 @@ export default function EnvelopeNode({
   return (
     <div className="module module--adsr">
       <header className="module__head">
-        <span className={styles.title}>ADSR</span>
+        <span className={styles.title}>{t("modules.envelope.title")}</span>
         <span className={`power ${gateActive ? "power--on" : ""}`}>
-          {GATE_KEY === " " ? "Leertaste" : GATE_KEY}
+          {GATE_KEY === " " ? t("modules.envelope.gateKeySpace") : GATE_KEY}
         </span>
       </header>
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="gate" />
-        <span className={styles.ioLabel}>Gate</span>
+        <span className={styles.ioLabel}>{t("common.gate")}</span>
       </div>
       <div className="module__row module__row--gap">
         <Knob
-          label="A"
+          label={t("modules.envelope.attackLabel")}
           value={data.attack}
           min={0.001}
           max={2}
@@ -108,7 +111,7 @@ export default function EnvelopeNode({
           onChange={(attack) => patch({ attack })}
         />
         <Knob
-          label="D"
+          label={t("modules.envelope.decayLabel")}
           value={data.decay}
           min={0.001}
           max={2}
@@ -120,7 +123,7 @@ export default function EnvelopeNode({
       </div>
       <div className="module__row module__row--gap">
         <Knob
-          label="S"
+          label={t("modules.envelope.sustainLabel")}
           value={data.sustain}
           min={0}
           max={1}
@@ -129,7 +132,7 @@ export default function EnvelopeNode({
           onChange={(sustain) => patch({ sustain })}
         />
         <Knob
-          label="R"
+          label={t("modules.envelope.releaseLabel")}
           value={data.release}
           min={0.001}
           max={5}

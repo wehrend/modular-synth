@@ -32,5 +32,45 @@
   "language": {
     "de": "German",
     "en": "English"
-  }
+  },
+  "common": {
+    "gate": "Gate",
+    "in": "In",
+    "out": "Out",
+    "cv": "CV",
+    "amountLabel": "Amount",
+    "rateLabel": "Rate",
+    "gainLabel": "Gain"
+  },
+  "modules": {
+    "vco": {
+      "title": "VCO",
+      "on": "on",
+      "off": "off",
+      "ariaStart": "Start oscillator",
+      "ariaStop": "Stop oscillator",
+      "frequencyLabel": "Frequency",
+      "cvHint": "With sequencer CV: set low (~1). With LFO CV: higher for an audible sweep.",
+      "waveforms": {
+        "sine": "Sin",
+        "triangle": "Tri",
+        "sawtooth": "Saw",
+        "square": "Sqr"
+      }
+    },
+    "vcf": {
+      "title": "VCF",
+      "cutoffLabel": "Cutoff",
+      "resonanceLabel": "Resonance",
+      "cutoffCvLabel": "Cutoff CV",
+      "resonanceCvLabel": "Res CV"
+    },
+    "envelope": {
+      "title": "ADSR",
+      "gateKeySpace": "Space",
+      "attackLabel": "A",
+      "decayLabel": "D",
+      "sustainLabel": "S",
+      "releaseLabel": "R"
+    }
 }
