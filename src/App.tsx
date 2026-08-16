@@ -85,7 +85,7 @@ initialEdges.forEach((e) =>
 );
 
 export default function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
@@ -317,10 +317,14 @@ export default function App() {
   const moduleButtons = useMemo(
     () =>
       MODULE_CATALOG.map((entry) => ({
-        label: entry.label,
+        type: entry.type,
+        label: t(entry.labelKey),
         onClick: createAddModuleHandler(entry, setNodes),
       })),
-    [setNodes],
+    // i18n.language explizit in den Deps, damit die Labels beim
+    // Sprachwechsel neu berechnet werden -- t() selbst ist keine reaktive
+    // Abhängigkeit, useMemo würde den Sprachwechsel sonst nicht bemerken.
+    [setNodes, t, i18n.language],
   );
 
   return (

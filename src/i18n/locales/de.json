@@ -33,7 +33,7 @@
     "de": "Deutsch",
     "en": "Englisch"
   },
-   "common": {
+  "common": {
     "gate": "Gate",
     "in": "In",
     "out": "Out",
@@ -43,6 +43,18 @@
     "gainLabel": "Gain"
   },
   "modules": {
+    "catalog": {
+      "osc": "+ Oszillator",
+      "mixer": "+ Mixer",
+      "vcf": "+ Filter",
+      "envelope": "+ ADSR / Hüllkurve",
+      "ringmod": "+ Ring Mod",
+      "wasp": "+ Wasp Filter",
+      "lfo": "+ LFO",
+      "noise": "+ Noise",
+      "vca": "+ VCA",
+      "sequencer": "+ Sequenzer"
+    },
     "vco": {
       "title": "VCO",
       "on": "an",
@@ -72,5 +84,6 @@
       "decayLabel": "D",
       "sustainLabel": "S",
       "releaseLabel": "R"
-    },
+    }
+  }
 }

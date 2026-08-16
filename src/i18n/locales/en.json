@@ -43,6 +43,18 @@
     "gainLabel": "Gain"
   },
   "modules": {
+    "catalog": {
+      "osc": "+ Oscillator",
+      "mixer": "+ Mixer",
+      "vcf": "+ Filter",
+      "envelope": "+ ADSR / Envelope",
+      "ringmod": "+ Ring Mod",
+      "wasp": "+ Wasp Filter",
+      "lfo": "+ LFO",
+      "noise": "+ Noise",
+      "vca": "+ VCA",
+      "sequencer": "+ Sequencer"
+    },
     "vco": {
       "title": "VCO",
       "on": "on",
@@ -73,4 +85,5 @@
       "sustainLabel": "S",
       "releaseLabel": "R"
     }
+  }
 }
