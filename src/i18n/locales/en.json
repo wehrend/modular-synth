@@ -44,6 +44,9 @@
     "volLabel": "Vol",
     "audioLabel": "Audio",
     "frequencyLabel": "Frequency",
+    "cancel": "Cancel",
+    "unnamed": "Unnamed",
+    "loading": "Loading…",
     "waveforms": {
       "sine": "Sin",
       "triangle": "Tri",
@@ -132,6 +135,49 @@
       "decayLabel": "D",
       "sustainLabel": "S",
       "releaseLabel": "R"
+    }
+  },
+  "pages": {
+    "discover": {
+      "noPatches": "No public patches yet.",
+      "viewProfile": "View profile",
+      "noPatchesShort": "No patches.",
+      "prev": "‹ Back",
+      "next": "Next ›"
+    },
+    "userDetail": {
+      "notFoundTitle": "Profile not found",
+      "backToSynth": "Back to synth",
+      "editTitle": "Edit profile",
+      "displayNamePlaceholder": "Display name",
+      "bioPlaceholder": "Bio",
+      "uploadingLabel": "Uploading…",
+      "chooseAvatarLabel": "Choose profile picture",
+      "avatarUrlPlaceholder": "Image URL",
+      "websitePlaceholder": "Website",
+      "memberSince": "Member since",
+      "errors": {
+        "invalidImage": "Please choose an image file.",
+        "imageTooLarge": "Image is too large (max. 2 MB)."
+      }
+    }
+  },
+  "components": {
+    "presetSidebar": {
+      "title": "Presets",
+      "empty": "Nothing saved yet.",
+      "makePrivate": "Make private",
+      "makePublic": "Make public",
+      "public": "Public",
+      "private": "Private",
+      "deleteConfirm": "Really delete \"{{name}}\"? This cannot be undone.",
+      "deleteAriaLabel": "Delete {{name}}",
+      "deleteTitle": "Delete"
+    },
+    "savePresetDialog": {
+      "title": "Save preset",
+      "nameLabel": "Name",
+      "descriptionLabel": "Description (optional)"
     }
   }
 }

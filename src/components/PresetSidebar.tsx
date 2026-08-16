@@ -1,5 +1,6 @@
 // PresetSidebar.tsx
 import { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { listPresets, type PresetRow } from "../persist/supabase";
 import styles from "./PresetSidebar.module.scss";
 
@@ -20,6 +21,7 @@ export default function PresetSidebar({
   refreshKey,
   userId,
 }: Props) {
+  const { t } = useTranslation();
   const [presets, setPresets] = useState<PresetRow[]>([]);
 
   const refresh = useCallback(() => {
@@ -38,9 +40,9 @@ export default function PresetSidebar({
 
   return (
     <aside className={styles.sidebar}>
-      <h2 className={styles.title}>Presets</h2>
+      <h2 className={styles.title}>{t("components.presetSidebar.title")}</h2>
       {presets.length === 0 && (
-        <p className={styles.empty}>Noch keine gespeichert.</p>
+        <p className={styles.empty}>{t("components.presetSidebar.empty")}</p>
       )}
 
       <ul className={styles.list}>
@@ -52,8 +54,16 @@ export default function PresetSidebar({
             <button
               className={styles.publicBtn}
               onClick={() => onTogglePublic(p.id, !p.is_public)}
-              aria-label={p.is_public ? "Privat machen" : "Öffentlich machen"}
-              title={p.is_public ? "Öffentlich" : "Privat"}
+              aria-label={
+                p.is_public
+                  ? t("components.presetSidebar.makePrivate")
+                  : t("components.presetSidebar.makePublic")
+              }
+              title={
+                p.is_public
+                  ? t("components.presetSidebar.public")
+                  : t("components.presetSidebar.private")
+              }
             >
               {p.is_public ? "🌐" : "🔒"}
             </button>
@@ -75,14 +85,18 @@ export default function PresetSidebar({
               onClick={() => {
                 if (
                   window.confirm(
-                    `"${p.name}" wirklich löschen? Das kann nicht rückgängig gemacht werden.`,
+                    t("components.presetSidebar.deleteConfirm", {
+                      name: p.name,
+                    }),
                   )
                 ) {
                   onDelete(p.id);
                 }
               }}
-              aria-label={`${p.name} löschen`}
-              title="Löschen"
+              aria-label={t("components.presetSidebar.deleteAriaLabel", {
+                name: p.name,
+              })}
+              title={t("components.presetSidebar.deleteTitle")}
             >
               🗑
             </button>

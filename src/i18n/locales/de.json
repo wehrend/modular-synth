@@ -44,6 +44,9 @@
     "volLabel": "Vol",
     "audioLabel": "Audio",
     "frequencyLabel": "Frequenz",
+    "cancel": "Abbrechen",
+    "unnamed": "Unbenannt",
+    "loading": "Lädt…",
     "waveforms": {
       "sine": "Sin",
       "triangle": "Tri",
@@ -56,13 +59,13 @@
       "osc": "+ Oszillator",
       "mixer": "+ Mixer",
       "vcf": "+ Filter",
-      "envelope": "+ ADSR / Envelope",
+      "envelope": "+ ADSR / Hüllkurve",
       "ringmod": "+ Ring Mod",
       "wasp": "+ Wasp Filter",
       "lfo": "+ LFO",
       "noise": "+ Noise",
       "vca": "+ VCA",
-      "sequencer": "+ Sequencer"
+      "sequencer": "+ Sequenzer"
     },
     "vco": {
       "title": "VCO",
@@ -132,6 +135,49 @@
       "decayLabel": "D",
       "sustainLabel": "S",
       "releaseLabel": "R"
+    }
+  },
+  "pages": {
+    "discover": {
+      "noPatches": "Noch keine öffentlichen Patches vorhanden.",
+      "viewProfile": "Profil ansehen",
+      "noPatchesShort": "Keine Patches.",
+      "prev": "‹ Zurück",
+      "next": "Weiter ›"
+    },
+    "userDetail": {
+      "notFoundTitle": "Profil nicht gefunden",
+      "backToSynth": "Zurück zum Synth",
+      "editTitle": "Profil bearbeiten",
+      "displayNamePlaceholder": "Anzeigename",
+      "bioPlaceholder": "Bio",
+      "uploadingLabel": "Lädt hoch…",
+      "chooseAvatarLabel": "Profilbild wählen",
+      "avatarUrlPlaceholder": "Bild-URL",
+      "websitePlaceholder": "Website",
+      "memberSince": "Mitglied seit",
+      "errors": {
+        "invalidImage": "Bitte eine Bilddatei auswählen.",
+        "imageTooLarge": "Bild ist zu groß (max. 2 MB)."
+      }
+    }
+  },
+  "components": {
+    "presetSidebar": {
+      "title": "Presets",
+      "empty": "Noch keine gespeichert.",
+      "makePrivate": "Privat machen",
+      "makePublic": "Öffentlich machen",
+      "public": "Öffentlich",
+      "private": "Privat",
+      "deleteConfirm": "\"{{name}}\" wirklich löschen? Das kann nicht rückgängig gemacht werden.",
+      "deleteAriaLabel": "{{name}} löschen",
+      "deleteTitle": "Löschen"
+    },
+    "savePresetDialog": {
+      "title": "Preset speichern",
+      "nameLabel": "Name",
+      "descriptionLabel": "Beschreibung (optional)"
     }
   }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import styles from "./SavePresetDialog.module.scss";
 
 type Props = {
@@ -16,6 +17,7 @@ export default function SavePresetDialog({
   onCancel,
   onConfirm,
 }: Props) {
+  const { t } = useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
@@ -53,10 +55,12 @@ export default function SavePresetDialog({
   return (
     <dialog ref={dialogRef} className={styles.dialog}>
       <form onSubmit={handleSubmit} className={styles.form}>
-        <h2 className={styles.title}>Preset speichern</h2>
+        <h2 className={styles.title}>
+          {t("components.savePresetDialog.title")}
+        </h2>
 
         <label className={styles.label}>
-          Name
+          {t("components.savePresetDialog.nameLabel")}
           <input
             className={styles.field}
             value={name}
@@ -67,7 +71,7 @@ export default function SavePresetDialog({
         </label>
 
         <label className={styles.label}>
-          Beschreibung (optional)
+          {t("components.savePresetDialog.descriptionLabel")}
           <textarea
             className={styles.field}
             rows={3}
@@ -78,10 +82,10 @@ export default function SavePresetDialog({
 
         <div className={styles.actions}>
           <button type="submit" className={styles.submit}>
-            Speichern
+            {t("toolbar.save")}
           </button>
           <button type="button" className={styles.submit} onClick={onCancel}>
-            Abbrechen
+            {t("common.cancel")}
           </button>
         </div>
       </form>
