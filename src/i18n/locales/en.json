@@ -1,0 +1,36 @@
+{
+  "toolbar": {
+    "discover": "Discover",
+    "title": "Modular Synth",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "save": "Save",
+    "saveNamed": "Save ({{name}})",
+    "saveAs": "Save as",
+    "hint": "Drag from an output to an input to patch. Double-click a cable to remove it — or select it and press Delete/Backspace.",
+    "language": "Language"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "noAccount": "No account yet?",
+      "register": "Sign up"
+    },
+    "register": {
+      "title": "Sign up",
+      "email": "Email",
+      "password": "Password (min. 6 characters)",
+      "submit": "Create account",
+      "haveAccount": "Already registered?",
+      "login": "Sign in",
+      "successInfo": "Account created. Please check your inbox if confirmation is required."
+    }
+  },
+  "language": {
+    "de": "German",
+    "en": "English"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "toolbar": {
+    "discover": "Entdecken",
+    "title": "Modular Synth",
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "save": "Speichern",
+    "saveNamed": "Speichern ({{name}})",
+    "saveAs": "Speichern unter",
+    "hint": "Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick entfernen — oder auswählen und Entf/Backspace.",
+    "language": "Sprache"
+  },
+  "auth": {
+    "login": {
+      "title": "Anmelden",
+      "email": "E-Mail",
+      "password": "Passwort",
+      "submit": "Anmelden",
+      "noAccount": "Noch kein Konto?",
+      "register": "Registrieren"
+    },
+    "register": {
+      "title": "Registrieren",
+      "email": "E-Mail",
+      "password": "Passwort (mind. 6 Zeichen)",
+      "submit": "Konto erstellen",
+      "haveAccount": "Schon registriert?",
+      "login": "Anmelden",
+      "successInfo": "Konto angelegt. Bitte E-Mail-Postfach prüfen, falls eine Bestätigung nötig ist."
+    }
+  },
+  "language": {
+    "de": "Deutsch",
+    "en": "Englisch"
+  }
+}

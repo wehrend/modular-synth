@@ -7,6 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import { AuthProvider } from "./auth/AuthContext";
 import "./styles/global.scss";
+import "./i18n"; // muss vor dem ersten Render laufen, damit useTranslation() sofort Übersetzungen hat
 import UserDetailPage from "./pages/UserDetailPage";
 import DiscoverPage from "./pages/DiscoverPage";
 

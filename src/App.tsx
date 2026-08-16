@@ -58,6 +58,9 @@ import { createAddModuleHandler } from "./lib/addModule";
 import { MODULE_CATALOG } from "./moduleCatalog";
 import SequencerNode from "./nodes/SequencerNode";
 
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "./components/LanguageSwitcher";
+
 const nodeTypes = {
   osc: OscillatorNode,
   mixer: MixerNode,
@@ -82,6 +85,7 @@ initialEdges.forEach((e) =>
 );
 
 export default function App() {
+  const { t } = useTranslation();
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
@@ -329,35 +333,35 @@ export default function App() {
       />
       <div className={styles.toolbar}>
         <Link className={styles.btn} to="/discover">
-          Entdecken
+          {t("toolbar.discover")}
         </Link>
-        <h1 className={styles.title}>Modular Synth</h1>
+        <h1 className={styles.title}>{t("toolbar.title")}</h1>
         {user ? (
           <>
             <Link className={styles.btn} to={`/user/${user.id}`}>
               {displayName ?? user.email}
             </Link>
             <button className={styles.btn} onClick={handleLogout}>
-              Abmelden
+              {t("toolbar.logout")}
             </button>
           </>
         ) : (
           <Link className={styles.btn} to="/login">
-            Anmelden
+            {t("toolbar.login")}
           </Link>
         )}
         <div className={styles.actions}>
           <button className={styles.btn} onClick={handleSave}>
-            {activePresetName ? `Speichern (${activePresetName})` : "Speichern"}
+            {activePresetName
+              ? t("toolbar.saveNamed", { name: activePresetName })
+              : t("toolbar.save")}
           </button>
           <button className={styles.btn} onClick={handleSaveAs}>
-            Speichern unter
+            {t("toolbar.saveAs")}
           </button>
           <ModuleToolbar modules={moduleButtons} />
-          <p className={styles.hint}>
-            Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick
-            entfernen — oder auswählen und Entf/Backspace.
-          </p>
+          <LanguageSwitcher />
+          <p className={styles.hint}>{t("toolbar.hint")}</p>
         </div>
       </div>
       <div className={styles.layout}>
