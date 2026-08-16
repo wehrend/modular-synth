@@ -328,6 +328,25 @@ export function triggerSamplerPlayback(id: string): void {
 }
 
 /**
+ * Wartet, bis der aktuell zugewiesene Sample-Buffer des Sampler-Nodes
+ * fertig geladen ist (lokal oder remote, z.B. von Supabase). Wichtig für
+ * die UI: "hasSample" im Patch sagt nur, dass IRGENDWANN eine Aufnahme
+ * existierte -- nicht, ob der Tone.Player den Buffer JETZT schon geladen
+ * hat. Play-Klicks vor Ladeende sind sonst stumm, ohne Fehler.
+ */
+export async function waitForSamplerReady(id: string): Promise<void> {
+  const node = registry.get(id);
+  if (node?.type !== "sampler") return;
+  await node.pendingLoad;
+}
+
+export function isSamplerReady(id: string): boolean {
+  const node = registry.get(id);
+  if (node?.type !== "sampler") return false;
+  return node.player.loaded;
+}
+
+/**
  * Ermittelt den Audio-Eingang eines Ziels.
  * Hat das Modul benannte Eingänge (`ins`), entscheidet die Handle-ID
  * der Kante, welcher Kanal gemeint ist. Sonst gilt der Standard-Eingang.

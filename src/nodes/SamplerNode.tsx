@@ -6,6 +6,8 @@ import {
   startSamplerRecording,
   stopSamplerRecording,
   triggerSamplerPlayback,
+  waitForSamplerReady,
+  isSamplerReady,
   resumeAudio,
   SamplerEntry,
 } from "../audio";
@@ -15,6 +17,7 @@ import { uploadSamplerRecording } from "../persist/supabase";
 import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
+import { useEffect, useState } from "react";
 
 /* ---------- Audio-Seite ---------- */
 
@@ -94,6 +97,25 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
   const { updateNodeData } = useReactFlow();
   const { user } = useAuth();
 
+  // Getrennt von data.hasSample: hasSample sagt nur, dass laut Patch
+  // IRGENDWANN eine Aufnahme existierte -- sampleReady sagt, ob der
+  // Tone.Player den (evtl. von Supabase geladenen) Buffer JETZT wirklich
+  // im Speicher hat. Play erst freigeben, wenn beides stimmt, sonst
+  // klickt man bei frisch geladenen Presets ins Leere (stumm, kein Fehler).
+  const [sampleReady, setSampleReady] = useState(() => isSamplerReady(id));
+
+  useEffect(() => {
+    if (sampleReady) return;
+    let cancelled = false;
+    waitForSamplerReady(id).then(() => {
+      if (!cancelled) setSampleReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
   const patch = (changes: Partial<SamplerData>) => {
     updateNodeData(id, changes);
     updateAudioNode(id, changes);
@@ -150,9 +172,11 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
       </header>
 
       <span className={styles.hint}>
-        {data.hasSample
-          ? t("modules.sampler.hintReady")
-          : t("modules.sampler.hintEmpty")}
+        {data.hasSample && !sampleReady
+          ? t("modules.sampler.hintLoading")
+          : data.hasSample
+            ? t("modules.sampler.hintReady")
+            : t("modules.sampler.hintEmpty")}
       </span>
       <Knob
         label={t("common.rateLabel")}
@@ -183,7 +207,7 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
           await resumeAudio();
           triggerSamplerPlayback(id);
         }}
-        disabled={!data.hasSample}
+        disabled={!data.hasSample || !sampleReady}
       >
         {t("modules.sampler.play")}
       </button>
