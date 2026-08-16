@@ -58,6 +58,11 @@ import {
   SequencerEntry,
   updateSequencerNode,
 } from "./nodes/SequencerNode";
+import {
+  createSamplerNode,
+  disposeSamplerNode,
+  updateSamplerNode,
+} from "./nodes/SamplerNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -112,6 +117,16 @@ export type NoiseEntry = {
   };
 };
 
+export type SamplerEntry = {
+  type: "sampler";
+  mic: Tone.UserMedia;
+  recorder: Tone.Recorder;
+  player: Tone.Player;
+  out: Tone.ToneAudioNode;
+  gainNode: Tone.Gain;
+  pendingLoad: Promise<void>;
+};
+
 type RegistryEntry =
   | OscEntry
   | MixerEntry
@@ -123,6 +138,7 @@ type RegistryEntry =
   | NoiseEntry
   | VcaEntry
   | SequencerEntry
+  | SamplerEntry
   | OutEntry;
 
 const registry = new Map<string, RegistryEntry>();
@@ -192,6 +208,11 @@ const MODULE_HANDLERS: Record<string, ModuleHandler<any, any>> = {
     update: updateSequencerNode,
     dispose: disposeSequencerNode,
   },
+  sampler: {
+    create: createSamplerNode,
+    update: updateSamplerNode,
+    dispose: disposeSamplerNode,
+  },
   out: {
     create: createOutputNode,
     update: updateOutputNode,
@@ -231,6 +252,10 @@ export function removeAudioNode(id: string): void {
 export function gateOn(id: string): void {
   const node = registry.get(id);
   if (node?.type === "envelope") node.env.triggerAttack();
+  if (node?.type === "sampler") {
+    if (node.player.state === "started") node.player.stop();
+    node.player.start();
+  }
 }
 
 /** Gate aus: Release-Phase starten (Taste losgelassen). */
@@ -241,8 +266,6 @@ export function gateOff(id: string): void {
 
 // Gate-Routing: parallel zum Audiographen, aber ohne echte Tone.js-Verbindung.
 // sourceId -> Menge der Envelope-IDs, die dieses Gate-Signal empfangen.
-// Schlüssel jetzt "sourceId::sourceHandle" statt nur "sourceId" --
-// ein Knoten kann mehrere unabhängige Gate-Ausgänge haben (CD4017: bis zu 10).
 // Schlüssel jetzt "sourceId::sourceHandle" statt nur "sourceId" --
 // ein Knoten kann mehrere unabhängige Gate-Ausgänge haben (CD4017: bis zu 10).
 const gateRoutes = new Map<string, Set<string>>();
@@ -260,6 +283,48 @@ export function fireGate(
     if (on) gateOn(targetId);
     else gateOff(targetId);
   });
+}
+
+export async function startSamplerRecording(id: string): Promise<void> {
+  const node = registry.get(id);
+  if (node?.type !== "sampler") return;
+
+  // Mikro nur öffnen, wenn es nicht schon offen ist -- unnötiges
+  // erneutes getUserMedia() bei jeder Aufnahme vermeiden.
+  if (node.mic.state !== "started") {
+    await node.mic.open(); // fragt bei Bedarf nach Mikrofonberechtigung
+  }
+
+  // Falls der Recorder aus irgendeinem Grund schon läuft (z.B. State
+  // durch einen vorherigen Fehler nicht sauber zurückgesetzt), nicht
+  // nochmal start() aufrufen -- das würde einen Assert werfen.
+  if (node.recorder.state === "started") return;
+
+  await node.recorder.start();
+}
+
+export async function stopSamplerRecording(id: string): Promise<Blob | null> {
+  const node = registry.get(id);
+  if (node?.type !== "sampler") return null;
+
+  // Wurde nie erfolgreich gestartet (z.B. weil startSamplerRecording
+  // vorher geworfen hat) -- nichts zu stoppen, sonst Assert-Fehler.
+  if (node.recorder.state !== "started") return null;
+
+  await node.pendingLoad;
+
+  const blob = await node.recorder.stop();
+  const url = URL.createObjectURL(blob);
+  await node.player.load(url);
+  URL.revokeObjectURL(url);
+  return blob;
+}
+
+export function triggerSamplerPlayback(id: string): void {
+  const node = registry.get(id);
+  if (node?.type !== "sampler") return;
+  if (node.player.state === "started") node.player.stop();
+  node.player.start();
 }
 
 /**
@@ -349,4 +414,30 @@ export function disconnectAudio(
       error,
     );
   }
+}
+
+// HMR-Fix: audio.ts hält seinen Zustand (registry, alle Tone.js-Node-
+// Instanzen) im Modul-Scope. Ersetzt Vite bei einer Änderung an dieser
+// Datei nur das Modul per Hot-Reload, bleiben alte Tone-Nodes (Recorder,
+// Player etc.) unsauber im Speicher/Audiographen hängen und vermischen
+// sich mit dem neuen Code -- daher vor jedem HMR-Update alles sauber
+// disposen, damit App.tsx beim Re-Import wieder einen frischen,
+// konsistenten Zustand aufbaut.
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    registry.forEach((node) => {
+      MODULE_HANDLERS[node.type]?.dispose(node);
+    });
+    registry.clear();
+    gateRoutes.clear();
+  });
+
+  // audio.ts hält globalen Modul-Zustand (registry), den ein reines
+  // HMR-Update nicht zuverlässig neu aufbaut (App.tsx's
+  // initialNodes.forEach(createAudioNode...) läuft nur beim vollen
+  // Modul-Load, nicht bei jedem Hot-Update). Statt mit einer leeren
+  // Registry weiterzulaufen, lieber sauber neu laden.
+  import.meta.hot.accept(() => {
+    window.location.reload();
+  });
 }

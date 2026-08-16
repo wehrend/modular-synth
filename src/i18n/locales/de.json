@@ -76,7 +76,8 @@
       "lfo": "+ LFO",
       "noise": "+ Noise",
       "vca": "+ VCA",
-      "sequencer": "+ Sequenzer"
+      "sequencer": "+ Sequenzer",
+      "sampler": "+ Sampler"
     },
     "vco": {
       "title": "VCO",
@@ -146,6 +147,22 @@
       "decayLabel": "D",
       "sustainLabel": "S",
       "releaseLabel": "R"
+    },
+    "sampler": {
+      "title": "SAMPLER",
+      "rec": "rec",
+      "recActive": "● rec",
+      "hintLoading": "Lade Sample...",
+      "hintReady": "Sample bereit",
+      "hintEmpty": "Noch keine Aufnahme",
+      "play": "▶ Play",
+      "log": {
+        "loadFailed": "Sample konnte nicht geladen werden:",
+        "noBlobToUpload": "Keine Aufnahme zum Hochladen vorhanden.",
+        "saveFailed": "Aufnahme konnte nicht gespeichert werden:",
+        "notLoggedIn": "Nicht eingeloggt -- Aufnahme wird nicht persistiert.",
+        "startFailed": "Aufnahme konnte nicht gestartet werden:"
+      }
     }
   },
   "pages": {

@@ -199,3 +199,32 @@ export async function loadProfile(id: string): Promise<Profile | null> {
   if (error || !data) return null;
   return data;
 }
+
+export async function uploadSamplerRecording(
+  userId: string,
+  sampleId: string,
+  blob: Blob,
+  fileExtension = "webm", // Tone.Recorder liefert meist webm
+  contentType = "audio/webm",
+): Promise<string> {
+  // Eindeutiger Pfad pro Upload statt fixem Pfad + upsert: Supabase liefert
+  // Storage-Objekte über ein CDN aus, dessen Cache-Key den Query-String
+  // ignoriert -- der "?t=..." Cache-Buster unten wirkt zwar gegen den
+  // Browser-Cache, aber NICHT gegen den CDN-Cache. Bei gleichem Pfad
+  // bekommt man deshalb trotz erfolgreichem Überschreiben (upsert) noch
+  // minutenlang die alte, gecachte Version ausgeliefert. Ein neuer Pfad
+  // pro Aufnahme umgeht das Problem komplett, da es für den CDN eine
+  // völlig neue Ressource ist.
+  const filePath = `${userId}/${sampleId}-${Date.now()}.${fileExtension}`;
+
+  const { error } = await supabase.storage
+    .from("sampler-recordings")
+    .upload(filePath, blob, { contentType });
+
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage
+    .from("sampler-recordings")
+    .getPublicUrl(filePath);
+  return data.publicUrl;
+}
