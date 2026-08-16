@@ -1,0 +1,194 @@
+{
+  "app": {
+    "errors": {
+      "loadFailed": "Failed to load.",
+      "visibilityChangeFailed": "Failed to change visibility.",
+      "loginRequiredToSave": "Please sign in first to save presets.",
+      "saveFailed": "Failed to save.",
+      "deleteFailed": "Failed to delete.",
+      "presetNotFound": "Preset with ID \"{{id}}\" not found.",
+      "patchNotFoundOrPrivate": "Patch not found or not public."
+    }
+  },
+  "toolbar": {
+    "discover": "Discover",
+    "title": "Modular Synth",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "save": "Save",
+    "saveNamed": "Save ({{name}})",
+    "saveAs": "Save as",
+    "hint": "Drag from an output to an input to patch. Double-click a cable to remove it — or select it and press Delete/Backspace.",
+    "language": "Language"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "noAccount": "No account yet?",
+      "register": "Sign up"
+    },
+    "register": {
+      "title": "Sign up",
+      "email": "Email",
+      "password": "Password (min. 6 characters)",
+      "submit": "Create account",
+      "haveAccount": "Already registered?",
+      "login": "Sign in",
+      "successInfo": "Account created. Please check your inbox if confirmation is required."
+    }
+  },
+  "language": {
+    "de": "German",
+    "en": "English"
+  },
+  "common": {
+    "gate": "Gate",
+    "in": "In",
+    "out": "Out",
+    "cv": "CV",
+    "amountLabel": "Amount",
+    "rateLabel": "Rate",
+    "gainLabel": "Gain",
+    "volLabel": "Vol",
+    "audioLabel": "Audio",
+    "frequencyLabel": "Frequency",
+    "cancel": "Cancel",
+    "unnamed": "Unnamed",
+    "loading": "Loading…",
+    "waveforms": {
+      "sine": "Sin",
+      "triangle": "Tri",
+      "sawtooth": "Saw",
+      "square": "Sqr"
+    }
+  },
+  "modules": {
+    "catalog": {
+      "osc": "+ Oscillator",
+      "mixer": "+ Mixer",
+      "vcf": "+ Filter",
+      "envelope": "+ ADSR / Envelope",
+      "ringmod": "+ Ring Mod",
+      "wasp": "+ Wasp Filter",
+      "lfo": "+ LFO",
+      "noise": "+ Noise",
+      "vca": "+ VCA",
+      "sequencer": "+ Sequencer"
+    },
+    "vco": {
+      "title": "VCO",
+      "on": "on",
+      "off": "off",
+      "ariaStart": "Start oscillator",
+      "ariaStop": "Stop oscillator",
+      "cvHint": "With sequencer CV: set low (~1). With LFO CV: higher for an audible sweep."
+    },
+    "lfo": {
+      "title": "LFO"
+    },
+    "mixer": {
+      "title": "MIX",
+      "inLabel": "In {{n}}",
+      "masterLabel": "Master"
+    },
+    "noise": {
+      "title": "NOISE",
+      "white": "White",
+      "pink": "Pink",
+      "brown": "Brown"
+    },
+    "vca": {
+      "title": "VCA"
+    },
+    "ringmod": {
+      "title": "RING-MOD",
+      "carrierLabel": "Carrier",
+      "modLabel": "Mod"
+    },
+    "wasp": {
+      "title": "WASP",
+      "resonanceLabel": "Res",
+      "driveLabel": "Drive",
+      "cvAmountLabel": "CV Amount",
+      "cutoffCvLabel": "Cutoff CV"
+    },
+    "sequencer": {
+      "title": "Sequencer",
+      "running": "running",
+      "stopped": "off",
+      "bpmLabel": "BPM",
+      "stepLabel": "Q{{n}}",
+      "cvOutLabel": "CV Out"
+    },
+    "output": {
+      "title": "OUT",
+      "lockedHint": "Cannot be deleted",
+      "muted": "muted",
+      "unmuted": "loud",
+      "levelLabel": "Level",
+      "left": "L",
+      "right": "R"
+    },
+    "vcf": {
+      "title": "VCF",
+      "cutoffLabel": "Cutoff",
+      "resonanceLabel": "Resonance",
+      "cutoffCvLabel": "Cutoff CV",
+      "resonanceCvLabel": "Res CV"
+    },
+    "envelope": {
+      "title": "ADSR",
+      "gateKeySpace": "Space",
+      "attackLabel": "A",
+      "decayLabel": "D",
+      "sustainLabel": "S",
+      "releaseLabel": "R"
+    }
+  },
+  "pages": {
+    "discover": {
+      "noPatches": "No public patches yet.",
+      "viewProfile": "View profile",
+      "noPatchesShort": "No patches.",
+      "prev": "‹ Back",
+      "next": "Next ›"
+    },
+    "userDetail": {
+      "notFoundTitle": "Profile not found",
+      "backToSynth": "Back to synth",
+      "editTitle": "Edit profile",
+      "displayNamePlaceholder": "Display name",
+      "bioPlaceholder": "Bio",
+      "uploadingLabel": "Uploading…",
+      "chooseAvatarLabel": "Choose profile picture",
+      "avatarUrlPlaceholder": "Image URL",
+      "websitePlaceholder": "Website",
+      "memberSince": "Member since",
+      "errors": {
+        "invalidImage": "Please choose an image file.",
+        "imageTooLarge": "Image is too large (max. 2 MB)."
+      }
+    }
+  },
+  "components": {
+    "presetSidebar": {
+      "title": "Presets",
+      "empty": "Nothing saved yet.",
+      "makePrivate": "Make private",
+      "makePublic": "Make public",
+      "public": "Public",
+      "private": "Private",
+      "deleteConfirm": "Really delete \"{{name}}\"? This cannot be undone.",
+      "deleteAriaLabel": "Delete {{name}}",
+      "deleteTitle": "Delete"
+    },
+    "savePresetDialog": {
+      "title": "Save preset",
+      "nameLabel": "Name",
+      "descriptionLabel": "Description (optional)"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import * as Tone from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
 import { updateAudioNode } from "../audio";
 import type { NoiseData, NoiseFlowNode } from "../types";
@@ -64,6 +65,7 @@ export function disposeNoiseNode(entry: NoiseEntry): void {
 /* ---------- UI-Seite ---------- */
 
 export default function NoiseNode({ id, data }: NodeProps<NoiseFlowNode>) {
+  const { t } = useTranslation();
   const { updateNodeData } = useReactFlow();
 
   const patch = (changes: Partial<NoiseData>) => {
@@ -74,12 +76,12 @@ export default function NoiseNode({ id, data }: NodeProps<NoiseFlowNode>) {
   return (
     <div className={styles.module}>
       <header className={styles.head}>
-        <span className={styles.title}>NOISE</span>
+        <span className={styles.title}>{t("modules.noise.title")}</span>
       </header>
       <div className={styles.ioRowOut}>
-        <span className={styles.ioLabel}>White</span>
+        <span className={styles.ioLabel}>{t("modules.noise.white")}</span>
         <Knob
-          label="Vol"
+          label={t("common.volLabel")}
           value={data.whiteVolume}
           min={-48}
           max={0}
@@ -91,9 +93,9 @@ export default function NoiseNode({ id, data }: NodeProps<NoiseFlowNode>) {
       </div>
 
       <div className={styles.ioRowOut}>
-        <span className={styles.ioLabel}>Pink</span>
+        <span className={styles.ioLabel}>{t("modules.noise.pink")}</span>
         <Knob
-          label="Vol"
+          label={t("common.volLabel")}
           value={data.pinkVolume}
           min={-48}
           max={0}
@@ -105,9 +107,9 @@ export default function NoiseNode({ id, data }: NodeProps<NoiseFlowNode>) {
       </div>
 
       <div className={styles.ioRowOut}>
-        <span className={styles.ioLabel}>Brown</span>
+        <span className={styles.ioLabel}>{t("modules.noise.brown")}</span>
         <Knob
-          label="Vol"
+          label={t("common.volLabel")}
           value={data.brownVolume}
           min={-48}
           max={0}

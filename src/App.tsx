@@ -57,6 +57,8 @@ import ModuleToolbar from "./components/ModuleToolbar";
 import { createAddModuleHandler } from "./lib/addModule";
 import { MODULE_CATALOG } from "./moduleCatalog";
 import SequencerNode from "./nodes/SequencerNode";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "./components/LanguageSwitcher";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -82,6 +84,7 @@ initialEdges.forEach((e) =>
 );
 
 export default function App() {
+  const { t, i18n } = useTranslation();
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
@@ -125,30 +128,31 @@ export default function App() {
         setSearchParams({}, { replace: true });
       })
       .catch((err) =>
-        window.alert(err instanceof Error ? err.message : "Fehler beim Laden."),
+        window.alert(
+          err instanceof Error ? err.message : t("app.errors.loadFailed"),
+        ),
       );
   }, []); // bewusst nur beim Mount
 
-  // App.tsx
-  const handleTogglePublic = useCallback(async (id: string, next: boolean) => {
-    console.log("handleTogglePublic aufgerufen:", { id, next });
-    try {
-      await togglePublic(id, next);
-      console.log("togglePublic erfolgreich");
-      setPresetRefresh((v) => v + 1);
-    } catch (err) {
-      console.log("togglePublic Fehler:", err);
-      window.alert(
-        err instanceof Error
-          ? err.message
-          : "Fehler beim Ändern der Sichtbarkeit.",
-      );
-    }
-  }, []);
+  const handleTogglePublic = useCallback(
+    async (id: string, next: boolean) => {
+      try {
+        await togglePublic(id, next);
+        setPresetRefresh((v) => v + 1);
+      } catch (err) {
+        window.alert(
+          err instanceof Error
+            ? err.message
+            : t("app.errors.visibilityChangeFailed"),
+        );
+      }
+    },
+    [t],
+  );
 
   const handleSave = async () => {
     if (!user) {
-      window.alert("Bitte zuerst anmelden, um Presets zu speichern.");
+      window.alert(t("app.errors.loginRequiredToSave"));
       return;
     }
 
@@ -170,14 +174,14 @@ export default function App() {
       setPresetRefresh((v) => v + 1);
     } catch (err) {
       window.alert(
-        err instanceof Error ? err.message : "Fehler beim Speichern.",
+        err instanceof Error ? err.message : t("app.errors.saveFailed"),
       );
     }
   };
 
   const handleSaveAs = () => {
     if (!user) {
-      window.alert("Bitte zuerst anmelden, um Presets zu speichern.");
+      window.alert(t("app.errors.loginRequiredToSave"));
       return;
     }
     setSaveDialogOpen(true);
@@ -204,7 +208,7 @@ export default function App() {
       setPresetRefresh((v) => v + 1);
     } catch (err) {
       window.alert(
-        err instanceof Error ? err.message : "Fehler beim Speichern.",
+        err instanceof Error ? err.message : t("app.errors.saveFailed"),
       );
     }
   };
@@ -233,10 +237,12 @@ export default function App() {
         setActivePresetId(id);
         setActivePresetName(name); // ← ergänzt
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : "Fehler beim Laden.");
+        window.alert(
+          err instanceof Error ? err.message : t("app.errors.loadFailed"),
+        );
       }
     },
-    [nodes, setNodes, setEdges],
+    [nodes, setNodes, setEdges, t],
   );
 
   const handleDeletePreset = useCallback(
@@ -253,11 +259,11 @@ export default function App() {
         setPresetRefresh((v) => v + 1);
       } catch (err) {
         window.alert(
-          err instanceof Error ? err.message : "Fehler beim Löschen.",
+          err instanceof Error ? err.message : t("app.errors.deleteFailed"),
         );
       }
     },
-    [activePresetId],
+    [activePresetId, t],
   );
 
   const onConnect = useCallback(
@@ -313,10 +319,14 @@ export default function App() {
   const moduleButtons = useMemo(
     () =>
       MODULE_CATALOG.map((entry) => ({
-        label: entry.label,
+        type: entry.type,
+        label: t(entry.labelKey),
         onClick: createAddModuleHandler(entry, setNodes),
       })),
-    [setNodes],
+    // i18n.language explizit in den Deps, damit die Labels beim
+    // Sprachwechsel neu berechnet werden -- t() selbst ist keine reaktive
+    // Abhängigkeit, useMemo würde den Sprachwechsel sonst nicht bemerken.
+    [setNodes, t, i18n.language],
   );
 
   return (
@@ -329,35 +339,35 @@ export default function App() {
       />
       <div className={styles.toolbar}>
         <Link className={styles.btn} to="/discover">
-          Entdecken
+          {t("toolbar.discover")}
         </Link>
-        <h1 className={styles.title}>Modular Synth</h1>
+        <h1 className={styles.title}>{t("toolbar.title")}</h1>
         {user ? (
           <>
             <Link className={styles.btn} to={`/user/${user.id}`}>
               {displayName ?? user.email}
             </Link>
             <button className={styles.btn} onClick={handleLogout}>
-              Abmelden
+              {t("toolbar.logout")}
             </button>
           </>
         ) : (
           <Link className={styles.btn} to="/login">
-            Anmelden
+            {t("toolbar.login")}
           </Link>
         )}
         <div className={styles.actions}>
           <button className={styles.btn} onClick={handleSave}>
-            {activePresetName ? `Speichern (${activePresetName})` : "Speichern"}
+            {activePresetName
+              ? t("toolbar.saveNamed", { name: activePresetName })
+              : t("toolbar.save")}
           </button>
           <button className={styles.btn} onClick={handleSaveAs}>
-            Speichern unter
+            {t("toolbar.saveAs")}
           </button>
           <ModuleToolbar modules={moduleButtons} />
-          <p className={styles.hint}>
-            Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick
-            entfernen — oder auswählen und Entf/Backspace.
-          </p>
+          <LanguageSwitcher />
+          <p className={styles.hint}>{t("toolbar.hint")}</p>
         </div>
       </div>
       <div className={styles.layout}>

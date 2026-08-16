@@ -2,6 +2,7 @@
 // Senke: Tone.Volume → Lautsprecher (Destination).
 
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
 import styles from "./Module.module.scss";
 import { OutEntry, updateAudioNode } from "../audio";
@@ -43,6 +44,7 @@ export function disposeOutputNode(node: OutEntry) {
 }
 
 export default function OutputNode({ id, data }: NodeProps<OutFlowNode>) {
+  const { t } = useTranslation();
   const { updateNodeData } = useReactFlow();
 
   const patch = (changes: Partial<OutData>) => {
@@ -53,29 +55,29 @@ export default function OutputNode({ id, data }: NodeProps<OutFlowNode>) {
   return (
     <div className={styles.module}>
       <header className={styles.head}>
-        <span className={styles.title}>OUT</span>
-        <span className={styles.lockedHint} title="Kann nicht gelöscht werden">
+        <span className={styles.title}>{t("modules.output.title")}</span>
+        <span className={styles.lockedHint} title={t("modules.output.lockedHint")}>
           🔒
         </span>
         <button
           className={`${styles.power} ${data.muted ? "" : styles.powerOn}`}
           onClick={() => patch({ muted: !data.muted })}
         >
-          {data.muted ? "stumm" : "laut"}
+          {data.muted ? t("modules.output.muted") : t("modules.output.unmuted")}
         </button>
       </header>
 
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="inL" />
-        <span className={styles.ioLabel}>L</span>
+        <span className={styles.ioLabel}>{t("modules.output.left")}</span>
       </div>
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="inR" />
-        <span className={styles.ioLabel}>R</span>
+        <span className={styles.ioLabel}>{t("modules.output.right")}</span>
       </div>
 
       <Knob
-        label="Pegel"
+        label={t("modules.output.levelLabel")}
         value={data.volume}
         min={-48}
         max={0}

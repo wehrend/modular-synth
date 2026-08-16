@@ -1,6 +1,7 @@
 // pages/DiscoverPage.tsx
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   listDiscoverableProfiles,
   listPublicPatchesForUser,
@@ -10,6 +11,7 @@ import {
 import styles from "./DiscoverPage.module.scss";
 
 export default function DiscoverPage() {
+  const { t } = useTranslation();
   const [profiles, setProfiles] = useState<DiscoverProfile[]>([]);
   const [index, setIndex] = useState(0);
   const [patches, setPatches] = useState<DiscoverPatch[]>([]);
@@ -70,9 +72,11 @@ export default function DiscoverPage() {
         {current.avatar_url && (
           <img className={styles.avatar} src={current.avatar_url} alt="" />
         )}
-        <h2 className={styles.name}>{current.display_name ?? "Unbenannt"}</h2>
+        <h2 className={styles.name}>
+          {current.display_name ?? t("common.unnamed")}
+        </h2>
         <Link className={styles.profileLink} to={`/user/${current.id}`}>
-          Profil ansehen
+          {t("pages.discover.viewProfile")}
         </Link>
         <ul className={styles.patchList}>
           {patches.map((p) => (
@@ -96,20 +100,22 @@ export default function DiscoverPage() {
             </li>
           ))}
           {patches.length === 0 && (
-            <li className={styles.status}>Keine Patches.</li>
+            <li className={styles.status}>
+              {t("pages.discover.noPatchesShort")}
+            </li>
           )}
         </ul>
       </div>
 
       <div className={styles.nav}>
         <button onClick={prev} disabled={index === 0}>
-          ‹ Zurück
+          {t("pages.discover.prev")}
         </button>
         <span className={styles.counter}>
           {index + 1} / {profiles.length}
         </span>
         <button onClick={next} disabled={index === profiles.length - 1}>
-          Weiter ›
+          {t("pages.discover.next")}
         </button>
       </div>
     </div>

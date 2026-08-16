@@ -1,10 +1,12 @@
 // src/pages/RegisterPage.tsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
 import styles from "./AuthPages.module.scss";
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -25,20 +27,18 @@ export default function RegisterPage() {
     }
     // Standard-Supabase-Verhalten: je nach Projekteinstellung ist eine
     // E-Mail-Bestätigung nötig, bevor eine Session entsteht.
-    setInfo(
-      "Konto angelegt. Bitte E-Mail-Postfach prüfen, falls eine Bestätigung nötig ist.",
-    );
+    setInfo(t("auth.register.successInfo"));
     setTimeout(() => navigate("/login"), 2000);
   };
 
   return (
     <div className={styles.page}>
       <form className={styles.card} onSubmit={onSubmit}>
-        <h1 className={styles.title}>Registrieren</h1>
+        <h1 className={styles.title}>{t("auth.register.title")}</h1>
         <input
           className={styles.field}
           type="email"
-          placeholder="E-Mail"
+          placeholder={t("auth.register.email")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -46,7 +46,7 @@ export default function RegisterPage() {
         <input
           className={styles.field}
           type="password"
-          placeholder="Passwort (mind. 6 Zeichen)"
+          placeholder={t("auth.register.password")}
           minLength={6}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -55,10 +55,11 @@ export default function RegisterPage() {
         {error && <p className={styles.error}>{error}</p>}
         {info && <p className={styles.info}>{info}</p>}
         <button className={styles.submit} type="submit" disabled={busy}>
-          {busy ? "…" : "Konto erstellen"}
+          {busy ? "…" : t("auth.register.submit")}
         </button>
         <p className={styles.hint}>
-          Schon registriert? <Link to="/login">Anmelden</Link>
+          {t("auth.register.haveAccount")}{" "}
+          <Link to="/login">{t("auth.register.login")}</Link>
         </p>
       </form>
     </div>

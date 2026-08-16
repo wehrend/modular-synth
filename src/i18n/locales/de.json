@@ -1,0 +1,194 @@
+{
+  "app": {
+    "errors": {
+      "loadFailed": "Fehler beim Laden.",
+      "visibilityChangeFailed": "Fehler beim Ändern der Sichtbarkeit.",
+      "loginRequiredToSave": "Bitte zuerst anmelden, um Presets zu speichern.",
+      "saveFailed": "Fehler beim Speichern.",
+      "deleteFailed": "Fehler beim Löschen.",
+      "presetNotFound": "Preset mit ID \"{{id}}\" nicht gefunden.",
+      "patchNotFoundOrPrivate": "Patch nicht gefunden oder nicht öffentlich."
+    }
+  },
+  "toolbar": {
+    "discover": "Entdecken",
+    "title": "Modular Synth",
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "save": "Speichern",
+    "saveNamed": "Speichern ({{name}})",
+    "saveAs": "Speichern unter",
+    "hint": "Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick entfernen — oder auswählen und Entf/Backspace.",
+    "language": "Sprache"
+  },
+  "auth": {
+    "login": {
+      "title": "Anmelden",
+      "email": "E-Mail",
+      "password": "Passwort",
+      "submit": "Anmelden",
+      "noAccount": "Noch kein Konto?",
+      "register": "Registrieren"
+    },
+    "register": {
+      "title": "Registrieren",
+      "email": "E-Mail",
+      "password": "Passwort (mind. 6 Zeichen)",
+      "submit": "Konto erstellen",
+      "haveAccount": "Schon registriert?",
+      "login": "Anmelden",
+      "successInfo": "Konto angelegt. Bitte E-Mail-Postfach prüfen, falls eine Bestätigung nötig ist."
+    }
+  },
+  "language": {
+    "de": "Deutsch",
+    "en": "Englisch"
+  },
+  "common": {
+    "gate": "Gate",
+    "in": "In",
+    "out": "Out",
+    "cv": "CV",
+    "amountLabel": "Amount",
+    "rateLabel": "Rate",
+    "gainLabel": "Gain",
+    "volLabel": "Vol",
+    "audioLabel": "Audio",
+    "frequencyLabel": "Frequenz",
+    "cancel": "Abbrechen",
+    "unnamed": "Unbenannt",
+    "loading": "Lädt…",
+    "waveforms": {
+      "sine": "Sin",
+      "triangle": "Tri",
+      "sawtooth": "Saw",
+      "square": "Sqr"
+    }
+  },
+  "modules": {
+    "catalog": {
+      "osc": "+ Oszillator",
+      "mixer": "+ Mixer",
+      "vcf": "+ Filter",
+      "envelope": "+ ADSR / Hüllkurve",
+      "ringmod": "+ Ring Mod",
+      "wasp": "+ Wasp Filter",
+      "lfo": "+ LFO",
+      "noise": "+ Noise",
+      "vca": "+ VCA",
+      "sequencer": "+ Sequenzer"
+    },
+    "vco": {
+      "title": "VCO",
+      "on": "an",
+      "off": "aus",
+      "ariaStart": "Oszillator starten",
+      "ariaStop": "Oszillator stoppen",
+      "cvHint": "Bei Sequencer-CV: niedrig einstellen (~1). Bei LFO-CV: höher für hörbaren Hub."
+    },
+    "lfo": {
+      "title": "LFO"
+    },
+    "mixer": {
+      "title": "MIX",
+      "inLabel": "In {{n}}",
+      "masterLabel": "Master"
+    },
+    "noise": {
+      "title": "NOISE",
+      "white": "White",
+      "pink": "Pink",
+      "brown": "Brown"
+    },
+    "vca": {
+      "title": "VCA"
+    },
+    "ringmod": {
+      "title": "RING-MOD",
+      "carrierLabel": "Träger",
+      "modLabel": "Mod"
+    },
+    "wasp": {
+      "title": "WASP",
+      "resonanceLabel": "Res",
+      "driveLabel": "Drive",
+      "cvAmountLabel": "CV Amount",
+      "cutoffCvLabel": "Cutoff CV"
+    },
+    "sequencer": {
+      "title": "Sequencer",
+      "running": "läuft",
+      "stopped": "aus",
+      "bpmLabel": "BPM",
+      "stepLabel": "Q{{n}}",
+      "cvOutLabel": "CV Out"
+    },
+    "output": {
+      "title": "OUT",
+      "lockedHint": "Kann nicht gelöscht werden",
+      "muted": "stumm",
+      "unmuted": "laut",
+      "levelLabel": "Pegel",
+      "left": "L",
+      "right": "R"
+    },
+    "vcf": {
+      "title": "VCF",
+      "cutoffLabel": "Cutoff",
+      "resonanceLabel": "Resonanz",
+      "cutoffCvLabel": "Cutoff CV",
+      "resonanceCvLabel": "Res CV"
+    },
+    "envelope": {
+      "title": "ADSR",
+      "gateKeySpace": "Leertaste",
+      "attackLabel": "A",
+      "decayLabel": "D",
+      "sustainLabel": "S",
+      "releaseLabel": "R"
+    }
+  },
+  "pages": {
+    "discover": {
+      "noPatches": "Noch keine öffentlichen Patches vorhanden.",
+      "viewProfile": "Profil ansehen",
+      "noPatchesShort": "Keine Patches.",
+      "prev": "‹ Zurück",
+      "next": "Weiter ›"
+    },
+    "userDetail": {
+      "notFoundTitle": "Profil nicht gefunden",
+      "backToSynth": "Zurück zum Synth",
+      "editTitle": "Profil bearbeiten",
+      "displayNamePlaceholder": "Anzeigename",
+      "bioPlaceholder": "Bio",
+      "uploadingLabel": "Lädt hoch…",
+      "chooseAvatarLabel": "Profilbild wählen",
+      "avatarUrlPlaceholder": "Bild-URL",
+      "websitePlaceholder": "Website",
+      "memberSince": "Mitglied seit",
+      "errors": {
+        "invalidImage": "Bitte eine Bilddatei auswählen.",
+        "imageTooLarge": "Bild ist zu groß (max. 2 MB)."
+      }
+    }
+  },
+  "components": {
+    "presetSidebar": {
+      "title": "Presets",
+      "empty": "Noch keine gespeichert.",
+      "makePrivate": "Privat machen",
+      "makePublic": "Öffentlich machen",
+      "public": "Öffentlich",
+      "private": "Privat",
+      "deleteConfirm": "\"{{name}}\" wirklich löschen? Das kann nicht rückgängig gemacht werden.",
+      "deleteAriaLabel": "{{name}} löschen",
+      "deleteTitle": "Löschen"
+    },
+    "savePresetDialog": {
+      "title": "Preset speichern",
+      "nameLabel": "Name",
+      "descriptionLabel": "Beschreibung (optional)"
+    }
+  }
+}

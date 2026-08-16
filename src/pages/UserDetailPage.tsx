@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "../persist/supabaseClient";
 import { useAuth } from "../auth/AuthContext";
 import styles from "./AuthPages.module.scss";
@@ -32,6 +33,7 @@ function PageCard({ children }: { children: React.ReactNode }) {
 }
 
 export default function UserDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { user, refreshDisplayName, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -188,7 +190,7 @@ export default function UserDetailPage() {
   if (loading) {
     return (
       <PageCard>
-        <p>Lädt…</p>
+        <p>{t("common.loading")}</p>
       </PageCard>
     );
   }
@@ -196,9 +198,9 @@ export default function UserDetailPage() {
   if (notFound || !profile) {
     return (
       <PageCard>
-        <h1 className={styles.title}>Profil nicht gefunden</h1>
+        <h1 className={styles.title}>{t("pages.userDetail.notFoundTitle")}</h1>
         <p className={styles.hint}>
-          <Link to="/">Zurück zum Synth</Link>
+          <Link to="/">{t("pages.userDetail.backToSynth")}</Link>
         </p>
       </PageCard>
     );
@@ -208,17 +210,17 @@ export default function UserDetailPage() {
     <PageCard>
       {editing ? (
         <>
-          <h1 className={styles.title}>Profil bearbeiten</h1>
+          <h1 className={styles.title}>{t("pages.userDetail.editTitle")}</h1>
 
           <input
             className={styles.field}
-            placeholder="Anzeigename"
+            placeholder={t("pages.userDetail.displayNamePlaceholder")}
             value={form.display_name}
             onChange={updateField("display_name")}
           />
           <textarea
             className={styles.field}
-            placeholder="Bio"
+            placeholder={t("pages.userDetail.bioPlaceholder")}
             rows={3}
             value={form.bio}
             onChange={updateField("bio")}
@@ -232,18 +234,20 @@ export default function UserDetailPage() {
               disabled={uploading}
               hidden
             />
-            {uploading ? "Lädt hoch…" : "Profilbild wählen"}
+            {uploading
+              ? t("pages.userDetail.uploadingLabel")
+              : t("pages.userDetail.chooseAvatarLabel")}
           </label>
 
           <input
             className={styles.field}
-            placeholder="Bild-URL"
+            placeholder={t("pages.userDetail.avatarUrlPlaceholder")}
             value={form.avatar_url}
             onChange={updateField("avatar_url")}
           />
           <input
             className={styles.field}
-            placeholder="Website"
+            placeholder={t("pages.userDetail.websitePlaceholder")}
             value={form.website}
             onChange={updateField("website")}
           />
@@ -256,14 +260,14 @@ export default function UserDetailPage() {
               onClick={saveProfile}
               disabled={saving || uploading}
             >
-              {saving ? "…" : "Speichern"}
+              {saving ? "…" : t("toolbar.save")}
             </button>
             <button
               className={styles.submit}
               onClick={cancelEditing}
               disabled={saving || uploading}
             >
-              Abbrechen
+              {t("common.cancel")}
             </button>
           </div>
         </>
@@ -273,7 +277,7 @@ export default function UserDetailPage() {
             <img src={profile.avatar_url} alt="" className={styles.avatar} />
           )}
           <h1 className={styles.title}>
-            {profile.display_name ?? "Unbenannt"}
+            {profile.display_name ?? t("common.unnamed")}
           </h1>
 
           {profile.bio && <p>{profile.bio}</p>}
@@ -291,23 +295,23 @@ export default function UserDetailPage() {
           )}
 
           <dl className={styles.detailList}>
-            <dt>Mitglied seit</dt>
+            <dt>{t("pages.userDetail.memberSince")}</dt>
             <dd>{new Date(profile.created_at).toLocaleDateString()}</dd>
           </dl>
 
           {isOwnProfile && (
             <div className={styles.actions}>
               <button className={styles.submit} onClick={startEditing}>
-                Profil bearbeiten
+                {t("pages.userDetail.editTitle")}
               </button>
               <button className={styles.submit} onClick={handleLogout}>
-                Abmelden
+                {t("toolbar.logout")}
               </button>
             </div>
           )}
 
           <p className={styles.hint}>
-            <Link to="/">Zurück zum Synth</Link>
+            <Link to="/">{t("pages.userDetail.backToSynth")}</Link>
           </p>
         </>
       )}
