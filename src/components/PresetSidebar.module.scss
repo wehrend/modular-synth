@@ -2,13 +2,11 @@
 @use "../styles/variables" as v;
 
 .sidebar {
-  max-width: 15%;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 0; // damit overflow-y:auto in der Flex-Spalte greift, statt den Container zu sprengen
   padding: 14px 12px;
-  margin-top: 5rem;
   overflow-y: auto;
   background: v.$panel;
-  border-right: 1px solid v.$panel-edge;
   display: flex;
   flex-direction: column;
   gap: 10px;

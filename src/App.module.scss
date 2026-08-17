@@ -66,6 +66,16 @@
   min-height: 0; // wichtig, sonst wächst der Flex-Container über den Viewport hinaus
 }
 
+.sidebarColumn {
+  display: flex;
+  flex-direction: column;
+  max-width: 15%;
+  min-width: 0;
+  margin-top: 5rem; // hält den Bereich frei von der absolut positionierten Toolbar
+  background: v.$panel;
+  border-right: 1px solid v.$panel-edge;
+}
+
 .layout > :first-child {
   flex: 1;
 }

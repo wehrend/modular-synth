@@ -41,6 +41,7 @@ import styles from "./App.module.scss";
 import PresetSidebar from "./components/PresetSidebar";
 import SavePresetDialog from "./components/SavePresetDialog";
 import Toolbar from "./components/Toolbar";
+import SidebarActions from "./components/SidebarActions";
 import { useAuth } from "./auth/AuthContext";
 import { initialNodes, initialEdges } from "./defaultPatch";
 import { createAddModuleHandler } from "./lib/addModule";
@@ -131,20 +132,24 @@ export default function App() {
         user={user}
         displayName={displayName}
         onLogout={handleLogout}
-        activePresetName={activePresetName}
-        onSave={handleSave}
-        onSaveAs={handleSaveAs}
         moduleButtons={moduleButtons}
       />
       <div className={styles.layout}>
-        <PresetSidebar
-          onLoad={loadPresetByIdHandler}
-          onTogglePublic={handleTogglePublic}
-          onDelete={handleDeletePreset}
-          activeId={activePresetId}
-          refreshKey={presetRefresh}
-          userId={user?.id ?? null}
-        />
+        <div className={styles.sidebarColumn}>
+          <SidebarActions
+            activePresetName={activePresetName}
+            onSave={handleSave}
+            onSaveAs={handleSaveAs}
+          />
+          <PresetSidebar
+            onLoad={loadPresetByIdHandler}
+            onTogglePublic={handleTogglePublic}
+            onDelete={handleDeletePreset}
+            activeId={activePresetId}
+            refreshKey={presetRefresh}
+            userId={user?.id ?? null}
+          />
+        </div>
         <ReactFlow<AppNode>
           nodes={nodes}
           edges={edges}

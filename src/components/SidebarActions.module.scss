@@ -1,0 +1,25 @@
+// SidebarActions.module.scss
+@use "../styles/variables" as v;
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 12px 10px;
+  border-bottom: 1px solid v.$panel-edge;
+  margin-bottom: 4px;
+}
+
+.btn {
+  @include v.control-base;
+  width: 100%;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: v.$panel;
+  color: v.$text;
+
+  &:hover {
+    border-color: v.$signal;
+  }
+}
