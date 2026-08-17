@@ -102,5 +102,18 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
       running: false,
       cvValues: [220, 262, 294, 330, 349, 330, 294, 262],
     }),
-  }
+  },
+  {
+    type: "sampler",
+    idPrefix: "sampler",
+    labelKey: "modules.catalog.sampler",
+    basePosition: { x: 440, y: 460 },
+    defaults: () => ({
+      recording: false,
+      hasSample: false,
+      playbackRate: 1,
+      gain: 1,
+      sampleUrl: null,
+    }),
+  },
 ];
