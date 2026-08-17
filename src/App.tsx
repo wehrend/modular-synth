@@ -1,64 +1,53 @@
 // App.tsx
 // Der Flow-Graph ist die "Wahrheit" für die Patch-Struktur.
 // Jede Änderung an Kanten/Knoten wird 1:1 in den Audiographen gespiegelt.
+//
+// Diese Datei orchestriert nur noch: Node-Typen-Registry, initialen
+// Audiographen-Aufbau, und das Zusammenstecken der ausgelagerten Hooks
+// (usePresetActions, usePatchFromUrl, useFlowAudioSync) mit dem Layout.
+// Die eigentliche Logik lebt in src/hooks/ und src/lib/.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   ReactFlow,
   Background,
   BackgroundVariant,
   Controls,
-  addEdge,
   useNodesState,
   useEdgesState,
-  type Connection,
   type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import OscillatorNode from "./nodes/OscillatorNode";
 import MixerNode from "./nodes/MixerNode";
 import OutputNode from "./nodes/OutputNode";
-import {
-  createAudioNode,
-  connectAudio,
-  disconnectAudio,
-  removeAudioNode,
-  resumeAudio,
-} from "./audio";
-import type { AppNode } from "./types";
-import styles from "./App.module.scss";
 import FilterNode from "./nodes/FilterNode";
 import EnvelopeNode from "./nodes/EnvelopeNode";
 import LfoNode from "./nodes/LfoNode";
-
-import { serializePatch, toFlow } from "./persist/serialize";
-import {
-  savePreset,
-  loadPresetById,
-  togglePublic,
-  loadPublicPatch,
-  overwritePreset,
-  deletePreset,
-} from "./persist/supabase";
-import { seedIds } from "./persist/ids";
-import PresetSidebar from "./components/PresetSidebar";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "./auth/AuthContext";
-import { captureFlowThumbnail } from "./lib/captureThumbnail";
-import SavePresetDialog from "./components/SavePresetDialog";
 import RingModNode from "./nodes/RingModNode";
 import WaspNode from "./nodes/WaspNode";
-// App.tsx, oben bei den anderen Imports
-import { initialNodes, initialEdges } from "./defaultPatch";
 import NoiseNode from "./nodes/NoiseNode";
 import VcaNode from "./nodes/VcaNode";
-import ModuleToolbar from "./components/ModuleToolbar";
+import SequencerNode from "./nodes/SequencerNode";
+import SamplerNode from "./nodes/SamplerNode";
+
+import { createAudioNode, connectAudio, resumeAudio } from "./audio";
+import type { AppNode } from "./types";
+import styles from "./App.module.scss";
+
+import PresetSidebar from "./components/PresetSidebar";
+import SavePresetDialog from "./components/SavePresetDialog";
+import Toolbar from "./components/Toolbar";
+import { useAuth } from "./auth/AuthContext";
+import { initialNodes, initialEdges } from "./defaultPatch";
 import { createAddModuleHandler } from "./lib/addModule";
 import { MODULE_CATALOG } from "./moduleCatalog";
-import SequencerNode from "./nodes/SequencerNode";
-import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "./components/LanguageSwitcher";
+import { usePresetActions } from "./hooks/usePresetActions";
+import { usePatchFromUrl } from "./hooks/usePatchFromUrl";
+import { useFlowAudioSync } from "./hooks/useFlowAudioSync";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -71,6 +60,7 @@ const nodeTypes = {
   noise: NoiseNode,
   vca: VcaNode,
   sequencer: SequencerNode,
+  sampler: SamplerNode,
   out: OutputNode,
 };
 
@@ -87,12 +77,7 @@ export default function App() {
   const { t, i18n } = useTranslation();
   const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initialEdges);
-  const [activePresetId, setActivePresetId] = useState<string | null>(null);
-  const [activePresetName, setActivePresetName] = useState<string | null>(null);
-  const [presetRefresh, setPresetRefresh] = useState(0);
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
-  // innerhalb der Komponente:
   const { user, displayName, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -101,221 +86,26 @@ export default function App() {
     navigate("/login");
   };
 
-  // innerhalb der App-Komponente:
-  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    activePresetId,
+    activePresetName,
+    presetRefresh,
+    saveDialogOpen,
+    setSaveDialogOpen,
+    handleSave,
+    handleSaveAs,
+    handleConfirmSave,
+    loadPresetByIdHandler,
+    handleDeletePreset,
+    handleTogglePublic,
+  } = usePresetActions(nodes, edges, setNodes, setEdges);
 
-  useEffect(() => {
-    const patchId = searchParams.get("patch");
-    if (!patchId) return;
+  usePatchFromUrl(nodes, setNodes, setEdges);
 
-    loadPublicPatch(patchId)
-      .then((doc) => {
-        const { nodes: newNodes, edges: newEdges } = toFlow(doc);
-        nodes.forEach((n) => removeAudioNode(n.id));
-        newNodes.forEach((n) =>
-          createAudioNode({
-            id: n.id,
-            type: n.type as any,
-            data: n.data as any,
-          }),
-        );
-        newEdges.forEach((e) =>
-          connectAudio(e.source, e.target, e.sourceHandle, e.targetHandle),
-        );
-        seedIds(newNodes.map((n) => n.id));
-        setNodes(newNodes);
-        setEdges(newEdges);
-        setSearchParams({}, { replace: true });
-      })
-      .catch((err) =>
-        window.alert(
-          err instanceof Error ? err.message : t("app.errors.loadFailed"),
-        ),
-      );
-  }, []); // bewusst nur beim Mount
+  const { onConnect, onEdgesDelete, onEdgeDoubleClick, onNodesDelete } =
+    useFlowAudioSync(setEdges);
 
-  const handleTogglePublic = useCallback(
-    async (id: string, next: boolean) => {
-      try {
-        await togglePublic(id, next);
-        setPresetRefresh((v) => v + 1);
-      } catch (err) {
-        window.alert(
-          err instanceof Error
-            ? err.message
-            : t("app.errors.visibilityChangeFailed"),
-        );
-      }
-    },
-    [t],
-  );
-
-  const handleSave = async () => {
-    if (!user) {
-      window.alert(t("app.errors.loginRequiredToSave"));
-      return;
-    }
-
-    // Kein Preset aktiv geladen -> wie "Speichern unter" verhalten,
-    // statt eine ID zu updaten, die es gar nicht gibt.
-    if (!activePresetId) {
-      await handleSaveAs();
-      return;
-    }
-
-    try {
-      const thumbnail = await captureFlowThumbnail(nodes);
-      await overwritePreset(
-        activePresetId,
-        user.id,
-        serializePatch(nodes, edges),
-        thumbnail,
-      );
-      setPresetRefresh((v) => v + 1);
-    } catch (err) {
-      window.alert(
-        err instanceof Error ? err.message : t("app.errors.saveFailed"),
-      );
-    }
-  };
-
-  const handleSaveAs = () => {
-    if (!user) {
-      window.alert(t("app.errors.loginRequiredToSave"));
-      return;
-    }
-    setSaveDialogOpen(true);
-  };
-
-  const handleConfirmSave = async (
-    name: string,
-    description: string | null,
-  ) => {
-    setSaveDialogOpen(false);
-    if (!user) return;
-
-    try {
-      const thumbnail = await captureFlowThumbnail(nodes);
-      const id = await savePreset(
-        user.id,
-        name,
-        description,
-        serializePatch(nodes, edges),
-        thumbnail,
-      );
-      setActivePresetId(id);
-      setActivePresetName(name);
-      setPresetRefresh((v) => v + 1);
-    } catch (err) {
-      window.alert(
-        err instanceof Error ? err.message : t("app.errors.saveFailed"),
-      );
-    }
-  };
-
-  const loadPresetByIdHandler = useCallback(
-    async (id: string, name: string) => {
-      try {
-        const doc = await loadPresetById(id);
-        const { nodes: newNodes, edges: newEdges } = toFlow(doc);
-
-        nodes.forEach((n) => removeAudioNode(n.id));
-        newNodes.forEach((n) =>
-          createAudioNode({
-            id: n.id,
-            type: n.type as any,
-            data: n.data as any,
-          }),
-        );
-        newEdges.forEach((e) =>
-          connectAudio(e.source, e.target, e.sourceHandle, e.targetHandle),
-        );
-        seedIds(newNodes.map((n) => n.id));
-
-        setNodes(newNodes);
-        setEdges(newEdges);
-        setActivePresetId(id);
-        setActivePresetName(name); // ← ergänzt
-      } catch (err) {
-        window.alert(
-          err instanceof Error ? err.message : t("app.errors.loadFailed"),
-        );
-      }
-    },
-    [nodes, setNodes, setEdges, t],
-  );
-
-  const handleDeletePreset = useCallback(
-    async (id: string) => {
-      try {
-        await deletePreset(id);
-        // Falls gerade das aktive Preset gelöscht wurde, Zustand zurücksetzen —
-        // sonst würde der "Speichern"-Button weiterhin auf eine ID zeigen,
-        // die es in der Datenbank nicht mehr gibt.
-        if (id === activePresetId) {
-          setActivePresetId(null);
-          setActivePresetName(null);
-        }
-        setPresetRefresh((v) => v + 1);
-      } catch (err) {
-        window.alert(
-          err instanceof Error ? err.message : t("app.errors.deleteFailed"),
-        );
-      }
-    },
-    [activePresetId, t],
-  );
-
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      // connection.targetHandle sagt, welcher benannte Eingang gemeint ist
-      // (z. B. "ch2" am Mixer); addEdge speichert ihn in der Kante mit.
-      connectAudio(
-        connection.source,
-        connection.target,
-        connection.sourceHandle,
-        connection.targetHandle,
-      );
-      setEdges((eds) => addEdge({ ...connection, animated: true }, eds));
-    },
-    [setEdges],
-  );
-
-  const onEdgesDelete = useCallback((deleted: Edge[]) => {
-    deleted.forEach((edge) =>
-      disconnectAudio(
-        edge.source,
-        edge.target,
-        edge.sourceHandle,
-        edge.targetHandle,
-      ),
-    );
-  }, []);
-
-  // Bugfix (v3): Doppelklick auf ein Kabel zieht es raus.
-  // Achtung: setEdges löst onEdgesDelete NICHT aus, deshalb muss das
-  // Audio-Trennen hier explizit passieren.
-  const onEdgeDoubleClick = useCallback(
-    (_event: React.MouseEvent, edge: Edge) => {
-      disconnectAudio(
-        edge.source,
-        edge.target,
-        edge.sourceHandle,
-        edge.targetHandle,
-      ); // ← ergänzt
-      setEdges((eds) => eds.filter((e) => e.id !== edge.id));
-    },
-    [setEdges],
-  );
-
-  const onNodesDelete = useCallback((deleted: AppNode[]) => {
-    deleted.forEach((node) => {
-      if (node.type === "out") return; // OUT ist unlöschbar, egal wie die Löschung ausgelöst wurde
-      removeAudioNode(node.id);
-    });
-  }, []);
-
-  // innerhalb der Komponente, ersetzt alle neun addXxx-Konstanten und useAddModule:
+  // ersetzt alle neun addXxx-Konstanten und useAddModule:
   const moduleButtons = useMemo(
     () =>
       MODULE_CATALOG.map((entry) => ({
@@ -337,45 +127,21 @@ export default function App() {
         onCancel={() => setSaveDialogOpen(false)}
         onConfirm={handleConfirmSave}
       />
-      <div className={styles.toolbar}>
-        <Link className={styles.btn} to="/discover">
-          {t("toolbar.discover")}
-        </Link>
-        <h1 className={styles.title}>{t("toolbar.title")}</h1>
-        {user ? (
-          <>
-            <Link className={styles.btn} to={`/user/${user.id}`}>
-              {displayName ?? user.email}
-            </Link>
-            <button className={styles.btn} onClick={handleLogout}>
-              {t("toolbar.logout")}
-            </button>
-          </>
-        ) : (
-          <Link className={styles.btn} to="/login">
-            {t("toolbar.login")}
-          </Link>
-        )}
-        <div className={styles.actions}>
-          <button className={styles.btn} onClick={handleSave}>
-            {activePresetName
-              ? t("toolbar.saveNamed", { name: activePresetName })
-              : t("toolbar.save")}
-          </button>
-          <button className={styles.btn} onClick={handleSaveAs}>
-            {t("toolbar.saveAs")}
-          </button>
-          <ModuleToolbar modules={moduleButtons} />
-          <LanguageSwitcher />
-          <p className={styles.hint}>{t("toolbar.hint")}</p>
-        </div>
-      </div>
+      <Toolbar
+        user={user}
+        displayName={displayName}
+        onLogout={handleLogout}
+        activePresetName={activePresetName}
+        onSave={handleSave}
+        onSaveAs={handleSaveAs}
+        moduleButtons={moduleButtons}
+      />
       <div className={styles.layout}>
         <PresetSidebar
-          onLoad={loadPresetByIdHandler} // war: onLoad={loadPresetByName}
+          onLoad={loadPresetByIdHandler}
           onTogglePublic={handleTogglePublic}
           onDelete={handleDeletePreset}
-          activeId={activePresetId} // war: activeName={activePreset}
+          activeId={activePresetId}
           refreshKey={presetRefresh}
           userId={user?.id ?? null}
         />
