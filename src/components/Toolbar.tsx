@@ -7,17 +7,10 @@ import ModuleToolbar, { type ModuleButtonConfig } from "./ModuleToolbar";
 
 type Props = {
   user: User | null;
-  displayName: string | null;
-  onLogout: () => void;
   moduleButtons: ModuleButtonConfig[];
 };
 
-export default function Toolbar({
-  user,
-  displayName,
-  onLogout,
-  moduleButtons,
-}: Props) {
+export default function Toolbar({ user, moduleButtons }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -26,16 +19,7 @@ export default function Toolbar({
         {t("toolbar.discover")}
       </Link>
       <h1 className={styles.title}>{t("toolbar.title")}</h1>
-      {user ? (
-        <>
-          <Link className={styles.btn} to={`/user/${user.id}`}>
-            {displayName ?? user.email}
-          </Link>
-          <button className={styles.btn} onClick={onLogout}>
-            {t("toolbar.logout")}
-          </button>
-        </>
-      ) : (
+      {!user && (
         <Link className={styles.btn} to="/login">
           {t("toolbar.login")}
         </Link>

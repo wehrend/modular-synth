@@ -128,15 +128,13 @@ export default function App() {
         onCancel={() => setSaveDialogOpen(false)}
         onConfirm={handleConfirmSave}
       />
-      <Toolbar
-        user={user}
-        displayName={displayName}
-        onLogout={handleLogout}
-        moduleButtons={moduleButtons}
-      />
+      <Toolbar user={user} moduleButtons={moduleButtons} />
       <div className={styles.layout}>
         <div className={styles.sidebarColumn}>
           <SidebarActions
+            user={user}
+            displayName={displayName}
+            onLogout={handleLogout}
             activePresetName={activePresetName}
             onSave={handleSave}
             onSaveAs={handleSaveAs}
