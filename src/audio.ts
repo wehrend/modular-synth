@@ -376,6 +376,24 @@ export function getVocoderAnalysisLevels(id: string): number[] | null {
   return node.bands.map((band) => band.meter.getValue() as number);
 }
 
+export function getVocoderAnalysisInputLevel(id: string): number | null {
+  const node = registry.get(id);
+  if (node?.type !== "vocoderAnalysis") return null;
+  return node.inputMeter.getValue() as number;
+}
+
+export function getVocoderSynthDebugInfo(
+  id: string,
+): { carrier: number; bands: number[]; output: number } | null {
+  const node = registry.get(id);
+  if (node?.type !== "vocoderSynth") return null;
+  return {
+    carrier: node.carrierMeter.getValue() as number,
+    bands: node.bands.map((band) => band.cvMeter.getValue() as number),
+    output: node.outputMeter.getValue() as number,
+  };
+}
+
 /**
  * Ermittelt den Audio-Eingang eines Ziels.
  * Hat das Modul benannte Eingänge (`ins`), entscheidet die Handle-ID
@@ -428,7 +446,24 @@ export function connectAudio(
 
   const output = resolveOutput(registry.get(sourceId), sourceHandle);
   const input = resolveInput(registry.get(targetId), targetHandle);
-  if (output && input) output.connect(input);
+  if (output && input) {
+    output.connect(input);
+  } else {
+    // Das Kabel existiert im Flow-Graph, aber im Audiographen fehlt ein
+    // Ende -- meistens ein Handle-ID-Tippfehler oder das Zielmodul war
+    // beim Verbinden noch nicht in der registry.
+    console.warn(
+      "connectAudio: Verbindung nicht auflösbar -- kein echtes connect() ausgeführt.",
+      {
+        sourceId,
+        targetId,
+        sourceHandle,
+        targetHandle,
+        outputResolved: !!output,
+        inputResolved: !!input,
+      },
+    )
+  }
 }
 
 /** Kante gelöscht → Audiosignal trennen. */
@@ -489,4 +524,5 @@ if (import.meta.hot) {
   import.meta.hot.accept(() => {
     window.location.reload();
   });
+  
 }

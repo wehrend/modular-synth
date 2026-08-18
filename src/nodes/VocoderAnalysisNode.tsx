@@ -2,18 +2,24 @@
 // Analyse-Hälfte des Vocoders (vgl. Doepfer A-129/1): zerlegt den Modulator
 // (z.B. Stimme) in Frequenzbänder und liefert pro Band eine CV, die der
 // Hüllkurve in diesem Band entspricht. Jedes Band hat -- wie beim A-129/1 --
-// eine Kontroll-LED, die die aktuelle Bandlautstärke zeigt (nur fürs Auge,
-// tapped parallel zum eigentlichen CV-Signal, beeinflusst den Audiographen
-// nicht).
+// eine Kontroll-LED. Zusätzlich ein Eingangspegel-Meter (vor der Filterbank)
+// und Konsolen-Logging zum Debuggen, ob/wo im Signalpfad etwas ankommt.
 
 import { useEffect, useState } from "react";
 import * as Tone from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
-import { updateAudioNode, getVocoderAnalysisLevels } from "../audio";
+import {
+  updateAudioNode,
+  getVocoderAnalysisLevels,
+  getVocoderAnalysisInputLevel,
+} from "../audio";
 import { vocoderBandFrequencies, VOCODER_BAND_Q } from "./VocoderBands";
-import type { VocoderAnalysisData, VocoderAnalysisFlowNode } from "../types";
+import type {
+  VocoderAnalysisData,
+  VocoderAnalysisFlowNode,
+} from "../types";
 import styles from "./Module.module.scss";
 
 /* ---------- Audio-Seite ---------- */
@@ -27,17 +33,26 @@ type Band = {
 export type VocoderAnalysisEntry = {
   type: "vocoderAnalysis";
   bands: Band[];
+  inputMeter: Tone.Meter; // Pegel VOR der Filterbank -- zeigt, ob überhaupt Signal ankommt
   ins: { modulator: Tone.Gain };
   outs: Record<string, Tone.ToneAudioNode>; // band0..band9
 };
 
 export function createVocoderAnalysisNode(
-  _id: string,
+  id: string,
   data: VocoderAnalysisData,
 ): VocoderAnalysisEntry {
   const modulatorIn = new Tone.Gain(1);
+  const inputMeter = new Tone.Meter({ normalRange: true });
+  modulatorIn.connect(inputMeter);
 
-  const bands: Band[] = vocoderBandFrequencies().map((freq) => {
+  const frequencies = vocoderBandFrequencies();
+  console.log(
+    `[VocoderAnalysis:${id}] erzeugt -- ${frequencies.length} Bänder, sensitivity=${data.sensitivity}`,
+    frequencies.map((f) => Math.round(f)),
+  );
+
+  const bands: Band[] = frequencies.map((freq, i) => {
     const filter = new Tone.Filter({
       frequency: freq,
       Q: VOCODER_BAND_Q,
@@ -48,7 +63,11 @@ export function createVocoderAnalysisNode(
 
     modulatorIn.connect(filter);
     filter.connect(follower);
-    follower.connect(meter); // Abzweig nur zur Anzeige, follower bleibt der echte CV-Ausgang
+    follower.connect(meter);
+
+    console.log(
+      `[VocoderAnalysis:${id}] Band ${i} verdrahtet: ${Math.round(freq)} Hz -- outs.band${i} = follower`,
+    );
 
     return { filter, follower, meter };
   });
@@ -61,6 +80,7 @@ export function createVocoderAnalysisNode(
   return {
     type: "vocoderAnalysis",
     bands,
+    inputMeter,
     ins: { modulator: modulatorIn },
     outs,
   };
@@ -79,6 +99,7 @@ export function updateVocoderAnalysisNode(
 
 export function disposeVocoderAnalysisNode(entry: VocoderAnalysisEntry): void {
   entry.ins.modulator.dispose();
+  entry.inputMeter.dispose();
   entry.bands.forEach((band) => {
     band.filter.dispose();
     band.follower.dispose();
@@ -105,16 +126,25 @@ export default function VocoderAnalysisNode({
     Array(bandCount).fill(0),
   );
 
-  // Poll statt Event-getrieben, weil Meter-Werte kontinuierlich sind --
-  // ~30fps reicht für eine LED-Anzeige und spart gegenüber 60fps Renders.
   useEffect(() => {
     let raf = 0;
-    let last = 0;
+    let lastDraw = 0;
+    let lastLog = 0;
     const tick = (time: number) => {
-      if (time - last > 33) {
+      if (time - lastDraw > 33) {
         const next = getVocoderAnalysisLevels(id);
         if (next) setLevels(next);
-        last = time;
+        lastDraw = time;
+      }
+      // Throttled auf 1x/Sekunde -- reicht zum Debuggen, spammt die Konsole nicht zu.
+      if (time - lastLog > 1000) {
+        const inputLevel = getVocoderAnalysisInputLevel(id);
+        const bandLevels = getVocoderAnalysisLevels(id);
+        console.log(
+          `[VocoderAnalysis:${id}] Eingangspegel=${inputLevel?.toFixed(3) ?? "n/a"}  Bänder=`,
+          bandLevels?.map((v) => v.toFixed(2)),
+        );
+        lastLog = time;
       }
       raf = requestAnimationFrame(tick);
     };
@@ -125,9 +155,7 @@ export default function VocoderAnalysisNode({
   return (
     <div className={styles.module}>
       <header className={styles.head}>
-        <span className={styles.title}>
-          {t("modules.vocoderAnalysis.title")}
-        </span>
+        <span className={styles.title}>{t("modules.vocoderAnalysis.title")}</span>
       </header>
 
       <div className={styles.ioRow}>

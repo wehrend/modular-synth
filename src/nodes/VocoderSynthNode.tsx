@@ -1,14 +1,16 @@
 // VocoderSynthNode.tsx
 // Synthese-Hälfte des Vocoders (vgl. Doepfer A-129/2): zerlegt den Carrier
-// (z.B. Sägezahn/Rauschen) in dieselben Frequenzbänder wie das Analyse-Modul
-// und moduliert pro Band einen VCA mit der dort ankommenden CV. Summe aller
-// Bänder = der eigentliche Vocoder-Klang.
+// in dieselben Frequenzbänder wie das Analyse-Modul und moduliert pro Band
+// einen VCA mit der dort ankommenden CV. Meter + Logging an drei Punkten
+// (Carrier-Eingang, jede CV pro Band, finaler Ausgang), damit man sieht,
+// an welcher Stelle im Signalpfad es hakt.
 
+import { useEffect } from "react";
 import * as Tone from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
-import { updateAudioNode } from "../audio";
+import { updateAudioNode, getVocoderSynthDebugInfo } from "../audio";
 import { vocoderBandFrequencies, VOCODER_BAND_Q } from "./VocoderBands";
 import type { VocoderSynthData, VocoderSynthFlowNode } from "../types";
 import styles from "./Module.module.scss";
@@ -18,7 +20,8 @@ import styles from "./Module.module.scss";
 type Band = {
   filter: Tone.Filter;
   vca: Tone.Gain;
-  cvIn: Tone.Gain; // CV-Eingang, verbindet auf vca.gain -- gleiches Muster wie cutoffAmt beim VCF
+  cvIn: Tone.Gain; // CV-Eingang, verbindet auf vca.gain
+  cvMeter: Tone.Meter; // zeigt, ob am CV-Eingang dieses Bands überhaupt was ankommt
 };
 
 export type VocoderSynthEntry = {
@@ -26,22 +29,35 @@ export type VocoderSynthEntry = {
   bands: Band[];
   sum: Tone.Gain;
   level: Tone.Gain;
+  carrierMeter: Tone.Meter;
+  outputMeter: Tone.Meter;
   ins: Record<string, Tone.ToneAudioNode>; // carrier, band0..band9
   out: Tone.ToneAudioNode;
 };
 
 export function createVocoderSynthNode(
-  _id: string,
+  id: string,
   data: VocoderSynthData,
 ): VocoderSynthEntry {
   const carrierIn = new Tone.Gain(1);
+  const carrierMeter = new Tone.Meter({ normalRange: true });
+  carrierIn.connect(carrierMeter);
+
   const sum = new Tone.Gain(1); // Summierpunkt aller Bänder
   const level = new Tone.Gain(data.level);
+  const outputMeter = new Tone.Meter({ normalRange: true });
   sum.connect(level);
+  level.connect(outputMeter);
 
   const ins: Record<string, Tone.ToneAudioNode> = { carrier: carrierIn };
 
-  const bands: Band[] = vocoderBandFrequencies().map((freq, i) => {
+  const frequencies = vocoderBandFrequencies();
+  console.log(
+    `[VocoderSynth:${id}] erzeugt -- ${frequencies.length} Bänder, level=${data.level}`,
+    frequencies.map((f) => Math.round(f)),
+  );
+
+  const bands: Band[] = frequencies.map((freq, i) => {
     const filter = new Tone.Filter({
       frequency: freq,
       Q: VOCODER_BAND_Q,
@@ -50,14 +66,20 @@ export function createVocoderSynthNode(
     // Basispegel 0: der VCA ist stumm, bis eine CV vom Analyse-Modul reinkommt
     const vca = new Tone.Gain(0);
     const cvIn = new Tone.Gain(1);
+    const cvMeter = new Tone.Meter({ normalRange: true });
     cvIn.connect(vca.gain);
+    cvIn.connect(cvMeter);
 
     carrierIn.connect(filter);
     filter.connect(vca);
     vca.connect(sum);
 
     ins[`band${i}`] = cvIn;
-    return { filter, vca, cvIn };
+    console.log(
+      `[VocoderSynth:${id}] Band ${i} verdrahtet: ${Math.round(freq)} Hz -- ins.band${i} = cvIn`,
+    );
+
+    return { filter, vca, cvIn, cvMeter };
   });
 
   return {
@@ -65,6 +87,8 @@ export function createVocoderSynthNode(
     bands,
     sum,
     level,
+    carrierMeter,
+    outputMeter,
     ins,
     out: level,
   };
@@ -81,12 +105,15 @@ export function updateVocoderSynthNode(
 
 export function disposeVocoderSynthNode(entry: VocoderSynthEntry): void {
   entry.ins.carrier.dispose();
+  entry.carrierMeter.dispose();
+  entry.outputMeter.dispose();
   entry.sum.dispose();
   entry.level.dispose();
   entry.bands.forEach((band) => {
     band.filter.dispose();
     band.vca.dispose();
     band.cvIn.dispose();
+    band.cvMeter.dispose();
   });
 }
 
@@ -105,6 +132,29 @@ export default function VocoderSynthNode({
   };
 
   const bandCount = vocoderBandFrequencies().length;
+
+  // Nur Logging, keine UI-Anzeige nötig -- die Analyse-LEDs zeigen bereits
+  // Bandpegel; hier reicht die Konsole, um Carrier/CV/Output zu prüfen.
+  useEffect(() => {
+    let raf = 0;
+    let lastLog = 0;
+    const tick = (time: number) => {
+      if (time - lastLog > 1000) {
+        const info = getVocoderSynthDebugInfo(id);
+        if (info) {
+          console.log(
+            `[VocoderSynth:${id}] Carrier=${info.carrier.toFixed(3)}  CVs=`,
+            info.bands.map((v) => v.toFixed(2)),
+            `Output=${info.output.toFixed(3)}`,
+          );
+        }
+        lastLog = time;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [id]);
 
   return (
     <div className={styles.module}>
