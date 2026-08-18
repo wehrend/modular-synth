@@ -110,8 +110,7 @@ export type VocoderAnalysisData = {
   sensitivity: number; // Follower-Glättungszeit in Sekunden (0.005–0.2)
 };
 
-export type VocoderAnalysisFlowNode = Node<VocoderAnalysisData,"vocoderAnalysis">
->;
+export type VocoderAnalysisFlowNode = Node<VocoderAnalysisData,"vocoderAnalysis">;
 
 export type VocoderSynthData = {
   level: number; // Ausgangspegel-Faktor, da die Summe der Bänder leise ist
