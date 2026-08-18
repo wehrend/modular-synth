@@ -106,6 +106,18 @@ export type SamplerData = {
 
 export type SamplerFlowNode = Node<SamplerData, "sampler">;
 
+export type VocoderAnalysisData = {
+  sensitivity: number; // Follower-Glättungszeit in Sekunden (0.005–0.2)
+};
+
+export type VocoderAnalysisFlowNode = Node<VocoderAnalysisData,"vocoderAnalysis">
+>;
+
+export type VocoderSynthData = {
+  level: number; // Ausgangspegel-Faktor, da die Summe der Bänder leise ist
+};
+
+export type VocoderSynthFlowNode = Node<VocoderSynthData, "vocoderSynth">;
 /** Diskriminierte Union aller Knoten der App. */
 export type AppNode =
   | OscFlowNode
@@ -119,6 +131,8 @@ export type AppNode =
   | VcaFlowNode
   | SequencerFlowNode
   | SamplerFlowNode
+  | VocoderAnalysisFlowNode
+  | VocoderSynthFlowNode
   | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
@@ -134,6 +148,8 @@ export type AudioNodeInit =
   | { id: string; type: "vca"; data: VcaData }
   | { id: string; type: "sequencer"; data: SequencerData }
   | { id: string; type: "sampler"; data: SamplerData }
+  | { id: string; type: "vocoderAnalysis"; data: VocoderAnalysisData }
+  | { id: string; type: "vocoderSynth"; data: VocoderSynthData }
   | { id: string; type: "out"; data: OutData };
 
 /** Partielle Parameter-Updates, wie sie von den Reglern kommen. */
@@ -149,4 +165,6 @@ export type NodePatch =
   | Partial<VcaData>
   | Partial<SequencerData>
   | Partial<SamplerData>
+  | Partial<VocoderAnalysisData>
+  | Partial<VocoderSynthData>
   | Partial<OutData>;

@@ -63,6 +63,18 @@ import {
   disposeSamplerNode,
   updateSamplerNode,
 } from "./nodes/SamplerNode";
+import {
+  createVocoderAnalysisNode,
+  disposeVocoderAnalysisNode,
+  updateVocoderAnalysisNode,
+  VocoderAnalysisEntry,
+} from "./nodes/VocoderAnalysisNode";
+import {
+  createVocoderSynthNode,
+  disposeVocoderSynthNode,
+  updateVocoderSynthNode,
+  VocoderSynthEntry,
+} from "./nodes/VocoderSynthNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -139,6 +151,8 @@ type RegistryEntry =
   | VcaEntry
   | SequencerEntry
   | SamplerEntry
+  | VocoderAnalysisEntry
+  | VocoderSynthEntry
   | OutEntry;
 
 const registry = new Map<string, RegistryEntry>();
@@ -212,6 +226,16 @@ const MODULE_HANDLERS: Record<string, ModuleHandler<any, any>> = {
     create: createSamplerNode,
     update: updateSamplerNode,
     dispose: disposeSamplerNode,
+  },
+  vocoderAnalysis: {
+    create: createVocoderAnalysisNode,
+    update: updateVocoderAnalysisNode,
+    dispose: disposeVocoderAnalysisNode,
+  },
+  vocoderSynth: {
+    create: createVocoderSynthNode,
+    update: updateVocoderSynthNode,
+    dispose: disposeVocoderSynthNode,
   },
   out: {
     create: createOutputNode,

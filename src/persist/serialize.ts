@@ -39,6 +39,8 @@ export const MODULE_DEFAULTS: Record<string, Record<string, unknown>> = {
   },
   mixer: { ch1: 0.8, ch2: 0.8, ch3: 0.8, master: 0.8 },
   envelope: { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.4 },
+  vocoderAnalysis: { sensitivity: 0.02 },
+  vocoderSynth: { level: 2.5 },
   out: { volume: -12, muted: false },
 };
 
