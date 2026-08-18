@@ -9,7 +9,7 @@ import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
 import { updateAudioNode } from "../audio";
-import { vocoderBandFrequencies, VOCODER_BAND_Q } from "./vocoderBands";
+import { vocoderBandFrequencies, VOCODER_BAND_Q } from "./VocoderBands";
 import type { VocoderAnalysisData, VocoderAnalysisFlowNode } from "../types";
 import styles from "./Module.module.scss";
 
