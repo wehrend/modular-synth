@@ -370,6 +370,12 @@ export function isSamplerReady(id: string): boolean {
   return node.player.loaded;
 }
 
+export function getVocoderAnalysisLevels(id: string): number[] | null {
+  const node = registry.get(id);
+  if (node?.type !== "vocoderAnalysis") return null;
+  return node.bands.map((band) => band.meter.getValue() as number);
+}
+
 /**
  * Ermittelt den Audio-Eingang eines Ziels.
  * Hat das Modul benannte Eingänge (`ins`), entscheidet die Handle-ID

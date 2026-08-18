@@ -1,14 +1,17 @@
 // VocoderAnalysisNode.tsx
 // Analyse-Hälfte des Vocoders (vgl. Doepfer A-129/1): zerlegt den Modulator
 // (z.B. Stimme) in Frequenzbänder und liefert pro Band eine CV, die der
-// Hüllkurve in diesem Band entspricht. Kein eigener Audioausgang -- nur
-// Steuersignale, die man frei patchen kann.
+// Hüllkurve in diesem Band entspricht. Jedes Band hat -- wie beim A-129/1 --
+// eine Kontroll-LED, die die aktuelle Bandlautstärke zeigt (nur fürs Auge,
+// tapped parallel zum eigentlichen CV-Signal, beeinflusst den Audiographen
+// nicht).
 
+import { useEffect, useState } from "react";
 import * as Tone from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
-import { updateAudioNode } from "../audio";
+import { updateAudioNode, getVocoderAnalysisLevels } from "../audio";
 import { vocoderBandFrequencies, VOCODER_BAND_Q } from "./VocoderBands";
 import type { VocoderAnalysisData, VocoderAnalysisFlowNode } from "../types";
 import styles from "./Module.module.scss";
@@ -18,6 +21,7 @@ import styles from "./Module.module.scss";
 type Band = {
   filter: Tone.Filter;
   follower: Tone.Follower;
+  meter: Tone.Meter; // nur für die LED-Anzeige, nicht Teil des Signalpfads
 };
 
 export type VocoderAnalysisEntry = {
@@ -40,9 +44,13 @@ export function createVocoderAnalysisNode(
       type: "bandpass",
     });
     const follower = new Tone.Follower(data.sensitivity);
+    const meter = new Tone.Meter({ normalRange: true });
+
     modulatorIn.connect(filter);
     filter.connect(follower);
-    return { filter, follower };
+    follower.connect(meter); // Abzweig nur zur Anzeige, follower bleibt der echte CV-Ausgang
+
+    return { filter, follower, meter };
   });
 
   const outs: Record<string, Tone.ToneAudioNode> = {};
@@ -74,6 +82,7 @@ export function disposeVocoderAnalysisNode(entry: VocoderAnalysisEntry): void {
   entry.bands.forEach((band) => {
     band.filter.dispose();
     band.follower.dispose();
+    band.meter.dispose();
   });
 }
 
@@ -92,6 +101,26 @@ export default function VocoderAnalysisNode({
   };
 
   const bandCount = vocoderBandFrequencies().length;
+  const [levels, setLevels] = useState<number[]>(() =>
+    Array(bandCount).fill(0),
+  );
+
+  // Poll statt Event-getrieben, weil Meter-Werte kontinuierlich sind --
+  // ~30fps reicht für eine LED-Anzeige und spart gegenüber 60fps Renders.
+  useEffect(() => {
+    let raf = 0;
+    let last = 0;
+    const tick = (time: number) => {
+      if (time - last > 33) {
+        const next = getVocoderAnalysisLevels(id);
+        if (next) setLevels(next);
+        last = time;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [id]);
 
   return (
     <div className={styles.module}>
@@ -124,6 +153,10 @@ export default function VocoderAnalysisNode({
           <span className={styles.ioLabel}>
             {t("common.bandLabel", { n: i })}
           </span>
+          <span
+            className={styles.led}
+            style={{ opacity: 0.15 + Math.min(levels[i] ?? 0, 1) * 0.85 }}
+          />
           <Handle type="source" position={Position.Right} id={`band${i}`} />
         </div>
       ))}
