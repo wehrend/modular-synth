@@ -36,7 +36,7 @@ export type VocoderSynthEntry = {
 };
 
 export function createVocoderSynthNode(
-  id: string,
+  _id: string,
   data: VocoderSynthData,
 ): VocoderSynthEntry {
   const carrierIn = new Tone.Gain(1);
@@ -53,7 +53,7 @@ export function createVocoderSynthNode(
 
   const frequencies = vocoderBandFrequencies();
 
-  const bands: Band[] = frequencies.map((freq, i) => {
+  const bands: Band[] = frequencies.map((freq, _i) => {
     const filter = new Tone.Filter({
       frequency: freq,
       Q: VOCODER_BAND_Q,

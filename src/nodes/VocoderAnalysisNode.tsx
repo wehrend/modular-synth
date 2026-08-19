@@ -37,7 +37,7 @@ export type VocoderAnalysisEntry = {
 };
 
 export function createVocoderAnalysisNode(
-  id: string,
+  _id: string,
   data: VocoderAnalysisData,
 ): VocoderAnalysisEntry {
   const modulatorIn = new Tone.Gain(1);
@@ -46,7 +46,7 @@ export function createVocoderAnalysisNode(
 
   const frequencies = vocoderBandFrequencies();
 
-  const bands: Band[] = frequencies.map((freq, i) => {
+  const bands: Band[] = frequencies.map((freq, _i) => {
     const filter = new Tone.Filter({
       frequency: freq,
       Q: VOCODER_BAND_Q,
