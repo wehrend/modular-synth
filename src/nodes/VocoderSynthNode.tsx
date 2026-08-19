@@ -70,7 +70,6 @@ export function createVocoderSynthNode(
     filter.connect(vca);
     vca.connect(sum);
 
-
     return { filter, vca, cvIn, cvMeter };
   });
 
@@ -169,12 +168,14 @@ export default function VocoderSynthNode({
           </span>
         </div>
       ))}
+
       <Knob
         label={t("modules.vocoderSynth.levelLabel")}
         value={data.level}
-        min={0}
-        max={4}
+        min={0.05}
+        max={20}
         step={0.05}
+        log
         format={(v) => `${Math.round(v * 100)}%`}
         onChange={(level) => patch({ level })}
       />

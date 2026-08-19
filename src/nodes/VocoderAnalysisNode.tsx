@@ -178,8 +178,8 @@ export default function VocoderAnalysisNode({
       <Knob
         label={t("common.gainLabel")}
         value={data.gainBoost}
-        min={1}
-        max={30}
+        min={50}
+        max={500}
         step={0.5}
         log
         format={(v) => `×${v.toFixed(1)}`}

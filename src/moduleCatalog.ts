@@ -128,6 +128,6 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
     idPrefix: "vocoderSynth",
     labelKey: "modules.catalog.vocoderSynth",
     basePosition: { x: 440, y: 460 },
-    defaults: () => ({ level: 1.5 }),
+    defaults: () => ({ level: 6 }),
   },
 ];
