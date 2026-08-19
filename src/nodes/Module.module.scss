@@ -170,3 +170,12 @@
   // width: 100%;      -- entfernen, sonst nimmt das Label die ganze Zeile ein
   // margin-left: auto; -- entfernen, aus demselben Grund
 }
+
+.led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: v.$raw-signal;
+  box-shadow: 0 0 6px 1px v.$raw-signal;
+  transition: opacity 60ms linear;
+}
