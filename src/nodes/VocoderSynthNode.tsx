@@ -177,7 +177,6 @@ export default function VocoderSynthNode({
           </span>
         </div>
       ))}
-
       <Knob
         label={t("modules.vocoderSynth.levelLabel")}
         value={data.level}
@@ -187,7 +186,6 @@ export default function VocoderSynthNode({
         format={(v) => `${Math.round(v * 100)}%`}
         onChange={(level) => patch({ level })}
       />
-
       <Handle type="source" position={Position.Right} id="out" />
     </div>
   );

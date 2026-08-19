@@ -347,8 +347,20 @@ export async function stopSamplerRecording(id: string): Promise<Blob | null> {
 export function triggerSamplerPlayback(id: string): void {
   const node = registry.get(id);
   if (node?.type !== "sampler") return;
+  console.log(
+    `[Sampler:${id}] triggerPlayback -- loaded=${node.player.loaded}, state=${node.player.state}, duration=${node.player.buffer?.duration ?? "n/a"}`,
+  );
+  if (!node.player.loaded) {
+    console.warn(
+      `[Sampler:${id}] Player hat keinen geladenen Buffer -- start() würde stumm bleiben.`,
+    );
+    return;
+  }
   if (node.player.state === "started") node.player.stop();
   node.player.start();
+  console.log(
+    `[Sampler:${id}] gestartet, gainNode.gain=${node.gainNode.gain.value}`,
+  );
 }
 
 /**
@@ -462,7 +474,7 @@ export function connectAudio(
         outputResolved: !!output,
         inputResolved: !!input,
       },
-    )
+    );
   }
 }
 
@@ -524,5 +536,4 @@ if (import.meta.hot) {
   import.meta.hot.accept(() => {
     window.location.reload();
   });
-  
 }

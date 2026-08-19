@@ -121,13 +121,13 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
     idPrefix: "vocoderAnalysis",
     labelKey: "modules.catalog.vocoderAnalysis",
     basePosition: { x: 440, y: 460 },
-    defaults: () => ({ sensitivity: 0.02 }),
+    defaults: () => ({ sensitivity: 0.02, gainBoost: 10 }),
   },
   {
     type: "vocoderSynth",
     idPrefix: "vocoderSynth",
     labelKey: "modules.catalog.vocoderSynth",
     basePosition: { x: 440, y: 460 },
-    defaults: () => ({ level: 2.5 }),
+    defaults: () => ({ level: 1.5 }),
   },
 ];

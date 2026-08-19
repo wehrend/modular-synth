@@ -108,9 +108,13 @@ export type SamplerFlowNode = Node<SamplerData, "sampler">;
 
 export type VocoderAnalysisData = {
   sensitivity: number; // Follower-Glättungszeit in Sekunden (0.005–0.2)
+  gainBoost: number; // Verstärkung der CV direkt nach dem Follower (wirkt auch auf die LEDs)
 };
 
-export type VocoderAnalysisFlowNode = Node<VocoderAnalysisData,"vocoderAnalysis">;
+export type VocoderAnalysisFlowNode = Node<
+  VocoderAnalysisData,
+  "vocoderAnalysis"
+>;
 
 export type VocoderSynthData = {
   level: number; // Ausgangspegel-Faktor, da die Summe der Bänder leise ist

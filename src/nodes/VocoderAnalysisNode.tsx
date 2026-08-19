@@ -1,9 +1,9 @@
 // VocoderAnalysisNode.tsx
 // Analyse-Hälfte des Vocoders (vgl. Doepfer A-129/1): zerlegt den Modulator
 // (z.B. Stimme) in Frequenzbänder und liefert pro Band eine CV, die der
-// Hüllkurve in diesem Band entspricht. Jedes Band hat -- wie beim A-129/1 --
-// eine Kontroll-LED. Zusätzlich ein Eingangspegel-Meter (vor der Filterbank)
-// und Konsolen-Logging zum Debuggen, ob/wo im Signalpfad etwas ankommt.
+// Hüllkurve in diesem Band entspricht. Der Gain-Boost sitzt bewusst direkt
+// hinter dem Follower -- VOR dem Meter-Abzweig -- damit die Kontroll-LEDs
+// exakt den Pegel zeigen, der auch als CV rausgeht (nicht den Rohwert).
 
 import { useEffect, useState } from "react";
 import * as Tone from "tone";
@@ -15,11 +15,8 @@ import {
   getVocoderAnalysisLevels,
   getVocoderAnalysisInputLevel,
 } from "../audio";
-import { vocoderBandFrequencies, VOCODER_BAND_Q } from "./VocoderBands";
-import type {
-  VocoderAnalysisData,
-  VocoderAnalysisFlowNode,
-} from "../types";
+import { vocoderBandFrequencies, VOCODER_BAND_Q } from "./vocoderBands";
+import type { VocoderAnalysisData, VocoderAnalysisFlowNode } from "../types";
 import styles from "./Module.module.scss";
 
 /* ---------- Audio-Seite ---------- */
@@ -27,6 +24,7 @@ import styles from "./Module.module.scss";
 type Band = {
   filter: Tone.Filter;
   follower: Tone.Follower;
+  boost: Tone.Gain; // verstärkt die CV -- Ausgang UND Meter hängen dahinter
   meter: Tone.Meter; // nur für die LED-Anzeige, nicht Teil des Signalpfads
 };
 
@@ -48,7 +46,7 @@ export function createVocoderAnalysisNode(
 
   const frequencies = vocoderBandFrequencies();
   console.log(
-    `[VocoderAnalysis:${id}] erzeugt -- ${frequencies.length} Bänder, sensitivity=${data.sensitivity}`,
+    `[VocoderAnalysis:${id}] erzeugt -- ${frequencies.length} Bänder, sensitivity=${data.sensitivity}, gainBoost=${data.gainBoost}`,
     frequencies.map((f) => Math.round(f)),
   );
 
@@ -59,22 +57,24 @@ export function createVocoderAnalysisNode(
       type: "bandpass",
     });
     const follower = new Tone.Follower(data.sensitivity);
+    const boost = new Tone.Gain(data.gainBoost);
     const meter = new Tone.Meter({ normalRange: true });
 
     modulatorIn.connect(filter);
     filter.connect(follower);
-    follower.connect(meter);
+    follower.connect(boost);
+    boost.connect(meter); // Meter UND Ausgang hängen beide hinter dem Boost
 
     console.log(
-      `[VocoderAnalysis:${id}] Band ${i} verdrahtet: ${Math.round(freq)} Hz -- outs.band${i} = follower`,
+      `[VocoderAnalysis:${id}] Band ${i} verdrahtet: ${Math.round(freq)} Hz -- outs.band${i} = boost (×${data.gainBoost})`,
     );
 
-    return { filter, follower, meter };
+    return { filter, follower, boost, meter };
   });
 
   const outs: Record<string, Tone.ToneAudioNode> = {};
   bands.forEach((band, i) => {
-    outs[`band${i}`] = band.follower;
+    outs[`band${i}`] = band.boost;
   });
 
   return {
@@ -95,6 +95,11 @@ export function updateVocoderAnalysisNode(
       band.follower.smoothing = patch.sensitivity!;
     });
   }
+  if (patch.gainBoost !== undefined) {
+    entry.bands.forEach((band) => {
+      band.boost.gain.rampTo(patch.gainBoost!, 0.04);
+    });
+  }
 }
 
 export function disposeVocoderAnalysisNode(entry: VocoderAnalysisEntry): void {
@@ -103,6 +108,7 @@ export function disposeVocoderAnalysisNode(entry: VocoderAnalysisEntry): void {
   entry.bands.forEach((band) => {
     band.filter.dispose();
     band.follower.dispose();
+    band.boost.dispose();
     band.meter.dispose();
   });
 }
@@ -136,7 +142,6 @@ export default function VocoderAnalysisNode({
         if (next) setLevels(next);
         lastDraw = time;
       }
-      // Throttled auf 1x/Sekunde -- reicht zum Debuggen, spammt die Konsole nicht zu.
       if (time - lastLog > 1000) {
         const inputLevel = getVocoderAnalysisInputLevel(id);
         const bandLevels = getVocoderAnalysisLevels(id);
@@ -155,7 +160,9 @@ export default function VocoderAnalysisNode({
   return (
     <div className={styles.module}>
       <header className={styles.head}>
-        <span className={styles.title}>{t("modules.vocoderAnalysis.title")}</span>
+        <span className={styles.title}>
+          {t("modules.vocoderAnalysis.title")}
+        </span>
       </header>
 
       <div className={styles.ioRow}>
@@ -174,6 +181,17 @@ export default function VocoderAnalysisNode({
         log
         format={(v) => `${Math.round(v * 1000)} ms`}
         onChange={(sensitivity) => patch({ sensitivity })}
+      />
+
+      <Knob
+        label={t("common.gainLabel")}
+        value={data.gainBoost}
+        min={1}
+        max={30}
+        step={0.5}
+        log
+        format={(v) => `×${v.toFixed(1)}`}
+        onChange={(gainBoost) => patch({ gainBoost })}
       />
 
       {Array.from({ length: bandCount }, (_, i) => (
