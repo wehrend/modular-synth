@@ -53,7 +53,7 @@ export function createVocoderSynthNode(
 
   const frequencies = vocoderBandFrequencies();
 
-  const bands: Band[] = frequencies.map((freq, _i) => {
+  const bands: Band[] = frequencies.map((freq, i) => {
     const filter = new Tone.Filter({
       frequency: freq,
       Q: VOCODER_BAND_Q,
@@ -69,6 +69,8 @@ export function createVocoderSynthNode(
     carrierIn.connect(filter);
     filter.connect(vca);
     vca.connect(sum);
+
+    ins[`band${i}`] = cvIn;
 
     return { filter, vca, cvIn, cvMeter };
   });
