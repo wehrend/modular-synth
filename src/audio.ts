@@ -63,6 +63,18 @@ import {
   disposeSamplerNode,
   updateSamplerNode,
 } from "./nodes/SamplerNode";
+import {
+  createVocoderAnalysisNode,
+  disposeVocoderAnalysisNode,
+  updateVocoderAnalysisNode,
+  VocoderAnalysisEntry,
+} from "./nodes/VocoderAnalysisNode";
+import {
+  createVocoderSynthNode,
+  disposeVocoderSynthNode,
+  updateVocoderSynthNode,
+  VocoderSynthEntry,
+} from "./nodes/VocoderSynthNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -139,6 +151,8 @@ type RegistryEntry =
   | VcaEntry
   | SequencerEntry
   | SamplerEntry
+  | VocoderAnalysisEntry
+  | VocoderSynthEntry
   | OutEntry;
 
 const registry = new Map<string, RegistryEntry>();
@@ -212,6 +226,16 @@ const MODULE_HANDLERS: Record<string, ModuleHandler<any, any>> = {
     create: createSamplerNode,
     update: updateSamplerNode,
     dispose: disposeSamplerNode,
+  },
+  vocoderAnalysis: {
+    create: createVocoderAnalysisNode,
+    update: updateVocoderAnalysisNode,
+    dispose: disposeVocoderAnalysisNode,
+  },
+  vocoderSynth: {
+    create: createVocoderSynthNode,
+    update: updateVocoderSynthNode,
+    dispose: disposeVocoderSynthNode,
   },
   out: {
     create: createOutputNode,
@@ -323,6 +347,9 @@ export async function stopSamplerRecording(id: string): Promise<Blob | null> {
 export function triggerSamplerPlayback(id: string): void {
   const node = registry.get(id);
   if (node?.type !== "sampler") return;
+  if (!node.player.loaded) {
+    return;
+  }
   if (node.player.state === "started") node.player.stop();
   node.player.start();
 }
@@ -344,6 +371,30 @@ export function isSamplerReady(id: string): boolean {
   const node = registry.get(id);
   if (node?.type !== "sampler") return false;
   return node.player.loaded;
+}
+
+export function getVocoderAnalysisLevels(id: string): number[] | null {
+  const node = registry.get(id);
+  if (node?.type !== "vocoderAnalysis") return null;
+  return node.bands.map((band) => band.meter.getValue() as number);
+}
+
+export function getVocoderAnalysisInputLevel(id: string): number | null {
+  const node = registry.get(id);
+  if (node?.type !== "vocoderAnalysis") return null;
+  return node.inputMeter.getValue() as number;
+}
+
+export function getVocoderSynthDebugInfo(
+  id: string,
+): { carrier: number; bands: number[]; output: number } | null {
+  const node = registry.get(id);
+  if (node?.type !== "vocoderSynth") return null;
+  return {
+    carrier: node.carrierMeter.getValue() as number,
+    bands: node.bands.map((band) => band.cvMeter.getValue() as number),
+    output: node.outputMeter.getValue() as number,
+  };
 }
 
 /**
@@ -398,7 +449,24 @@ export function connectAudio(
 
   const output = resolveOutput(registry.get(sourceId), sourceHandle);
   const input = resolveInput(registry.get(targetId), targetHandle);
-  if (output && input) output.connect(input);
+  if (output && input) {
+    output.connect(input);
+  } else {
+    // Das Kabel existiert im Flow-Graph, aber im Audiographen fehlt ein
+    // Ende -- meistens ein Handle-ID-Tippfehler oder das Zielmodul war
+    // beim Verbinden noch nicht in der registry.
+    console.warn(
+      "connectAudio: Verbindung nicht auflösbar -- kein echtes connect() ausgeführt.",
+      {
+        sourceId,
+        targetId,
+        sourceHandle,
+        targetHandle,
+        outputResolved: !!output,
+        inputResolved: !!input,
+      },
+    );
+  }
 }
 
 /** Kante gelöscht → Audiosignal trennen. */
