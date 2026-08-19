@@ -15,7 +15,7 @@ import {
   getVocoderAnalysisLevels,
   getVocoderAnalysisInputLevel,
 } from "../audio";
-import { vocoderBandFrequencies, VOCODER_BAND_Q } from "./vocoderBands";
+import { vocoderBandFrequencies, VOCODER_BAND_Q } from "./VocoderBands";
 import type { VocoderAnalysisData, VocoderAnalysisFlowNode } from "../types";
 import styles from "./Module.module.scss";
 
@@ -45,10 +45,6 @@ export function createVocoderAnalysisNode(
   modulatorIn.connect(inputMeter);
 
   const frequencies = vocoderBandFrequencies();
-  console.log(
-    `[VocoderAnalysis:${id}] erzeugt -- ${frequencies.length} Bänder, sensitivity=${data.sensitivity}, gainBoost=${data.gainBoost}`,
-    frequencies.map((f) => Math.round(f)),
-  );
 
   const bands: Band[] = frequencies.map((freq, i) => {
     const filter = new Tone.Filter({
@@ -64,10 +60,6 @@ export function createVocoderAnalysisNode(
     filter.connect(follower);
     follower.connect(boost);
     boost.connect(meter); // Meter UND Ausgang hängen beide hinter dem Boost
-
-    console.log(
-      `[VocoderAnalysis:${id}] Band ${i} verdrahtet: ${Math.round(freq)} Hz -- outs.band${i} = boost (×${data.gainBoost})`,
-    );
 
     return { filter, follower, boost, meter };
   });

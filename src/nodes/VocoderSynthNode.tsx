@@ -52,10 +52,6 @@ export function createVocoderSynthNode(
   const ins: Record<string, Tone.ToneAudioNode> = { carrier: carrierIn };
 
   const frequencies = vocoderBandFrequencies();
-  console.log(
-    `[VocoderSynth:${id}] erzeugt -- ${frequencies.length} Bänder, level=${data.level}`,
-    frequencies.map((f) => Math.round(f)),
-  );
 
   const bands: Band[] = frequencies.map((freq, i) => {
     const filter = new Tone.Filter({
@@ -74,10 +70,6 @@ export function createVocoderSynthNode(
     filter.connect(vca);
     vca.connect(sum);
 
-    ins[`band${i}`] = cvIn;
-    console.log(
-      `[VocoderSynth:${id}] Band ${i} verdrahtet: ${Math.round(freq)} Hz -- ins.band${i} = cvIn`,
-    );
 
     return { filter, vca, cvIn, cvMeter };
   });
