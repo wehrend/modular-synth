@@ -9,6 +9,7 @@ import {
   type DiscoverPatch,
 } from "../persist/supabase";
 import styles from "./DiscoverPage.module.scss";
+import PresetShareLink from "../components/PresetShareLink";
 
 export default function DiscoverPage() {
   const { t } = useTranslation();
@@ -53,11 +54,11 @@ export default function DiscoverPage() {
     navigate(`/?patch=${patchId}`);
   };
 
-  if (loading) return <p className={styles.status}>Lädt…</p>;
+  if (loading) return <p className={styles.status}>{t("common.loading")}</p>;
   if (profiles.length === 0) {
     return (
       <p className={styles.status}>
-        Noch keine öffentlichen Patches vorhanden.
+        {t("pages.discover.noPatches")}
       </p>
     );
   }
@@ -72,17 +73,15 @@ export default function DiscoverPage() {
         {current.avatar_url && (
           <img className={styles.avatar} src={current.avatar_url} alt="" />
         )}
-        <h2 className={styles.name}>
-          {current.display_name ?? t("common.unnamed")}
-        </h2>
+        <h2 className={styles.name}>{current.display_name ?? t("common.unnamed")}</h2>
         <Link className={styles.profileLink} to={`/user/${current.id}`}>
           {t("pages.discover.viewProfile")}
         </Link>
         <ul className={styles.patchList}>
           {patches.map((p) => (
-            <li key={p.id}>
+            <li key={p.id} className={styles.patchCard}>
               <button
-                className={styles.patchBtn}
+                className={styles.patchThumbBtn}
                 onClick={() => openInSynth(p.id)}
               >
                 {p.thumbnail_url ? (
@@ -94,15 +93,24 @@ export default function DiscoverPage() {
                 ) : (
                   <div className={styles.patchThumbPlaceholder} aria-hidden />
                 )}
+              </button>
+
+              {/* Alle hier gelisteten Patches kommen aus
+                  listPublicPatchesForUser -- also per Definition öffentlich,
+                  der Link funktioniert für jeden direkt. */}
+              <PresetShareLink presetId={p.id} isPublic />
+
+              <button
+                className={styles.patchInfoBtn}
+                onClick={() => openInSynth(p.id)}
+              >
                 <span className={styles.patchName}>{p.name}</span>
                 <span className={styles.patchDescription}>{p.description}</span>
               </button>
             </li>
           ))}
           {patches.length === 0 && (
-            <li className={styles.status}>
-              {t("pages.discover.noPatchesShort")}
-            </li>
+            <li className={styles.status}>{t("pages.discover.noPatchesShort")}</li>
           )}
         </ul>
       </div>
