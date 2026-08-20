@@ -96,56 +96,24 @@
   padding-top: 10px;
   border-top: 1px solid v.$panel-edge;
 }
+
+// ---------- I/O Rows & Handles ----------
+// EIN einziger, kanonischer Satz Regeln -- vorher gab es hier doppelte,
+// sich widersprechende Definitionen (Rest eines alten Zwischenstands),
+// die je nach Kaskaden-Reihenfolge Labels zu mittig bzw. Handles nicht
+// exakt am Rand positioniert haben.
+
 .ioRow {
   position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 6px 0;
-  min-height: 16px;
-}
-
-.ioRow :global(.react-flow__handle) {
-  left: -20px;
-}
-
-.ioLabel {
-  font-size: 12px;
-  @include v.dim-label;
-}
-
-// Module.module.scss, ergänzen
-
-.ioRowOut {
-  position: relative;
-  display: flex;
-  flex-direction: column; // Label oben, Knob darunter mittig -- statt nebeneinander
-  align-items: center;
-  gap: 4px;
-  margin: 10px 0;
-  min-height: 16px;
-}
-
-.ioRowOut .react-flow__handle {
-  right: -20px;
-}
-
-.ioRowOut .ioLabel {
-  text-align: right; // Label läuft zum Handle hin, wie die Leserichtung bei Ausgängen
-  width: 100%;
-}
-
-// ---------- I/O Rows & Handles ----------
-
-.ioRow {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center; // war: flex-end
-  gap: 8px; // fehlte bisher -- sonst kleben Label und Knob aneinander
   width: 100%;
   margin: 6px 0;
   min-height: 16px;
+  // Kein justify-content -- Default (flex-start) reicht: Handle ist
+  // absolut positioniert (react-flow), das Label bleibt einfach am
+  // Zeilenanfang statt in die Mitte zu rutschen.
 
   :global(.react-flow__handle) {
     top: 50%;
@@ -165,13 +133,57 @@
 
 .ioLabel {
   font-size: 12px;
-  text-align: right;
   @include v.dim-label;
-  // width: 100%;      -- entfernen, sonst nimmt das Label die ganze Zeile ein
-  // margin-left: auto; -- entfernen, aus demselben Grund
 }
 
+// Für Ausgangs-Reihen mit vielen Bändern (Vocoder-Analyse): Label oben,
+// Handle darunter, rechtsbündig zum Modulrand.
+.ioRowOut {
+  position: relative;
+  margin: 10px 0;
+  min-height: 24px;
+}
+
+.ioRowOut .ioLabel {
+  display: block;
+  text-align: right;
+  margin-bottom: 4px;
+}
+
+// LED und Handle teilen sich diesen kleinen Rahmen als gemeinsamen
+// Bezugspunkt -- so zentrieren sich beide auf DIESELBE Mitte, statt (wie
+// vorher) auf die Mitte der ganzen Zeile inkl. Label.
+.ioRowOut {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 6px 0;
+  min-height: 16px;
+
+  :global(.react-flow__handle) {
+    // !important nötig -- React Flow setzt bei mehreren Handles derselben
+    // Seite einen eigenen top-Inline-Style (relativ zur ganzen Node-Höhe),
+    // der sonst gewinnt und den Handle neben seine Zeile schiebt.
+    top: 50% !important;
+    right: -20px !important;
+    left: auto !important;
+    transform: translateY(-50%);
+  }
+}
+
+.ioRowOut .ioLabel {
+  text-align: right;
+}
+
+// ---------- Vocoder-Analyse: Band-LEDs ----------
+// Zeigt den Pegel pro Band (vgl. Doepfer A-129/1 Kontroll-LEDs).
+// Opacity wird per Inline-Style aus dem Meter-Wert gesetzt, s. VocoderAnalysisNode.tsx.
+
 .led {
+  display: block;
+  flex-shrink: 0; // bleibt 8px, auch wenn Label mal länger wird
   width: 8px;
   height: 8px;
   border-radius: 50%;

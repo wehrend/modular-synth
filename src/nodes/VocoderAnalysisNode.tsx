@@ -170,18 +170,6 @@ export default function VocoderAnalysisNode({
           {t("modules.vocoderAnalysis.modulatorLabel")}
         </span>
       </div>
-
-      <Knob
-        label={t("modules.vocoderAnalysis.followerLabel")}
-        value={data.sensitivity}
-        min={0.005}
-        max={0.2}
-        step={0.005}
-        log
-        format={(v) => `${Math.round(v * 1000)} ms`}
-        onChange={(sensitivity) => patch({ sensitivity })}
-      />
-
       {Array.from({ length: bandCount }, (_, i) => (
         <div className={styles.ioRowOut} key={i}>
           <span className={styles.ioLabel}>
