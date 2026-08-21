@@ -55,7 +55,6 @@
     "volLabel": "Vol",
     "audioLabel": "Audio",
     "frequencyLabel": "Frequenz",
-    "bandLabel": "Band {{n}}",
     "cancel": "Abbrechen",
     "unnamed": "Unbenannt",
     "loading": "Lädt…",
@@ -78,9 +77,7 @@
       "noise": "+ Noise",
       "vca": "+ VCA",
       "sequencer": "+ Sequenzer",
-      "sampler": "+ Sampler",
-      "vocoderAnalysis": "+ Vocoder (Analyse)",
-      "vocoderSynth": "+ Vocoder (Synthese)"
+      "sampler": "+ Sampler"
     },
     "vco": {
       "title": "VCO",
@@ -165,17 +162,8 @@
         "saveFailed": "Aufnahme konnte nicht gespeichert werden:",
         "notLoggedIn": "Nicht eingeloggt -- Aufnahme wird nicht persistiert.",
         "startFailed": "Aufnahme konnte nicht gestartet werden:"
-      }
-    },
-    "vocoderAnalysis": {
-      "title": "VOCODER · ANALYSE",
-      "modulatorLabel": "Modulator",
-      "followerLabel": "Follower"
-    },
-    "vocoderSynth": {
-      "title": "VOCODER · SYNTHESE",
-      "carrierLabel": "Träger",
-      "levelLabel": "Pegel"
+      },
+      "voicesLabel": "Stimmen"
     }
   },
   "pages": {
@@ -219,6 +207,13 @@
       "title": "Preset speichern",
       "nameLabel": "Name",
       "descriptionLabel": "Beschreibung (optional)"
+    },
+    "presetShareLink": {
+      "label": "Teilen-Link:",
+      "copy": "Kopieren",
+      "copied": "Kopiert ✓",
+      "copyFailed": "Link konnte nicht kopiert werden:",
+      "privateHint": "Funktioniert für andere erst, wenn das Preset öffentlich ist (🌐)."
     }
   }
 }

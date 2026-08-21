@@ -65,19 +65,45 @@
   }
 }
 
-.patchBtn {
-  @include v.control-base;
+.patchCard {
   width: 100%;
-  padding: 0;
   border-radius: 8px;
   overflow: hidden;
+  border: 1px solid v.$panel-edge;
+  background: transparent;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  flex-shrink: 0; // s. Kommentar: overflow:hidden setzt sonst die automatische
+  // Mindesthöhe auf 0 (CSS-Spec), wodurch Flexbox die Karten bei zu wenig
+  // Platz zusammenquetscht statt die Liste scrollen zu lassen.
 
   &:hover {
     border-color: v.$signal;
   }
+}
+
+.patchThumbBtn,
+.patchInfoBtn {
+  // Expliziter Reset statt "all: unset" -- browserübergreifend
+  // zuverlässiger (manche Browser behalten bei "all: unset" natives
+  // Button-Chrome/Padding, v.a. Safari/WebKit mit -webkit-appearance).
+  appearance: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  text-align: inherit;
+  color: inherit;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.patchInfoBtn {
+  display: flex;
+  flex-direction: column;
 }
 
 .patchThumb {

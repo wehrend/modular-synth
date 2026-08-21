@@ -55,7 +55,6 @@
     "volLabel": "Vol",
     "audioLabel": "Audio",
     "frequencyLabel": "Frequency",
-    "bandLabel": "Band {{n}}",
     "cancel": "Cancel",
     "unnamed": "Unnamed",
     "loading": "Loading…",
@@ -78,9 +77,7 @@
       "noise": "+ Noise",
       "vca": "+ VCA",
       "sequencer": "+ Sequencer",
-      "sampler": "+ Sampler",
-      "vocoderAnalysis": "+ Vocoder (Analysis)",
-      "vocoderSynth": "+ Vocoder (Synthesis)"
+      "sampler": "+ Sampler"
     },
     "vco": {
       "title": "VCO",
@@ -165,17 +162,8 @@
         "saveFailed": "Could not save recording:",
         "notLoggedIn": "Not signed in -- recording will not be persisted.",
         "startFailed": "Could not start recording:"
-      }
-    },
-    "vocoderAnalysis": {
-      "title": "VOCODER · ANALYSIS",
-      "modulatorLabel": "Modulator",
-      "followerLabel": "Follower"
-    },
-    "vocoderSynth": {
-      "title": "VOCODER · SYNTHESIS",
-      "carrierLabel": "Carrier",
-      "levelLabel": "Level"
+      },
+      "voicesLabel": "Voices"
     }
   },
   "pages": {
@@ -219,6 +207,13 @@
       "title": "Save preset",
       "nameLabel": "Name",
       "descriptionLabel": "Description (optional)"
+    },
+    "presetShareLink": {
+      "label": "Share link:",
+      "copy": "Copy",
+      "copied": "Copied ✓",
+      "copyFailed": "Could not copy link:",
+      "privateHint": "Only works for others once the preset is public (🌐)."
     }
   }
 }
