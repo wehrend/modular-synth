@@ -434,12 +434,6 @@ export function connectAudio(
   sourceHandle?: string | null,
   targetHandle?: string | null,
 ): void {
-  console.log("connectAudio:", {
-    sourceId,
-    targetId,
-    sourceHandle,
-    targetHandle,
-  });
   if (targetHandle === "gate" && sourceHandle) {
     const key = gateKey(sourceId, sourceHandle);
     if (!gateRoutes.has(key)) gateRoutes.set(key, new Set());
