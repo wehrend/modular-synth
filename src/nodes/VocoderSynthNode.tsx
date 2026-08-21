@@ -5,11 +5,9 @@
 // ist fest auf ×10 verdrahtet (kein Knob mehr) -- passt zusammen mit dem
 // festen ×100-Boost der Analyse zu einer stabilen Gesamtverstärkung.
 
-import { useEffect } from "react";
 import * as Tone from "tone";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
-import { getVocoderSynthDebugInfo } from "../audio";
 import { vocoderBandFrequencies, VOCODER_BAND_Q } from "./VocoderBands";
 import type { VocoderSynthData, VocoderSynthFlowNode } from "../types";
 import styles from "./Module.module.scss";
@@ -39,7 +37,7 @@ export type VocoderSynthEntry = {
 };
 
 export function createVocoderSynthNode(
-  id: string,
+  _id: string,
   _data: VocoderSynthData,
 ): VocoderSynthEntry {
   const carrierIn = new Tone.Gain(1);
@@ -66,10 +64,6 @@ export function createVocoderSynthNode(
   const ins: Record<string, Tone.ToneAudioNode> = { carrier: carrierIn };
 
   const frequencies = vocoderBandFrequencies();
-  console.log(
-    `[VocoderSynth:${id}] erzeugt -- ${frequencies.length} Bänder, level=${SYNTH_FIXED_LEVEL} (fest)`,
-    frequencies.map((f) => Math.round(f)),
-  );
 
   const bands: Band[] = frequencies.map((freq, i) => {
     const filter = new Tone.Filter({
@@ -88,9 +82,6 @@ export function createVocoderSynthNode(
     vca.connect(sum);
 
     ins[`band${i}`] = cvIn;
-    console.log(
-      `[VocoderSynth:${id}] Band ${i} verdrahtet: ${Math.round(freq)} Hz -- ins.band${i} = cvIn`,
-    );
 
     return { filter, vca, cvIn, cvMeter };
   });
@@ -134,33 +125,10 @@ export function disposeVocoderSynthNode(entry: VocoderSynthEntry): void {
 
 /* ---------- UI-Seite ---------- */
 
-export default function VocoderSynthNode({
-  id,
-}: NodeProps<VocoderSynthFlowNode>) {
+export default function VocoderSynthNode({}: NodeProps<VocoderSynthFlowNode>) {
   const { t } = useTranslation();
 
   const bandCount = vocoderBandFrequencies().length;
-
-  useEffect(() => {
-    let raf = 0;
-    let lastLog = 0;
-    const tick = (time: number) => {
-      if (time - lastLog > 1000) {
-        const info = getVocoderSynthDebugInfo(id);
-        if (info) {
-          console.log(
-            `[VocoderSynth:${id}] Carrier=${info.carrier.toFixed(3)}  CVs=`,
-            info.bands.map((v) => v.toFixed(2)),
-            `Output(nach Kompressor+Makeup)=${info.output.toFixed(3)}`,
-          );
-        }
-        lastLog = time;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [id]);
 
   return (
     <div className={styles.module}>

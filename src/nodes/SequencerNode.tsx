@@ -20,11 +20,6 @@ export function createSequencerNode(
   id: string,
   data: SequencerData,
 ): SequencerEntry {
-  console.log("createSequencerNode aufgerufen:", {
-    id,
-    steps: data.steps,
-    running: data.running,
-  });
   let current = 0;
 
   const pitchSignal = new Tone.Signal({

@@ -10,10 +10,7 @@ import { useEffect, useState } from "react";
 import * as Tone from "tone";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
-import {
-  getVocoderAnalysisLevels,
-  getVocoderAnalysisInputLevel,
-} from "../audio";
+import { getVocoderAnalysisLevels } from "../audio";
 import { vocoderBandFrequencies, VOCODER_BAND_Q } from "./VocoderBands";
 import type { VocoderAnalysisData, VocoderAnalysisFlowNode } from "../types";
 import styles from "./Module.module.scss";
@@ -38,7 +35,7 @@ export type VocoderAnalysisEntry = {
 };
 
 export function createVocoderAnalysisNode(
-  id: string,
+  _id: string,
   data: VocoderAnalysisData,
 ): VocoderAnalysisEntry {
   const modulatorIn = new Tone.Gain(1);
@@ -46,12 +43,8 @@ export function createVocoderAnalysisNode(
   modulatorIn.connect(inputMeter);
 
   const frequencies = vocoderBandFrequencies();
-  console.log(
-    `[VocoderAnalysis:${id}] erzeugt -- ${frequencies.length} Bänder, sensitivity=${data.sensitivity}, gainBoost=${ANALYSIS_GAIN_BOOST} (fest)`,
-    frequencies.map((f) => Math.round(f)),
-  );
 
-  const bands: Band[] = frequencies.map((freq, i) => {
+  const bands: Band[] = frequencies.map((freq) => {
     const filter = new Tone.Filter({
       frequency: freq,
       Q: VOCODER_BAND_Q,
@@ -65,10 +58,6 @@ export function createVocoderAnalysisNode(
     filter.connect(follower);
     follower.connect(boost);
     boost.connect(meter);
-
-    console.log(
-      `[VocoderAnalysis:${id}] Band ${i} verdrahtet: ${Math.round(freq)} Hz -- outs.band${i} = boost (×${ANALYSIS_GAIN_BOOST})`,
-    );
 
     return { filter, follower, boost, meter };
   });
@@ -113,10 +102,9 @@ export function disposeVocoderAnalysisNode(entry: VocoderAnalysisEntry): void {
 /* ---------- UI-Seite ---------- */
 
 export default function VocoderAnalysisNode({
-  id
+  id,
 }: NodeProps<VocoderAnalysisFlowNode>) {
   const { t } = useTranslation();
-
 
   const bandCount = vocoderBandFrequencies().length;
   const [levels, setLevels] = useState<number[]>(() =>
@@ -126,21 +114,11 @@ export default function VocoderAnalysisNode({
   useEffect(() => {
     let raf = 0;
     let lastDraw = 0;
-    let lastLog = 0;
     const tick = (time: number) => {
       if (time - lastDraw > 33) {
         const next = getVocoderAnalysisLevels(id);
         if (next) setLevels(next);
         lastDraw = time;
-      }
-      if (time - lastLog > 1000) {
-        const inputLevel = getVocoderAnalysisInputLevel(id);
-        const bandLevels = getVocoderAnalysisLevels(id);
-        console.log(
-          `[VocoderAnalysis:${id}] Eingangspegel=${inputLevel?.toFixed(3) ?? "n/a"}  Bänder=`,
-          bandLevels?.map((v) => v.toFixed(2)),
-        );
-        lastLog = time;
       }
       raf = requestAnimationFrame(tick);
     };
