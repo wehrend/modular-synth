@@ -1,9 +1,10 @@
 // VocoderAnalysisNode.tsx
 // Analyse-Hälfte des Vocoders (vgl. Doepfer A-129/1): zerlegt den Modulator
-// (z.B. Stimme) in Frequenzbänder und liefert pro Band eine CV, die der
-// Hüllkurve in diesem Band entspricht. Der Gain-Boost sitzt bewusst direkt
-// hinter dem Follower -- VOR dem Meter-Abzweig -- damit die Kontroll-LEDs
-// exakt den Pegel zeigen, der auch als CV rausgeht (nicht den Rohwert).
+// in Frequenzbänder und liefert pro Band eine CV. Der Gain-Boost nach dem
+// Follower ist fest auf ×100 verdrahtet (kein Knob) -- das normalisierte
+// Follower-Signal (0..1) liegt bei Sprache nur im Prozentbereich, ×100
+// bringt es in einen Bereich, der die Synth-VCAs stabil aussteuert, ohne
+// dass man den Wert pro Patch manuell suchen muss.
 
 import { useEffect, useState } from "react";
 import * as Tone from "tone";
@@ -21,23 +22,25 @@ import styles from "./Module.module.scss";
 
 /* ---------- Audio-Seite ---------- */
 
+const ANALYSIS_GAIN_BOOST = 100; // fest -- s. Kommentar oben
+
 type Band = {
   filter: Tone.Filter;
   follower: Tone.Follower;
-  boost: Tone.Gain; // verstärkt die CV -- Ausgang UND Meter hängen dahinter
-  meter: Tone.Meter; // nur für die LED-Anzeige, nicht Teil des Signalpfads
+  boost: Tone.Gain; // fest ×100 -- Ausgang UND Meter hängen dahinter
+  meter: Tone.Meter;
 };
 
 export type VocoderAnalysisEntry = {
   type: "vocoderAnalysis";
   bands: Band[];
-  inputMeter: Tone.Meter; // Pegel VOR der Filterbank -- zeigt, ob überhaupt Signal ankommt
+  inputMeter: Tone.Meter;
   ins: { modulator: Tone.Gain };
   outs: Record<string, Tone.ToneAudioNode>; // band0..band9
 };
 
 export function createVocoderAnalysisNode(
-  _id: string,
+  id: string,
   data: VocoderAnalysisData,
 ): VocoderAnalysisEntry {
   const modulatorIn = new Tone.Gain(1);
@@ -45,21 +48,29 @@ export function createVocoderAnalysisNode(
   modulatorIn.connect(inputMeter);
 
   const frequencies = vocoderBandFrequencies();
+  console.log(
+    `[VocoderAnalysis:${id}] erzeugt -- ${frequencies.length} Bänder, sensitivity=${data.sensitivity}, gainBoost=${ANALYSIS_GAIN_BOOST} (fest)`,
+    frequencies.map((f) => Math.round(f)),
+  );
 
-  const bands: Band[] = frequencies.map((freq, _i) => {
+  const bands: Band[] = frequencies.map((freq, i) => {
     const filter = new Tone.Filter({
       frequency: freq,
       Q: VOCODER_BAND_Q,
       type: "bandpass",
     });
     const follower = new Tone.Follower(data.sensitivity);
-    const boost = new Tone.Gain(data.gainBoost);
+    const boost = new Tone.Gain(ANALYSIS_GAIN_BOOST);
     const meter = new Tone.Meter({ normalRange: true });
 
     modulatorIn.connect(filter);
     filter.connect(follower);
     follower.connect(boost);
-    boost.connect(meter); // Meter UND Ausgang hängen beide hinter dem Boost
+    boost.connect(meter);
+
+    console.log(
+      `[VocoderAnalysis:${id}] Band ${i} verdrahtet: ${Math.round(freq)} Hz -- outs.band${i} = boost (×${ANALYSIS_GAIN_BOOST})`,
+    );
 
     return { filter, follower, boost, meter };
   });
@@ -87,11 +98,7 @@ export function updateVocoderAnalysisNode(
       band.follower.smoothing = patch.sensitivity!;
     });
   }
-  if (patch.gainBoost !== undefined) {
-    entry.bands.forEach((band) => {
-      band.boost.gain.rampTo(patch.gainBoost!, 0.04);
-    });
-  }
+  // gainBoost ist fest verdrahtet (ANALYSIS_GAIN_BOOST) -- kein Patch-Pfad mehr nötig.
 }
 
 export function disposeVocoderAnalysisNode(entry: VocoderAnalysisEntry): void {
@@ -163,29 +170,6 @@ export default function VocoderAnalysisNode({
           {t("modules.vocoderAnalysis.modulatorLabel")}
         </span>
       </div>
-
-      <Knob
-        label={t("modules.vocoderAnalysis.followerLabel")}
-        value={data.sensitivity}
-        min={0.005}
-        max={0.2}
-        step={0.005}
-        log
-        format={(v) => `${Math.round(v * 1000)} ms`}
-        onChange={(sensitivity) => patch({ sensitivity })}
-      />
-
-      <Knob
-        label={t("common.gainLabel")}
-        value={data.gainBoost}
-        min={50}
-        max={500}
-        step={0.5}
-        log
-        format={(v) => `×${v.toFixed(1)}`}
-        onChange={(gainBoost) => patch({ gainBoost })}
-      />
-
       {Array.from({ length: bandCount }, (_, i) => (
         <div className={styles.ioRowOut} key={i}>
           <span className={styles.ioLabel}>
