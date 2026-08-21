@@ -121,11 +121,11 @@ export default function UserDetailPage() {
     // Validierung, spart dem Nutzer aber einen fehlgeschlagenen Upload
     // bei offensichtlich falschen Dateien.
     if (!file.type.startsWith("image/")) {
-      setError("Bitte eine Bilddatei auswählen.");
+      setError(t("pages.userDetail.errors.invalidImage"));
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      setError("Bild ist zu groß (max. 2 MB).");
+      setError(t("pages.userDetail.errors.imageTooLarge"));
       return;
     }
 
