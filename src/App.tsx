@@ -33,6 +33,9 @@ import NoiseNode from "./nodes/NoiseNode";
 import VcaNode from "./nodes/VcaNode";
 import SequencerNode from "./nodes/SequencerNode";
 import SamplerNode from "./nodes/SamplerNode";
+import VocoderAnalysisNode from "./nodes/VocoderAnalysisNode";
+import VocoderSynthNode from "./nodes/VocoderSynthNode";
+
 
 import { createAudioNode, connectAudio, resumeAudio } from "./audio";
 import type { AppNode } from "./types";
@@ -62,6 +65,8 @@ const nodeTypes = {
   vca: VcaNode,
   sequencer: SequencerNode,
   sampler: SamplerNode,
+  vocoderAnalysis: VocoderAnalysisNode,
+  vocoderSynth: VocoderSynthNode,
   out: OutputNode,
 };
 

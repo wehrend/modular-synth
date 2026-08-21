@@ -8,11 +8,9 @@
 
 import { useEffect, useState } from "react";
 import * as Tone from "tone";
-import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
-import Knob from "../components/Knob";
 import {
-  updateAudioNode,
   getVocoderAnalysisLevels,
   getVocoderAnalysisInputLevel,
 } from "../audio";
@@ -115,16 +113,10 @@ export function disposeVocoderAnalysisNode(entry: VocoderAnalysisEntry): void {
 /* ---------- UI-Seite ---------- */
 
 export default function VocoderAnalysisNode({
-  id,
-  data,
+  id
 }: NodeProps<VocoderAnalysisFlowNode>) {
   const { t } = useTranslation();
-  const { updateNodeData } = useReactFlow();
 
-  const patch = (changes: Partial<VocoderAnalysisData>) => {
-    updateNodeData(id, changes);
-    updateAudioNode(id, changes);
-  };
 
   const bandCount = vocoderBandFrequencies().length;
   const [levels, setLevels] = useState<number[]>(() =>
