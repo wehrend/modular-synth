@@ -1,6 +1,7 @@
 import { supabase } from "./supabaseClient";
 import type { PatchDocument } from "./serialize";
 import { SCHEMA_VERSION } from "./serialize";
+import i18n from "../i18n";
 
 export type PresetRow = {
   id: string;
@@ -82,7 +83,7 @@ export async function loadPresetById(id: string): Promise<PatchDocument> {
     .single();
 
   if (error) throw new Error(error.message);
-  if (!data) throw new Error(`Preset mit ID "${id}" nicht gefunden.`);
+  if (!data) throw new Error(i18n.t("app.errors.presetNotFound", { id }));
 
   return data.graph as PatchDocument;
 }
@@ -157,7 +158,7 @@ export async function loadPublicPatch(id: string): Promise<PatchDocument> {
     .eq("is_public", true)
     .single();
   if (error || !data)
-    throw new Error("Patch nicht gefunden oder nicht öffentlich.");
+    throw new Error(i18n.t("app.errors.patchNotFoundOrPrivate"));
   return data.graph as PatchDocument;
 }
 
