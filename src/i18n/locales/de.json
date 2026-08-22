@@ -63,7 +63,8 @@
       "triangle": "Tri",
       "sawtooth": "Saw",
       "square": "Sqr"
-    }
+    },
+    "bandLabel": "Band {{n}}"
   },
   "modules": {
     "catalog": {
@@ -77,7 +78,9 @@
       "noise": "+ Noise",
       "vca": "+ VCA",
       "sequencer": "+ Sequenzer",
-      "sampler": "+ Sampler"
+      "sampler": "+ Sampler",
+      "vocoderAnalysis": "+ Vocoder (Analyse)",
+      "vocoderSynth": "+ Vocoder (Synthese)"
     },
     "vco": {
       "title": "VCO",
@@ -164,6 +167,14 @@
         "startFailed": "Aufnahme konnte nicht gestartet werden:"
       },
       "voicesLabel": "Stimmen"
+    },
+    "vocoderAnalysis": {
+      "title": "VOCODER · ANALYSIS",
+      "modulatorLabel": "Modulator"
+    },
+    "vocoderSynth": {
+      "title": "VOCODER · SYNTHESIS",
+      "carrierLabel": "Träger"
     }
   },
   "pages": {
