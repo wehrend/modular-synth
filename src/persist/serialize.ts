@@ -28,14 +28,14 @@ export type PatchDocument = {
 // Passe diese Defaults an deine tatsächlichen initialNodes-Werte an —
 // sie sind das Sicherheitsnetz beim Laden (siehe unten, toFlow).
 export const MODULE_DEFAULTS: Record<string, Record<string, unknown>> = {
-  osc: { frequency: 220, waveform: "sawtooth", running: true },
+  osc: { frequency: 220, waveform: "sawtooth", running: true, cvAmount: 1 },
   lfo: { rate: 3, waveform: "sine" },
   vcf: {
     cutoff: 1500,
     resonance: 3,
     filterType: "lowpass",
     cutoffAmount: 1200,
-    resonanceAmount: 0,
+    resonanceAmount: 1,
   },
   mixer: { ch1: 0.8, ch2: 0.8, ch3: 0.8, master: 0.8 },
   envelope: { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.4 },
