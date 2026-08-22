@@ -21,7 +21,7 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
       frequency: 440,
       waveform: "sine",
       running: false,
-      cvAmount: 0.5,
+      cvAmount: 1,
     }),
   },
   {
@@ -41,7 +41,7 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
       resonance: 2,
       filterType: "lowpass",
       cutoffAmount: 2000,
-      resonanceAmount: 0,
+      resonanceAmount: 1,
     }),
   },
   {

@@ -57,7 +57,14 @@ export default function Knob({
   // Drag-Zustand im Ref: Startposition bleibt fix, während `value` sich ändert
   const drag = useRef<{ startY: number; startT: number } | null>(null);
 
-  /* Kennlinie: Reglerposition t (0–1) ↔ Wert */
+  /* Kennlinie: Reglerposition t (0–1) ↔ Wert.
+     Absicherung gegen NaN: fehlt `value` (z.B. ein älteres Preset ohne
+     dieses Datenfeld) oder ist er außerhalb [min, max], würde die
+     Kennlinien-Berechnung sonst NaN liefern und die komplette SVG-Bahn
+     kaputt rendern (d="M NaN NaN A..."). Erst clampen, dann rechnen. */
+  const safeValue = Number.isFinite(value)
+    ? Math.min(max, Math.max(min, value))
+    : min;
   const toT = (v: number) =>
     log ? Math.log(v / min) / Math.log(max / min) : (v - min) / (max - min);
   const fromT = (t: number) =>
@@ -70,7 +77,7 @@ export default function Knob({
   };
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    drag.current = { startY: e.clientY, startT: toT(value) };
+    drag.current = { startY: e.clientY, startT: toT(safeValue) };
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
@@ -96,8 +103,8 @@ export default function Knob({
       : 0;
     if (dir !== 0) {
       next = log
-        ? fromT(Math.min(1, Math.max(0, toT(value) + dir * (e.shiftKey ? 0.1 : 0.01))))
-        : value + dir * (e.shiftKey ? step * 10 : step);
+        ? fromT(Math.min(1, Math.max(0, toT(safeValue) + dir * (e.shiftKey ? 0.1 : 0.01))))
+        : safeValue + dir * (e.shiftKey ? step * 10 : step);
     }
     if (e.key === 'Home') next = min;
     if (e.key === 'End') next = max;
@@ -108,7 +115,7 @@ export default function Knob({
     }
   };
 
-  const angle = SWEEP_START + toT(value) * (SWEEP_END - SWEEP_START);
+  const angle = SWEEP_START + toT(safeValue) * (SWEEP_END - SWEEP_START);
   const tip = polar(angle, R - 7);
   const base = polar(angle, 6);
 
@@ -121,7 +128,7 @@ export default function Knob({
         aria-label={label}
         aria-valuemin={min}
         aria-valuemax={max}
-        aria-valuenow={value}
+        aria-valuenow={safeValue}
         tabIndex={0}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -138,7 +145,7 @@ export default function Knob({
           <line x1={base.x} y1={base.y} x2={tip.x} y2={tip.y} className={styles.pointer} />
         </svg>
       </div>
-      <span className={styles.value}>{format ? format(value) : value}</span>
+      <span className={styles.value}>{format ? format(safeValue) : safeValue}</span>
     </div>
   );
 }

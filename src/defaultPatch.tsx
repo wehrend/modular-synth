@@ -7,12 +7,12 @@ export const initialNodes: AppNode[] = [
     type: "osc",
     position: { x: 40, y: 60 },
     // defaultPatch.tsx
-    data: { frequency: 220, waveform: "sawtooth", running: true, cvAmount: 0.5 },
+    data: { frequency: 220, waveform: "sawtooth", running: true, cvAmount: 1 },
   },
   {
     id: "lfo-1",
     type: "lfo",
-    position: { x: 40, y: 260 },
+    position: { x: 40, y: 477 },
     data: { rate: 3, waveform: "sine" },
   },
   {
@@ -24,7 +24,7 @@ export const initialNodes: AppNode[] = [
       resonance: 3,
       filterType: "lowpass",
       cutoffAmount: 1200,
-      resonanceAmount: 0,
+      resonanceAmount: 1,
     },
   },
   {
