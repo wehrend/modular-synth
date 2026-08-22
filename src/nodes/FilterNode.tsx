@@ -113,7 +113,7 @@ export default function FilterNode({ id, data }: NodeProps<VcfFlowNode>) {
         <Knob
           label={t("common.amountLabel")}
           value={data.cutoffAmount}
-          min={0}
+          min={1}
           max={5000}
           step={10}
           format={(v) => `±${v}`}
@@ -130,7 +130,7 @@ export default function FilterNode({ id, data }: NodeProps<VcfFlowNode>) {
         <Knob
           label={t("common.amountLabel")}
           value={data.resonanceAmount}
-          min={0}
+          min={1}
           max={10}
           step={0.1}
           format={(v) => `±${v.toFixed(1)}`}
