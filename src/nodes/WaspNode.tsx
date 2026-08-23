@@ -19,6 +19,8 @@ export type WaspEntry = {
   feedback: Tone.Gain;
   feedbackDelay: Tone.Delay;
   cutoffAmt: Tone.Gain;
+  instability: Tone.LFO;
+  inputSum: Tone.Gain;
   ins: { in: Tone.Gain; cutoff: Tone.Gain };
   out: Tone.ToneAudioNode;
 };
@@ -26,51 +28,67 @@ export type WaspEntry = {
 // Soft-Clip-Kurve mit leichter Asymmetrie -- angelehnt an den charakteristischen
 // "dreckigen" Klang der CMOS-Inverter-Stufen im echten EDP Wasp.
 function waspCurve(drive: number): Float32Array {
-  const amount = 1 + drive * 8;
-  const samples = 1024;
+  const amount = 1 + drive * 14;
+  const samples = 2048; // feiner aufgelöst, damit das Falten nicht körnig klingt
   const curve = new Float32Array(samples);
+
   for (let i = 0; i < samples; i++) {
     const x = (i / (samples - 1)) * 2 - 1;
-    curve[i] = Math.tanh(x * amount) * (1 - 0.08 * x);
+    let driven = x * amount;
+
+    // Wavefolding: statt zu kappen, wird das Signal an ±1 gespiegelt.
+    // Mehrfaches Falten bei hohem "drive" erzeugt die metallisch-
+    // quäkende, instabile Obertonstruktur des echten Wasp-Verhaltens.
+    let folded = driven;
+    for (let f = 0; f < 3; f++) {
+      if (folded > 1) folded = 2 - folded;
+      else if (folded < -1) folded = -2 - folded;
+    }
+
+    // Leichte Asymmetrie -- reale Schaltungen sind nie perfekt symmetrisch
+    curve[i] = folded * (1 - 0.06 * x);
   }
   return curve;
 }
 
 export function createWaspNode(_id: string, data: WaspData): WaspEntry {
+  const inputSum = new Tone.Gain(1);
   const input = new Tone.Gain(1);
+  input.connect(inputSum);
 
-  // Kaskadierte Lowpass-Filter (12dB/oct pro Stufe)
   const stage1 = new Tone.Filter({
     frequency: data.cutoff,
     type: "lowpass",
-    Q: 0.707,
+    Q: 3,
   });
+  const shaper = new Tone.WaveShaper(waspCurve(data.drive));
   const stage2 = new Tone.Filter({
     frequency: data.cutoff,
     type: "lowpass",
-    Q: 0.707,
+    Q: 3,
   });
 
-  const shaper = new Tone.WaveShaper(waspCurve(data.drive));
-
-  // Hauptsignalpfad: Input -> Stage1 -> Shaper -> Stage2
-  input.connect(stage1);
+  inputSum.connect(stage1);
   stage1.connect(shaper);
   shaper.connect(stage2);
 
-  // Resonanz als Rückkopplung über den gesättigten Shaper zurück an Stage1.
-  // Faktor 0.95 hält das Signal in der Sättigungszone ohne extremes Hart-Clipping.
-  const feedback = new Tone.Gain(data.resonance * 0.95);
-
-  // 1-Sample-Delay (statt 1ms), um Kammfilter-Effekte im Audio-Graph zu vermeiden.
-  const sampleRate = Tone.getContext().sampleRate || 44100;
-  const feedbackDelay = new Tone.Delay(1 / sampleRate);
-
+  const feedback = new Tone.Gain(data.resonance * 5.5);
+  const feedbackDelay = new Tone.Delay(0.001);
   stage2.connect(feedback);
   feedback.connect(feedbackDelay);
-  feedbackDelay.connect(stage1); // Zurück an den Anfang von Stage 1
+  feedbackDelay.connect(inputSum);
 
-  // Cutoff CV-Modulation
+  // Interne Instabilität: eine schnelle, winzige Modulation auf den Cutoff,
+  // simuliert Bauteil-Drift der CMOS-Chips -- macht den Klang "lebendig"
+  // statt statisch/sauber, besonders hörbar bei hoher Resonanz.
+  const instability = new Tone.LFO({
+    frequency: 37,
+    min: -15,
+    max: 15,
+  }).start();
+  instability.connect(stage1.frequency);
+  instability.connect(stage2.frequency);
+
   const cutoffAmt = new Tone.Gain(data.cutoffAmount);
   cutoffAmt.connect(stage1.frequency);
   cutoffAmt.connect(stage2.frequency);
@@ -82,7 +100,9 @@ export function createWaspNode(_id: string, data: WaspData): WaspEntry {
     shaper,
     feedback,
     feedbackDelay,
+    inputSum,
     cutoffAmt,
+    instability,
     ins: { in: input, cutoff: cutoffAmt },
     out: stage2,
   };
@@ -113,6 +133,7 @@ export function disposeWaspNode(entry: WaspEntry): void {
   entry.stage2.dispose();
   entry.shaper.dispose();
   entry.feedback.dispose();
+  entry.instability.dispose();
   entry.feedbackDelay.dispose();
   entry.cutoffAmt.dispose();
 }
