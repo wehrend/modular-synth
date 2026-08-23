@@ -16,11 +16,11 @@ export type WaspEntry = {
   stage1: Tone.Filter;
   stage2: Tone.Filter;
   shaper: Tone.WaveShaper;
+  inputSum: Tone.Gain;
   feedback: Tone.Gain;
   feedbackDelay: Tone.Delay;
   cutoffAmt: Tone.Gain;
   instability: Tone.LFO;
-  inputSum: Tone.Gain;
   ins: { in: Tone.Gain; cutoff: Tone.Gain };
   out: Tone.ToneAudioNode;
 };
@@ -132,6 +132,7 @@ export function disposeWaspNode(entry: WaspEntry): void {
   entry.stage1.dispose();
   entry.stage2.dispose();
   entry.shaper.dispose();
+  entry.instability.dispose();
   entry.feedback.dispose();
   entry.instability.dispose();
   entry.feedbackDelay.dispose();
