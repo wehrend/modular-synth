@@ -120,6 +120,14 @@ export type VocoderSynthData = {
 };
 
 export type VocoderSynthFlowNode = Node<VocoderSynthData, "vocoderSynth">;
+
+export type VoicedUnvoicedData = {
+  gain: number; // Vorverstärkung des Sprachsignals
+  trebleBoost: number; // Höhenanhebung in dB, verbessert die Sprachverständlichkeit
+};
+
+export type VoicedUnvoicedFlowNode = Node<VoicedUnvoicedData, "voicedUnvoiced">;
+
 /** Diskriminierte Union aller Knoten der App. */
 export type AppNode =
   | OscFlowNode
@@ -135,6 +143,7 @@ export type AppNode =
   | SamplerFlowNode
   | VocoderAnalysisFlowNode
   | VocoderSynthFlowNode
+  | VoicedUnvoicedFlowNode
   | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
@@ -152,6 +161,7 @@ export type AudioNodeInit =
   | { id: string; type: "sampler"; data: SamplerData }
   | { id: string; type: "vocoderAnalysis"; data: VocoderAnalysisData }
   | { id: string; type: "vocoderSynth"; data: VocoderSynthData }
+  | { id: string; type: "voicedUnvoiced"; data: VoicedUnvoicedData }
   | { id: string; type: "out"; data: OutData };
 
 /** Partielle Parameter-Updates, wie sie von den Reglern kommen. */
@@ -169,4 +179,5 @@ export type NodePatch =
   | Partial<SamplerData>
   | Partial<VocoderAnalysisData>
   | Partial<VocoderSynthData>
+  | Partial<VoicedUnvoicedData>
   | Partial<OutData>;
