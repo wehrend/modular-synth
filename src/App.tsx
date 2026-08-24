@@ -45,6 +45,7 @@ import PresetSidebar from "./components/PresetSidebar";
 import SavePresetDialog from "./components/SavePresetDialog";
 import Toolbar from "./components/Toolbar";
 import SidebarActions from "./components/SidebarActions";
+import ResourceStatsOverlay from "./components/ResourceStatsOverlay";
 import { useAuth } from "./auth/AuthContext";
 import { initialNodes, initialEdges } from "./defaultPatch";
 import { createAddModuleHandler } from "./lib/addModule";
@@ -171,6 +172,7 @@ export default function App() {
           <Controls />
         </ReactFlow>
       </div>
+      <ResourceStatsOverlay />
     </div>
   );
 }

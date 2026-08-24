@@ -275,3 +275,71 @@ export function removeAudioNode(id: string): void {
     else targets.delete(id);
   }
 }
+
+export type ResourceStats = {
+  byType: Record<string, { instances: number; toneObjects: number }>;
+  totalInstances: number;
+  totalToneObjects: number;
+};
+
+/**
+ * Duck-Typing-Check: Tone.js exportiert seine interne Basisklasse nicht
+ * öffentlich, ein sauberer `instanceof`-Check über alle Objekttypen
+ * (Oszillator, Gain, Player, Signal, Loop, Buffer, Recorder, UserMedia...)
+ * ist deshalb nicht möglich. Alle Tone.js-Objekte haben aber .dispose() --
+ * das genügt als generisches Erkennungsmerkmal.
+ */
+function isToneLike(value: unknown): value is { dispose: () => unknown } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { dispose?: unknown }).dispose === "function"
+  );
+}
+
+/**
+ * Zählt die eindeutigen Tone.js-Objekte eines Registry-Eintrags, auch
+ * eine Ebene tief verschachtelt (z.B. ins.cutoff, bands[].filter). Ein
+ * Set verhindert Doppelzählung, falls ein Feld wie `out` nur ein Alias
+ * auf ein bereits anderweitig referenziertes Objekt ist (z.B. `out ===
+ * filter` bei VCF) -- sonst würde dieselbe Web-Audio-Node zweimal gezählt.
+ */
+function countToneResources(entry: RegistryEntry): number {
+  const seen = new Set<object>();
+  const visit = (value: unknown): void => {
+    if (isToneLike(value)) {
+      seen.add(value);
+    } else if (Array.isArray(value)) {
+      value.forEach(visit);
+    } else if (value && typeof value === "object") {
+      Object.values(value).forEach(visit);
+    }
+  };
+  for (const [key, value] of Object.entries(entry)) {
+    if (key === "type") continue; // reiner String-Diskriminator, kein Tone-Objekt
+    visit(value);
+  }
+  return seen.size;
+}
+
+/** Aktueller Ressourcenverbrauch des offenen Patches, aufgeschlüsselt nach Modultyp. */
+export function getResourceStats(): ResourceStats {
+  const byType: ResourceStats["byType"] = {};
+
+  registry.forEach((entry) => {
+    const t = entry.type;
+    if (!byType[t]) byType[t] = { instances: 0, toneObjects: 0 };
+    byType[t].instances += 1;
+    byType[t].toneObjects += countToneResources(entry);
+  });
+
+  const totals = Object.values(byType).reduce(
+    (acc, v) => ({
+      totalInstances: acc.totalInstances + v.instances,
+      totalToneObjects: acc.totalToneObjects + v.toneObjects,
+    }),
+    { totalInstances: 0, totalToneObjects: 0 },
+  );
+
+  return { byType, ...totals };
+}
