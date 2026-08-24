@@ -1,0 +1,84 @@
+// ResourceStatsOverlay.module.scss
+@use "../styles/variables" as v;
+
+.corner {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.toggleBtn {
+  @include v.control-base;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 16px;
+  background: v.$panel;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+
+  &:hover {
+    border-color: v.$signal;
+  }
+}
+
+.panel {
+  min-width: 220px;
+  max-width: 320px;
+  background: v.$panel;
+  border: 1px solid v.$panel-edge;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.head {
+  margin-bottom: 6px;
+}
+
+.title {
+  font-weight: 600;
+  color: v.$text;
+}
+
+.empty {
+  color: v.$text-dim;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: 2px 6px 2px 0;
+  }
+
+  th {
+    color: v.$text-dim;
+    font-weight: 400;
+  }
+
+  td {
+    color: v.$text;
+  }
+
+  th:not(:first-child),
+  td:not(:first-child) {
+    text-align: right;
+    padding-right: 0;
+    padding-left: 8px;
+  }
+
+  tfoot td {
+    border-top: 1px solid v.$panel-edge;
+    padding-top: 4px;
+    font-weight: 600;
+  }
+}

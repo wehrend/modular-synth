@@ -17,6 +17,8 @@ export {
   createAudioNode,
   updateAudioNode,
   removeAudioNode,
+  getResourceStats,
+  type ResourceStats,
 } from "./registry";
 
 export { gateOn, gateOff, fireGate } from "./gateRouting";
