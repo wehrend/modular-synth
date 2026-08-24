@@ -1,0 +1,354 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index c7b4dd7..2c913a3 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -45,6 +45,7 @@ import PresetSidebar from "./components/PresetSidebar";
+ import SavePresetDialog from "./components/SavePresetDialog";
+ import Toolbar from "./components/Toolbar";
+ import SidebarActions from "./components/SidebarActions";
++import ResourceStatsOverlay from "./components/ResourceStatsOverlay";
+ import { useAuth } from "./auth/AuthContext";
+ import { initialNodes, initialEdges } from "./defaultPatch";
+ import { createAddModuleHandler } from "./lib/addModule";
+@@ -171,6 +172,7 @@ export default function App() {
+           <Controls />
+         </ReactFlow>
+       </div>
++      <ResourceStatsOverlay />
+     </div>
+   );
+ }
+diff --git a/src/audio/index.ts b/src/audio/index.ts
+index a17931d..0406fd7 100644
+--- a/src/audio/index.ts
++++ b/src/audio/index.ts
+@@ -17,6 +17,8 @@ export {
+   createAudioNode,
+   updateAudioNode,
+   removeAudioNode,
++  getResourceStats,
++  type ResourceStats,
+ } from "./registry";
+ 
+ export { gateOn, gateOff, fireGate } from "./gateRouting";
+diff --git a/src/audio/registry.ts b/src/audio/registry.ts
+index c346552..fb7b47f 100644
+--- a/src/audio/registry.ts
++++ b/src/audio/registry.ts
+@@ -274,4 +274,72 @@ export function removeAudioNode(id: string): void {
+     if (key.startsWith(`${id}::`)) gateRoutes.delete(key);
+     else targets.delete(id);
+   }
++}
++
++export type ResourceStats = {
++  byType: Record<string, { instances: number; toneObjects: number }>;
++  totalInstances: number;
++  totalToneObjects: number;
++};
++
++/**
++ * Duck-Typing-Check: Tone.js exportiert seine interne Basisklasse nicht
++ * öffentlich, ein sauberer `instanceof`-Check über alle Objekttypen
++ * (Oszillator, Gain, Player, Signal, Loop, Buffer, Recorder, UserMedia...)
++ * ist deshalb nicht möglich. Alle Tone.js-Objekte haben aber .dispose() --
++ * das genügt als generisches Erkennungsmerkmal.
++ */
++function isToneLike(value: unknown): value is { dispose: () => unknown } {
++  return (
++    typeof value === "object" &&
++    value !== null &&
++    typeof (value as { dispose?: unknown }).dispose === "function"
++  );
++}
++
++/**
++ * Zählt die eindeutigen Tone.js-Objekte eines Registry-Eintrags, auch
++ * eine Ebene tief verschachtelt (z.B. ins.cutoff, bands[].filter). Ein
++ * Set verhindert Doppelzählung, falls ein Feld wie `out` nur ein Alias
++ * auf ein bereits anderweitig referenziertes Objekt ist (z.B. `out ===
++ * filter` bei VCF) -- sonst würde dieselbe Web-Audio-Node zweimal gezählt.
++ */
++function countToneResources(entry: RegistryEntry): number {
++  const seen = new Set<object>();
++  const visit = (value: unknown): void => {
++    if (isToneLike(value)) {
++      seen.add(value);
++    } else if (Array.isArray(value)) {
++      value.forEach(visit);
++    } else if (value && typeof value === "object") {
++      Object.values(value).forEach(visit);
++    }
++  };
++  for (const [key, value] of Object.entries(entry)) {
++    if (key === "type") continue; // reiner String-Diskriminator, kein Tone-Objekt
++    visit(value);
++  }
++  return seen.size;
++}
++
++/** Aktueller Ressourcenverbrauch des offenen Patches, aufgeschlüsselt nach Modultyp. */
++export function getResourceStats(): ResourceStats {
++  const byType: ResourceStats["byType"] = {};
++
++  registry.forEach((entry) => {
++    const t = entry.type;
++    if (!byType[t]) byType[t] = { instances: 0, toneObjects: 0 };
++    byType[t].instances += 1;
++    byType[t].toneObjects += countToneResources(entry);
++  });
++
++  const totals = Object.values(byType).reduce(
++    (acc, v) => ({
++      totalInstances: acc.totalInstances + v.instances,
++      totalToneObjects: acc.totalToneObjects + v.toneObjects,
++    }),
++    { totalInstances: 0, totalToneObjects: 0 },
++  );
++
++  return { byType, ...totals };
+ }
+\ No newline at end of file
+diff --git a/src/components/ResourceStatsOverlay.module.scss b/src/components/ResourceStatsOverlay.module.scss
+new file mode 100644
+index 0000000..4c42816
+--- /dev/null
++++ b/src/components/ResourceStatsOverlay.module.scss
+@@ -0,0 +1,84 @@
++// ResourceStatsOverlay.module.scss
++@use "../styles/variables" as v;
++
++.corner {
++  position: fixed;
++  bottom: 16px;
++  right: 16px;
++  z-index: 20;
++  display: flex;
++  flex-direction: column;
++  align-items: flex-end;
++  gap: 8px;
++}
++
++.toggleBtn {
++  @include v.control-base;
++  width: 36px;
++  height: 36px;
++  border-radius: 50%;
++  font-size: 16px;
++  background: v.$panel;
++  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
++
++  &:hover {
++    border-color: v.$signal;
++  }
++}
++
++.panel {
++  min-width: 220px;
++  max-width: 320px;
++  background: v.$panel;
++  border: 1px solid v.$panel-edge;
++  border-radius: 8px;
++  padding: 10px 12px;
++  font-size: 12px;
++  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
++}
++
++.head {
++  margin-bottom: 6px;
++}
++
++.title {
++  font-weight: 600;
++  color: v.$text;
++}
++
++.empty {
++  color: v.$text-dim;
++}
++
++.table {
++  width: 100%;
++  border-collapse: collapse;
++
++  th,
++  td {
++    text-align: left;
++    padding: 2px 6px 2px 0;
++  }
++
++  th {
++    color: v.$text-dim;
++    font-weight: 400;
++  }
++
++  td {
++    color: v.$text;
++  }
++
++  th:not(:first-child),
++  td:not(:first-child) {
++    text-align: right;
++    padding-right: 0;
++    padding-left: 8px;
++  }
++
++  tfoot td {
++    border-top: 1px solid v.$panel-edge;
++    padding-top: 4px;
++    font-weight: 600;
++  }
++}
+diff --git a/src/components/ResourceStatsOverlay.tsx b/src/components/ResourceStatsOverlay.tsx
+new file mode 100644
+index 0000000..d6e89f1
+--- /dev/null
++++ b/src/components/ResourceStatsOverlay.tsx
+@@ -0,0 +1,103 @@
++// components/ResourceStatsOverlay.tsx
++// Eigenständiges Overlay unten rechts -- bewusst NICHT an SidebarActions
++// gekoppelt, damit es unabhängig von Sidebar-Layout-Änderungen an fester
++// Bildschirmposition bleibt.
++
++import { useEffect, useState } from "react";
++import { useTranslation } from "react-i18next";
++import { getResourceStats, type ResourceStats } from "../audio";
++import styles from "./ResourceStatsOverlay.module.scss";
++
++// Bildet jeden Registry-"type" auf seinen bestehenden i18n-Titel-Schlüssel
++// ab -- so entsteht keine zweite Quelle für Modulnamen, die aus dem Ruder
++// laufen könnte, sobald mal ein Modul umbenannt wird.
++const TYPE_LABEL_KEYS: Record<string, string> = {
++  osc: "modules.vco.title",
++  mixer: "modules.mixer.title",
++  vcf: "modules.vcf.title",
++  envelope: "modules.envelope.title",
++  ringmod: "modules.ringmod.title",
++  lfo: "modules.lfo.title",
++  wasp: "modules.wasp.title",
++  noise: "modules.noise.title",
++  vca: "modules.vca.title",
++  sequencer: "modules.sequencer.title",
++  sampler: "modules.sampler.title",
++  vocoderAnalysis: "modules.vocoderAnalysis.title",
++  vocoderSynth: "modules.vocoderSynth.title",
++  out: "modules.output.title",
++};
++
++const POLL_INTERVAL_MS = 1000;
++
++export default function ResourceStatsOverlay() {
++  const { t } = useTranslation();
++  const [open, setOpen] = useState(false);
++  const [stats, setStats] = useState<ResourceStats | null>(null);
++
++  // Live-Polling statt Event-Kopplung an jede einzelne Node-Änderung --
++  // die Registry in audio/registry.ts ist reiner Modul-Scope-State, kein
++  // React-State, löst also von sich aus keine Re-Renders aus. Ein
++  // Sekunden-Intervall reicht für ein Debug-/Info-Panel völlig aus.
++  useEffect(() => {
++    if (!open) return;
++    setStats(getResourceStats());
++    const interval = setInterval(() => setStats(getResourceStats()), POLL_INTERVAL_MS);
++    return () => clearInterval(interval);
++  }, [open]);
++
++  const rows = stats
++    ? Object.entries(stats.byType).sort(([, a], [, b]) => b.toneObjects - a.toneObjects)
++    : [];
++
++  return (
++    <div className={styles.corner}>
++      {open && stats && (
++        <div className={styles.panel}>
++          <header className={styles.head}>
++            <span className={styles.title}>{t("components.resourceStats.title")}</span>
++          </header>
++
++          {rows.length === 0 ? (
++            <p className={styles.empty}>{t("components.resourceStats.empty")}</p>
++          ) : (
++            <table className={styles.table}>
++              <thead>
++                <tr>
++                  <th>{t("components.resourceStats.module")}</th>
++                  <th>{t("components.resourceStats.instances")}</th>
++                  <th>{t("components.resourceStats.nodes")}</th>
++                </tr>
++              </thead>
++              <tbody>
++                {rows.map(([type, v]) => (
++                  <tr key={type}>
++                    <td>{t(TYPE_LABEL_KEYS[type] ?? type)}</td>
++                    <td>{v.instances}</td>
++                    <td>{v.toneObjects}</td>
++                  </tr>
++                ))}
++              </tbody>
++              <tfoot>
++                <tr>
++                  <td>{t("components.resourceStats.total")}</td>
++                  <td>{stats.totalInstances}</td>
++                  <td>{stats.totalToneObjects}</td>
++                </tr>
++              </tfoot>
++            </table>
++          )}
++        </div>
++      )}
++
++      <button
++        className={styles.toggleBtn}
++        onClick={() => setOpen((v) => !v)}
++        aria-label={t("components.resourceStats.toggle")}
++        aria-expanded={open}
++      >
++        📊
++      </button>
++    </div>
++  );
++}
+diff --git a/src/i18n/locales/de.json b/src/i18n/locales/de.json
+index 86c2320..b356c22 100644
+--- a/src/i18n/locales/de.json
++++ b/src/i18n/locales/de.json
+@@ -225,6 +225,15 @@
+       "copied": "Kopiert ✓",
+       "copyFailed": "Link konnte nicht kopiert werden:",
+       "privateHint": "Funktioniert für andere erst, wenn das Preset öffentlich ist (🌐)."
++    },
++    "resourceStats": {
++      "toggle": "Ressourcen anzeigen",
++      "title": "Ressourcen (Patch)",
++      "module": "Modul",
++      "instances": "Anzahl",
++      "nodes": "Tone.js-Objekte",
++      "total": "Gesamt",
++      "empty": "Keine Module im Patch."
+     }
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/src/i18n/locales/en.json b/src/i18n/locales/en.json
+index 95307f0..7a79f29 100644
+--- a/src/i18n/locales/en.json
++++ b/src/i18n/locales/en.json
+@@ -225,6 +225,15 @@
+       "copied": "Copied ✓",
+       "copyFailed": "Could not copy link:",
+       "privateHint": "Only works for others once the preset is public (🌐)."
++    },
++    "resourceStats": {
++      "toggle": "Show resources",
++      "title": "Resources (patch)",
++      "module": "Module",
++      "instances": "Count",
++      "nodes": "Tone.js objects",
++      "total": "Total",
++      "empty": "No modules in the patch."
+     }
+   }
+-}
+\ No newline at end of file
++}

@@ -225,6 +225,15 @@
       "copied": "Kopiert ✓",
       "copyFailed": "Link konnte nicht kopiert werden:",
       "privateHint": "Funktioniert für andere erst, wenn das Preset öffentlich ist (🌐)."
+    },
+    "resourceStats": {
+      "toggle": "Ressourcen anzeigen",
+      "title": "Ressourcen (Patch)",
+      "module": "Modul",
+      "instances": "Anzahl",
+      "nodes": "Tone.js-Objekte",
+      "total": "Gesamt",
+      "empty": "Keine Module im Patch."
     }
   }
 }

@@ -225,6 +225,15 @@
       "copied": "Copied ✓",
       "copyFailed": "Could not copy link:",
       "privateHint": "Only works for others once the preset is public (🌐)."
+    },
+    "resourceStats": {
+      "toggle": "Show resources",
+      "title": "Resources (patch)",
+      "module": "Module",
+      "instances": "Count",
+      "nodes": "Tone.js objects",
+      "total": "Total",
+      "empty": "No modules in the patch."
     }
   }
 }
