@@ -37,6 +37,7 @@ export {
   getVocoderAnalysisLevels,
   getVocoderAnalysisInputLevel,
   getVocoderSynthDebugInfo,
+  getVoicedUnvoicedLevel,
 } from "./vocoderDebug";
 
 import "./hmr"; // reiner Seiteneffekt, keine Exporte

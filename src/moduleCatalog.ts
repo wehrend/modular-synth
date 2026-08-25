@@ -130,4 +130,11 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
     basePosition: { x: 440, y: 460 },
     defaults: () => ({}),
   },
+  {
+    type: "voicedUnvoiced",
+    idPrefix: "voicedUnvoiced",
+    labelKey: "modules.catalog.voicedUnvoiced",
+    basePosition: { x: 440, y: 460 },
+    defaults: () => ({ gain: 1, trebleBoost: 6 }),
+  },
 ];

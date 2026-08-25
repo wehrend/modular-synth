@@ -80,7 +80,8 @@
       "sequencer": "+ Sequenzer",
       "sampler": "+ Sampler",
       "vocoderAnalysis": "+ Vocoder (Analyse)",
-      "vocoderSynth": "+ Vocoder (Synthese)"
+      "vocoderSynth": "+ Vocoder (Synthese)",
+      "voicedUnvoiced": "+ Stimmhaft/Stimmlos-Detektor"
     },
     "vco": {
       "title": "VCO",
@@ -175,6 +176,16 @@
     "vocoderSynth": {
       "title": "VOCODER · SYNTHESIS",
       "carrierLabel": "Träger"
+    },
+    "voicedUnvoiced": {
+      "title": "V/UV DETECTOR",
+      "speechLabel": "Sprache",
+      "voicedInLabel": "Stimmhaft In",
+      "unvoicedInLabel": "Stimmlos In",
+      "trebleBoostLabel": "Treble Boost",
+      "unvoicedLedLabel": "Unvoiced",
+      "speechOutLabel": "Speech Out",
+      "carrierOutLabel": "Carrier"
     }
   },
   "pages": {
