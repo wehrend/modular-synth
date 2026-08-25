@@ -32,3 +32,9 @@ export function getVocoderSynthDebugInfo(
     output: node.outputMeter.getValue() as number,
   };
 }
+
+export function getVoicedUnvoicedLevel(id: string): number | null {
+  const node = registry.get(id);
+  if (node?.type !== "voicedUnvoiced") return null;
+  return node.ledMeter.getValue() as number;
+}

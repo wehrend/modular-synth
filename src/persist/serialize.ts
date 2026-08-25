@@ -41,6 +41,7 @@ export const MODULE_DEFAULTS: Record<string, Record<string, unknown>> = {
   envelope: { attack: 0.01, decay: 0.2, sustain: 0.6, release: 0.4 },
   vocoderAnalysis: { sensitivity: 0.02 },
   vocoderSynth: {},
+  voicedUnvoiced: { gain: 1, trebleBoost: 6 },
   out: { volume: -12, muted: false },
 };
 
