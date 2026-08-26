@@ -25,6 +25,7 @@ const TYPE_LABEL_KEYS: Record<string, string> = {
   sampler: "modules.sampler.title",
   vocoderAnalysis: "modules.vocoderAnalysis.title",
   vocoderSynth: "modules.vocoderSynth.title",
+  VoicedUnvoiced: "modules.voicedUnvoiced.title",
   out: "modules.output.title",
 };
 
@@ -42,12 +43,17 @@ export default function ResourceStatsOverlay() {
   useEffect(() => {
     if (!open) return;
     setStats(getResourceStats());
-    const interval = setInterval(() => setStats(getResourceStats()), POLL_INTERVAL_MS);
+    const interval = setInterval(
+      () => setStats(getResourceStats()),
+      POLL_INTERVAL_MS,
+    );
     return () => clearInterval(interval);
   }, [open]);
 
   const rows = stats
-    ? Object.entries(stats.byType).sort(([, a], [, b]) => b.toneObjects - a.toneObjects)
+    ? Object.entries(stats.byType).sort(
+        ([, a], [, b]) => b.toneObjects - a.toneObjects,
+      )
     : [];
 
   return (
@@ -55,11 +61,15 @@ export default function ResourceStatsOverlay() {
       {open && stats && (
         <div className={styles.panel}>
           <header className={styles.head}>
-            <span className={styles.title}>{t("components.resourceStats.title")}</span>
+            <span className={styles.title}>
+              {t("components.resourceStats.title")}
+            </span>
           </header>
 
           {rows.length === 0 ? (
-            <p className={styles.empty}>{t("components.resourceStats.empty")}</p>
+            <p className={styles.empty}>
+              {t("components.resourceStats.empty")}
+            </p>
           ) : (
             <table className={styles.table}>
               <thead>
