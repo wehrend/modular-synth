@@ -235,7 +235,7 @@
       "copy": "Copy",
       "copied": "Copied ✓",
       "copyFailed": "Could not copy link:",
-      "privateHint": "Only works for others once the preset is public (🌐)."
+      "privateHint": "Only works for others once the preset is public."
     },
     "resourceStats": {
       "toggle": "Show resources",

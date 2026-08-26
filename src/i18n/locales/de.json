@@ -235,7 +235,7 @@
       "copy": "Kopieren",
       "copied": "Kopiert ✓",
       "copyFailed": "Link konnte nicht kopiert werden:",
-      "privateHint": "Funktioniert für andere erst, wenn das Preset öffentlich ist (🌐)."
+      "privateHint": "Funktioniert für andere erst, wenn das Preset öffentlich ist."
     },
     "resourceStats": {
       "toggle": "Ressourcen anzeigen",
