@@ -1,5 +1,6 @@
 // WaspNode.tsx
 import * as Tone from "tone";
+import { connect as toneConnect } from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
@@ -8,135 +9,122 @@ import type { WaspData, WaspFlowNode } from "../types";
 import styles from "./Module.module.scss";
 
 const RAMP = 0.04;
+const WORKLET_NAME = "wasp-circuit-processor";
+
+type WaspParam = "cutoff" | "resonance" | "drive" | "cutoffAmount";
 
 /* ---------- Audio-Seite ---------- */
 
 export type WaspEntry = {
   type: "wasp";
-  stage1: Tone.Filter;
-  stage2: Tone.Filter;
-  shaper: Tone.WaveShaper;
-  inputSum: Tone.Gain;
-  feedback: Tone.Gain;
-  feedbackDelay: Tone.Delay;
-  cutoffAmt: Tone.Gain;
-  instability: Tone.LFO;
+  inputGain: Tone.Gain;
+  cvGain: Tone.Gain;
+  outputGain: Tone.Gain;
+  workletNode: AudioWorkletNode | null;
+  // Patches, die eintreffen bevor das Worklet-Modul geladen ist, werden
+  // hier zwischengespeichert und beim Verbinden nachgeholt -- sonst gehen
+  // schnelle Knob-Drehungen im Ladefenster (typ. < 50ms) verloren.
+  pendingPatch: Partial<WaspData>;
   ins: { in: Tone.Gain; cutoff: Tone.Gain };
   out: Tone.ToneAudioNode;
 };
 
-// Soft-Clip-Kurve mit leichter Asymmetrie -- angelehnt an den charakteristischen
-// "dreckigen" Klang der CMOS-Inverter-Stufen im echten EDP Wasp.
-function waspCurve(drive: number): Float32Array {
-  const amount = 1 + drive * 14;
-  const samples = 2048; // feiner aufgelöst, damit das Falten nicht körnig klingt
-  const curve = new Float32Array(samples);
+let workletModulePromise: Promise<void> | null = null;
 
-  for (let i = 0; i < samples; i++) {
-    const x = (i / (samples - 1)) * 2 - 1;
-    let driven = x * amount;
-
-    // Wavefolding: statt zu kappen, wird das Signal an ±1 gespiegelt.
-    // Mehrfaches Falten bei hohem "drive" erzeugt die metallisch-
-    // quäkende, instabile Obertonstruktur des echten Wasp-Verhaltens.
-    let folded = driven;
-    for (let f = 0; f < 3; f++) {
-      if (folded > 1) folded = 2 - folded;
-      else if (folded < -1) folded = -2 - folded;
-    }
-
-    // Leichte Asymmetrie -- reale Schaltungen sind nie perfekt symmetrisch
-    curve[i] = folded * (1 - 0.06 * x);
+/** Lädt das Worklet-Modul genau einmal pro AudioContext. */
+function loadWaspWorklet(): Promise<void> {
+  if (!workletModulePromise) {
+    const url = new URL("../audio/worklets/wasp-processor.ts", import.meta.url);
+    const context = Tone.getContext().rawContext as unknown as AudioContext;
+    workletModulePromise = context.audioWorklet.addModule(url.href);
   }
-  return curve;
+  return workletModulePromise;
+}
+
+function setParam(
+  node: AudioWorkletNode,
+  name: WaspParam,
+  value: number,
+): void {
+  const param = node.parameters.get(name);
+  if (!param) return;
+  param.linearRampToValueAtTime(value, Tone.getContext().currentTime + RAMP);
 }
 
 export function createWaspNode(_id: string, data: WaspData): WaspEntry {
-  const inputSum = new Tone.Gain(1);
-  const input = new Tone.Gain(1);
-  input.connect(inputSum);
+  // Sofort echte Tone-Gains zurückgeben -- createAudioNode() in der Registry
+  // läuft synchron beim App-Start, vor jeder Nutzergeste. Das Worklet-Modul
+  // lädt async im Hintergrund und wird nachträglich dazwischengehängt;
+  // bis dahin bleibt der Pfad stumm statt zu blockieren oder zu werfen.
+  const inputGain = new Tone.Gain(1);
+  const cvGain = new Tone.Gain(1);
+  const outputGain = new Tone.Gain(1);
 
-  const stage1 = new Tone.Filter({
-    frequency: data.cutoff,
-    type: "lowpass",
-    Q: 3,
-  });
-  const shaper = new Tone.WaveShaper(waspCurve(data.drive));
-  const stage2 = new Tone.Filter({
-    frequency: data.cutoff,
-    type: "lowpass",
-    Q: 3,
-  });
-
-  inputSum.connect(stage1);
-  stage1.connect(shaper);
-  shaper.connect(stage2);
-
-  const feedback = new Tone.Gain(data.resonance * 5.5);
-  const feedbackDelay = new Tone.Delay(0.001);
-  stage2.connect(feedback);
-  feedback.connect(feedbackDelay);
-  feedbackDelay.connect(inputSum);
-
-  // Interne Instabilität: eine schnelle, winzige Modulation auf den Cutoff,
-  // simuliert Bauteil-Drift der CMOS-Chips -- macht den Klang "lebendig"
-  // statt statisch/sauber, besonders hörbar bei hoher Resonanz.
-  const instability = new Tone.LFO({
-    frequency: 37,
-    min: -15,
-    max: 15,
-  }).start();
-  instability.connect(stage1.frequency);
-  instability.connect(stage2.frequency);
-
-  const cutoffAmt = new Tone.Gain(data.cutoffAmount);
-  cutoffAmt.connect(stage1.frequency);
-  cutoffAmt.connect(stage2.frequency);
-
-  return {
+  const entry: WaspEntry = {
     type: "wasp",
-    stage1,
-    stage2,
-    shaper,
-    feedback,
-    feedbackDelay,
-    inputSum,
-    cutoffAmt,
-    instability,
-    ins: { in: input, cutoff: cutoffAmt },
-    out: stage2,
+    inputGain,
+    cvGain,
+    outputGain,
+    workletNode: null,
+    pendingPatch: {},
+    ins: { in: inputGain, cutoff: cvGain },
+    out: outputGain,
   };
+
+  loadWaspWorklet()
+    .then(() => {
+      const context = Tone.getContext().rawContext as unknown as AudioContext;
+      const node = new AudioWorkletNode(context, WORKLET_NAME, {
+        numberOfInputs: 2,
+        numberOfOutputs: 1,
+        channelCount: 1,
+        channelCountMode: "explicit",
+      });
+
+      const initial: WaspData = { ...data, ...entry.pendingPatch };
+      setParam(node, "cutoff", initial.cutoff);
+      setParam(node, "resonance", initial.resonance);
+      setParam(node, "drive", initial.drive);
+      setParam(node, "cutoffAmount", initial.cutoffAmount);
+
+      toneConnect(inputGain, node, 0, 0);
+      toneConnect(cvGain, node, 0, 1);
+      toneConnect(node, outputGain);
+
+      entry.workletNode = node;
+      entry.pendingPatch = {};
+    })
+    .catch((err) => {
+      console.error("Wasp-Worklet konnte nicht geladen werden:", err);
+    });
+
+  return entry;
 }
 
 export function updateWaspNode(
   entry: WaspEntry,
   patch: Partial<WaspData>,
 ): void {
-  if (patch.cutoff !== undefined) {
-    entry.stage1.frequency.rampTo(patch.cutoff, RAMP);
-    entry.stage2.frequency.rampTo(patch.cutoff, RAMP);
+  if (!entry.workletNode) {
+    entry.pendingPatch = { ...entry.pendingPatch, ...patch };
+    return;
   }
-  if (patch.resonance !== undefined) {
-    entry.feedback.gain.rampTo(patch.resonance * 0.95, RAMP);
-  }
-  if (patch.drive !== undefined) {
-    entry.shaper.curve = waspCurve(patch.drive);
-  }
-  if (patch.cutoffAmount !== undefined) {
-    entry.cutoffAmt.gain.rampTo(patch.cutoffAmount, RAMP);
-  }
+  if (patch.cutoff !== undefined)
+    setParam(entry.workletNode, "cutoff", patch.cutoff);
+  if (patch.resonance !== undefined)
+    setParam(entry.workletNode, "resonance", patch.resonance);
+  if (patch.drive !== undefined)
+    setParam(entry.workletNode, "drive", patch.drive);
+  if (patch.cutoffAmount !== undefined)
+    setParam(entry.workletNode, "cutoffAmount", patch.cutoffAmount);
 }
 
 export function disposeWaspNode(entry: WaspEntry): void {
-  entry.ins.in.dispose();
-  entry.stage1.dispose();
-  entry.stage2.dispose();
-  entry.shaper.dispose();
-  entry.instability.dispose();
-  entry.feedback.dispose();
-  entry.instability.dispose();
-  entry.feedbackDelay.dispose();
-  entry.cutoffAmt.dispose();
+  entry.inputGain.dispose();
+  entry.cvGain.dispose();
+  entry.outputGain.dispose();
+  entry.workletNode?.disconnect();
+  entry.workletNode?.port.close();
 }
 
 /* ---------- UI-Seite ---------- */
