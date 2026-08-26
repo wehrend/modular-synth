@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { listPresets, type PresetRow } from "../persist/supabase";
 import styles from "./PresetSidebar.module.scss";
+import { GlobeIcon, LockIcon, TrashIcon } from "lucide-react";
 
 type Props = {
   onLoad: (id: string, name: string) => void;
@@ -65,7 +66,7 @@ export default function PresetSidebar({
                   : t("components.presetSidebar.private")
               }
             >
-              {p.is_public ? "🌐" : "🔒"}
+              {p.is_public ? <GlobeIcon /> : <LockIcon />}
             </button>
             <button
               className={styles.loadBtn}
@@ -98,7 +99,7 @@ export default function PresetSidebar({
               })}
               title={t("components.presetSidebar.deleteTitle")}
             >
-              🗑
+              <TrashIcon />
             </button>
           </li>
         ))}
