@@ -1,149 +1,17 @@
+// EvenVcoNode.tsx
 import * as Tone from "tone";
+import { connect as toneConnect } from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
-import { updateAudioNode } from "../audio";
-import {
-  type EvenVcoData,
-  type EvenVcoFlowNode,
-} from "../types";
-import styles from "./Module.module.scss";
 import RotarySwitch from "../components/RotarySwitch";
+import { updateAudioNode } from "../audio";
+import type { EvenVcoData, EvenVcoFlowNode } from "../types";
+import styles from "./Module.module.scss";
 
 const RAMP = 0.04;
-
-/* ---------- Audio-Seite ---------- */
-
-export type EvenVcoEntry = {
-  type: "evenvco";
-  oscSine: Tone.Oscillator;
-  oscTriangle: Tone.Oscillator;
-  oscSawtooth: Tone.Oscillator;
-  oscSquare: Tone.Oscillator;
-  sineCore: Tone.Oscillator;
-  evenShaper: Tone.WaveShaper;
-  dcBlocker: Tone.Filter;
-  cvAmt: Tone.Gain;
-  currentData: EvenVcoData;
-  ins: { cv: Tone.Gain };
-  outs: {
-    sine: Tone.ToneAudioNode;
-    triangle: Tone.ToneAudioNode;
-    sawtooth: Tone.ToneAudioNode;
-    square: Tone.ToneAudioNode;
-    even: Tone.ToneAudioNode;
-  };
-};
-
-// Vollweg-Gleichrichtung (|x|) ist eine gerad-symmetrische Funktion
-// (f(-x) = f(x)) -- genau solche Nichtlinearitäten erzeugen mathematisch
-// AUSSCHLIESSLICH geradzahlige Obertöne (2f, 4f, 6f, ...), keine ungeraden.
-// Leicht geglättet statt scharfem |x|, damit es nicht wie reines Clipping klingt.
-function evenHarmonicsCurve(): Float32Array {
-  const samples = 1024;
-  const curve = new Float32Array(samples);
-  for (let i = 0; i < samples; i++) {
-    const x = (i / (samples - 1)) * 2 - 1;
-    curve[i] = Math.abs(x) ** 0.85; // Exponent < 1 rundet die Spitze leicht ab
-  }
-  return curve;
-}
-
-function computeFrequency(data: EvenVcoData): number {
-  const BASE_FREQUENCY = 440;
-  const octave = data.octave ?? 5;
-  const fineTune = data.fineTune ?? 0;
-  return BASE_FREQUENCY * Math.pow(2, octave - 5) + fineTune;
-}
-
-export function createEvenVcoNode(
-  _id: string,
-  data: EvenVcoData,
-): EvenVcoEntry {
-  const freq = computeFrequency(data);
-
-  const oscSine = new Tone.Oscillator(freq, "sine");
-  const oscTriangle = new Tone.Oscillator(freq, "triangle");
-  const oscSawtooth = new Tone.Oscillator(freq, "sawtooth");
-  const oscSquare = new Tone.Oscillator(freq, "square");
-  const allOscs = [oscSine, oscTriangle, oscSawtooth, oscSquare];
-  if (data.running) allOscs.forEach((o) => o.start());
-
-  const sineCore = new Tone.Oscillator(freq, "sine");
-  if (data.running) sineCore.start();
-
-  const evenShaper = new Tone.WaveShaper(evenHarmonicsCurve());
-  const dcBlocker = new Tone.Filter({ frequency: 20, type: "highpass", Q: 0 });
-  sineCore.connect(evenShaper);
-  evenShaper.connect(dcBlocker);
-
-  const cvAmt = new Tone.Gain(data.cvAmount);
-  // ALLE fünf Kerne folgen derselben CV, damit sie zueinander stimmig bleiben
-  [...allOscs, sineCore].forEach((o) => cvAmt.connect(o.frequency));
-
-  return {
-    type: "evenvco",
-    oscSine,
-    oscTriangle,
-    oscSawtooth,
-    oscSquare,
-    sineCore,
-    evenShaper,
-    dcBlocker,
-    cvAmt,
-    currentData: data,
-    ins: { cv: cvAmt },
-    outs: {
-      sine: oscSine,
-      triangle: oscTriangle,
-      sawtooth: oscSawtooth,
-      square: oscSquare,
-      even: dcBlocker,
-    },
-  };
-}
-
-export function updateEvenVcoNode(
-  entry: EvenVcoEntry,
-  patch: Partial<EvenVcoData>,
-): void {
-  entry.currentData = { ...entry.currentData, ...patch };
-
-  if (patch.octave !== undefined || patch.fineTune !== undefined) {
-    const freq = computeFrequency(entry.currentData);
-    entry.oscSine.frequency.rampTo(freq, RAMP);
-    entry.oscTriangle.frequency.rampTo(freq, RAMP);
-    entry.oscSawtooth.frequency.rampTo(freq, RAMP);
-    entry.oscSquare.frequency.rampTo(freq, RAMP);
-    entry.sineCore.frequency.rampTo(freq, RAMP);
-  }
-  if (patch.cvAmount !== undefined) {
-    entry.cvAmt.gain.rampTo(patch.cvAmount, RAMP);
-  }
-  if (patch.running !== undefined) {
-    const oscs = [
-      entry.oscSine,
-      entry.oscTriangle,
-      entry.oscSawtooth,
-      entry.oscSquare,
-      entry.sineCore,
-    ];
-    if (patch.running) oscs.forEach((o) => o.start());
-    else oscs.forEach((o) => o.stop());
-  }
-}
-
-export function disposeEvenVcoNode(entry: EvenVcoEntry): void {
-  entry.oscSine.dispose();
-  entry.oscTriangle.dispose();
-  entry.oscSawtooth.dispose();
-  entry.oscSquare.dispose();
-  entry.sineCore.dispose();
-  entry.evenShaper.dispose();
-  entry.dcBlocker.dispose();
-  entry.cvAmt.dispose();
-}
-
-/* ---------- UI-Seite ---------- */
+const WORKLET_NAME = "evenvco-processor";
+const BASE_FREQUENCY = 440; // A4 als Referenz bei Oktave-Index 5 (Mitte von 0-11)
 
 const OCTAVE_LABELS = [
   "32'",
@@ -160,54 +28,250 @@ const OCTAVE_LABELS = [
   "1/64'",
 ];
 
+type EvenVcoParam = "masterFreq" | "slaveFreq" | "masterCvAmount" | "fmAmount";
+
+function computeMasterFrequency(data: EvenVcoData): number {
+  const octave = data.octave ?? 5;
+  const fineTune = data.fineTune ?? 0;
+  return BASE_FREQUENCY * Math.pow(2, octave - 5) + fineTune;
+}
+
+/* ---------- Audio-Seite ---------- */
+
+export type EvenVcoEntry = {
+  type: "evenvco";
+  masterCvIn: Tone.Gain;
+  slaveFmIn: Tone.Gain;
+  sineOut: Tone.Gain;
+  triangleOut: Tone.Gain;
+  sawtoothOut: Tone.Gain;
+  squareOut: Tone.Gain;
+  evenOut: Tone.Gain;
+  workletNode: AudioWorkletNode | null;
+  // Patches, die eintreffen bevor das Worklet-Modul geladen ist, werden
+  // hier zwischengespeichert und beim Verbinden nachgeholt -- sonst gehen
+  // schnelle Knob-Drehungen im Ladefenster (typ. < 50ms) verloren.
+  pendingPatch: Partial<EvenVcoData>;
+  currentData: EvenVcoData;
+  ins: { masterCv: Tone.Gain; slaveFm: Tone.Gain };
+  outs: {
+    sine: Tone.ToneAudioNode;
+    triangle: Tone.ToneAudioNode;
+    sawtooth: Tone.ToneAudioNode;
+    square: Tone.ToneAudioNode;
+    even: Tone.ToneAudioNode;
+  };
+};
+
+let workletModulePromise: Promise<void> | null = null;
+
+/** Lädt das Worklet-Modul genau einmal pro AudioContext. */
+function loadEvenVcoWorklet(): Promise<void> {
+  if (!workletModulePromise) {
+    const url = new URL(
+      "../audio/worklets/evenvco-processor.ts",
+      import.meta.url,
+    );
+    const context = Tone.getContext().rawContext as unknown as AudioContext;
+    workletModulePromise = context.audioWorklet.addModule(url.href);
+  }
+  return workletModulePromise;
+}
+
+function setParam(
+  node: AudioWorkletNode,
+  name: EvenVcoParam,
+  value: number,
+): void {
+  const param = node.parameters.get(name);
+  if (!param) return;
+  param.linearRampToValueAtTime(value, Tone.getContext().currentTime + RAMP);
+}
+
+export function createEvenVcoNode(
+  _id: string,
+  data: EvenVcoData,
+): EvenVcoEntry {
+  // Sofort echte Tone-Gains zurückgeben -- createAudioNode() in der Registry
+  // läuft synchron beim App-Start, vor jeder Nutzergeste. Das Worklet-Modul
+  // lädt async im Hintergrund und wird nachträglich dazwischengehängt;
+  // bis dahin bleibt der Pfad stumm statt zu blockieren oder zu werfen.
+  const masterCvIn = new Tone.Gain(1);
+  const slaveFmIn = new Tone.Gain(1);
+  const sineOut = new Tone.Gain(1);
+  const triangleOut = new Tone.Gain(1);
+  const sawtoothOut = new Tone.Gain(1);
+  const squareOut = new Tone.Gain(1);
+  const evenOut = new Tone.Gain(1);
+
+  const entry: EvenVcoEntry = {
+    type: "evenvco",
+    masterCvIn,
+    slaveFmIn,
+    sineOut,
+    triangleOut,
+    sawtoothOut,
+    squareOut,
+    evenOut,
+    workletNode: null,
+    pendingPatch: {},
+    currentData: data,
+    ins: { masterCv: masterCvIn, slaveFm: slaveFmIn },
+    outs: {
+      sine: sineOut,
+      triangle: triangleOut,
+      sawtooth: sawtoothOut,
+      square: squareOut,
+      even: evenOut,
+    },
+  };
+
+  loadEvenVcoWorklet()
+    .then(() => {
+      const context = Tone.getContext().rawContext as unknown as AudioContext;
+      const node = new AudioWorkletNode(context, WORKLET_NAME, {
+        numberOfInputs: 2,
+        numberOfOutputs: 5,
+        outputChannelCount: [1, 1, 1, 1, 1],
+        channelCount: 1,
+        channelCountMode: "explicit",
+      });
+
+      const initial: EvenVcoData = { ...data, ...entry.pendingPatch };
+      setParam(node, "masterFreq", computeMasterFrequency(initial));
+      setParam(node, "slaveFreq", initial.slaveFreq);
+      setParam(node, "masterCvAmount", initial.masterCvAmount);
+      setParam(node, "fmAmount", initial.fmAmount);
+
+      toneConnect(masterCvIn, node, 0, 0);
+      toneConnect(slaveFmIn, node, 0, 1);
+      toneConnect(node, sineOut, 0, 0);
+      toneConnect(node, triangleOut, 1, 0);
+      toneConnect(node, sawtoothOut, 2, 0);
+      toneConnect(node, squareOut, 3, 0);
+      toneConnect(node, evenOut, 4, 0);
+
+      entry.workletNode = node;
+      entry.pendingPatch = {};
+    })
+    .catch((err) => {
+      console.error("EvenVco-Worklet konnte nicht geladen werden:", err);
+    });
+
+  return entry;
+}
+
+export function updateEvenVcoNode(
+  entry: EvenVcoEntry,
+  patch: Partial<EvenVcoData>,
+): void {
+  entry.currentData = { ...entry.currentData, ...patch };
+
+  if (!entry.workletNode) {
+    entry.pendingPatch = { ...entry.pendingPatch, ...patch };
+    return;
+  }
+  if (patch.octave !== undefined || patch.fineTune !== undefined) {
+    setParam(
+      entry.workletNode,
+      "masterFreq",
+      computeMasterFrequency(entry.currentData),
+    );
+  }
+  if (patch.slaveFreq !== undefined) {
+    setParam(entry.workletNode, "slaveFreq", patch.slaveFreq);
+  }
+  if (patch.masterCvAmount !== undefined) {
+    setParam(entry.workletNode, "masterCvAmount", patch.masterCvAmount);
+  }
+  if (patch.fmAmount !== undefined) {
+    setParam(entry.workletNode, "fmAmount", patch.fmAmount);
+  }
+}
+
+export function disposeEvenVcoNode(entry: EvenVcoEntry): void {
+  entry.masterCvIn.dispose();
+  entry.slaveFmIn.dispose();
+  entry.sineOut.dispose();
+  entry.triangleOut.dispose();
+  entry.sawtoothOut.dispose();
+  entry.squareOut.dispose();
+  entry.evenOut.dispose();
+  entry.workletNode?.disconnect();
+  entry.workletNode?.port.close();
+}
+
+/* ---------- UI-Seite ---------- */
+
 export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
+  const { t } = useTranslation();
   const { updateNodeData } = useReactFlow();
+
   const patch = (changes: Partial<EvenVcoData>) => {
     updateNodeData(id, changes);
     updateAudioNode(id, changes);
   };
 
   return (
-    <div className={`${styles.module} ${data.running ? styles.isRunning : ""}`}>
+    <div className={styles.module}>
       <header className={styles.head}>
-        <span className={styles.title}>EVEN VCO</span>
-        <button
-          className={`${styles.power} ${data.running ? styles.powerOn : ""}`}
-          onClick={() => patch({ running: !data.running })}
-        >
-          {data.running ? "an" : "aus"}
-        </button>
+        <span className={styles.title}>{t("modules.evenvco.title")}</span>
       </header>
 
-      <RotarySwitch
-        positions={12}
-        value={data.octave}
-        labels={OCTAVE_LABELS}
-        onChange={(octave) => patch({ octave })}
-      />
+      <div className={styles.row}>
+        <RotarySwitch
+          positions={12}
+          value={data.octave}
+          labels={OCTAVE_LABELS}
+          onChange={(octave) => patch({ octave })}
+        />
+        <Knob
+          label={t("modules.evenvco.fineLabel")}
+          value={data.fineTune}
+          min={-20}
+          max={20}
+          step={0.1}
+          format={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} Hz`}
+          onChange={(fineTune) => patch({ fineTune })}
+        />
+      </div>
 
       <Knob
-        label="Fine"
-        value={data.fineTune}
-        min={-20}
-        max={20}
-        step={0.1}
-        format={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} Hz`}
-        onChange={(fineTune) => patch({ fineTune })}
+        label={t("modules.evenvco.slaveLabel")}
+        value={data.slaveFreq}
+        min={20}
+        max={2000}
+        step={1}
+        log
+        format={(v) => `${v} Hz`}
+        onChange={(slaveFreq) => patch({ slaveFreq })}
       />
 
       <div className={styles.ioRow}>
-        <Handle type="target" position={Position.Left} id="cv" />
-        <span className={styles.ioLabel}>CV</span>
+        <Handle type="target" position={Position.Left} id="masterCv" />
+        <span className={styles.ioLabel}>{t("modules.evenvco.cvLabel")}</span>
         <Knob
-          label="Amount"
-          value={data.cvAmount}
-          min={1}
-          max={2000}
-          step={1}
-          log
+          label={t("modules.evenvco.cvAmountLabel")}
+          value={data.masterCvAmount}
+          min={0}
+          max={5000}
+          step={10}
           format={(v) => `±${v}`}
-          onChange={(cvAmount) => patch({ cvAmount })}
+          onChange={(masterCvAmount) => patch({ masterCvAmount })}
+        />
+      </div>
+
+      <div className={styles.ioRow}>
+        <Handle type="target" position={Position.Left} id="slaveFm" />
+        <span className={styles.ioLabel}>{t("modules.evenvco.fmLabel")}</span>
+        <Knob
+          label={t("modules.evenvco.fmAmountLabel")}
+          value={data.fmAmount}
+          min={0}
+          max={5000}
+          step={10}
+          format={(v) => `±${v}`}
+          onChange={(fmAmount) => patch({ fmAmount })}
         />
       </div>
 
@@ -217,7 +281,7 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           type="source"
           position={Position.Right}
           id="sine"
-          style={{ top: "58%" }}
+          style={{ top: "55%" }}
         />
       </div>
       <div className={styles.ioRowOut}>
@@ -226,7 +290,7 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           type="source"
           position={Position.Right}
           id="triangle"
-          style={{ top: "67%" }}
+          style={{ top: "65%" }}
         />
       </div>
       <div className={styles.ioRowOut}>
@@ -235,7 +299,7 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           type="source"
           position={Position.Right}
           id="sawtooth"
-          style={{ top: "76%" }}
+          style={{ top: "75%" }}
         />
       </div>
       <div className={styles.ioRowOut}>
@@ -253,7 +317,7 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           type="source"
           position={Position.Right}
           id="even"
-          style={{ top: "94%" }}
+          style={{ top: "95%" }}
         />
       </div>
     </div>

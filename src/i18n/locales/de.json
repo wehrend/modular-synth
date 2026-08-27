@@ -198,13 +198,13 @@
       "right": "R"
     },
     "evenVco": {
-      "frequency": "Frequenz",
-      "cv": "CV",
-      "cvAmount": "Amount",
-      "outputMain": "Main",
-      "outputEven": "Even",
-      "running": "an",
-      "stopped": "aus"
+      "title": "EVEN VCO",
+      "fineLabel": "Fine",
+      "slaveLabel": "Slave",
+      "cvLabel": "CV",
+      "cvAmountLabel": "Amount",
+      "fmLabel": "FM",
+      "fmAmountLabel": "Amount"
     }
   },
   "pages": {
