@@ -149,12 +149,6 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
     idPrefix: "evenvco",
     labelKey: "modules.catalog.evenvco",
     basePosition: { x: 440, y: 460 },
-    defaults: () => ({
-      octave: 5,
-      fineTune: 0,
-      waveform: "sawtooth",
-      running: false,
-      cvAmount: 0,
-    }),
+    defaults: () => ({ octave: 5, fineTune: 0, running: false, cvAmount: 0 }),
   },
 ];

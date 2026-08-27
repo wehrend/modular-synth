@@ -3,10 +3,8 @@ import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import Knob from "../components/Knob";
 import { updateAudioNode } from "../audio";
 import {
-  WAVEFORMS,
   type EvenVcoData,
   type EvenVcoFlowNode,
-  type Waveform,
 } from "../types";
 import styles from "./Module.module.scss";
 import RotarySwitch from "../components/RotarySwitch";
@@ -17,14 +15,23 @@ const RAMP = 0.04;
 
 export type EvenVcoEntry = {
   type: "evenvco";
-  osc: Tone.Oscillator; // normaler, wählbarer Ausgang
-  sineCore: Tone.Oscillator; // interner, fester Sinus -- Basis für den Even-Trick
-  currentData: EvenVcoData;
+  oscSine: Tone.Oscillator;
+  oscTriangle: Tone.Oscillator;
+  oscSawtooth: Tone.Oscillator;
+  oscSquare: Tone.Oscillator;
+  sineCore: Tone.Oscillator;
   evenShaper: Tone.WaveShaper;
   dcBlocker: Tone.Filter;
   cvAmt: Tone.Gain;
+  currentData: EvenVcoData;
   ins: { cv: Tone.Gain };
-  outs: { main: Tone.ToneAudioNode; even: Tone.ToneAudioNode };
+  outs: {
+    sine: Tone.ToneAudioNode;
+    triangle: Tone.ToneAudioNode;
+    sawtooth: Tone.ToneAudioNode;
+    square: Tone.ToneAudioNode;
+    even: Tone.ToneAudioNode;
+  };
 };
 
 // Vollweg-Gleichrichtung (|x|) ist eine gerad-symmetrische Funktion
@@ -53,40 +60,45 @@ export function createEvenVcoNode(
   data: EvenVcoData,
 ): EvenVcoEntry {
   const freq = computeFrequency(data);
-  const osc = new Tone.Oscillator(freq, data.waveform);
-  if (data.running) osc.start();
 
-  // Fester Sinuskern für den Even-Ausgang, unabhängig von der gewählten
-  // Wellenform des Hauptausgangs -- läuft synchron zur selben Frequenz.
-  const BASE_FREQUENCY = 440; // A4 als Referenz
+  const oscSine = new Tone.Oscillator(freq, "sine");
+  const oscTriangle = new Tone.Oscillator(freq, "triangle");
+  const oscSawtooth = new Tone.Oscillator(freq, "sawtooth");
+  const oscSquare = new Tone.Oscillator(freq, "square");
+  const allOscs = [oscSine, oscTriangle, oscSawtooth, oscSquare];
+  if (data.running) allOscs.forEach((o) => o.start());
 
-  // Startfrequenz anhand von octave/fineTune (oder Standard BASE_FREQUENCY) initialisieren:
-  const sineCore = new Tone.Oscillator(BASE_FREQUENCY, "sine");
+  const sineCore = new Tone.Oscillator(freq, "sine");
   if (data.running) sineCore.start();
 
   const evenShaper = new Tone.WaveShaper(evenHarmonicsCurve());
-  // Gleichrichtung erzeugt einen DC-Offset (der Mittelwert von |sin| ist
-  // nicht 0) -- ein Hochpass mit sehr niedrigem Cutoff entfernt ihn wieder,
-  // ohne den hörbaren Klanganteil zu beeinflussen.
   const dcBlocker = new Tone.Filter({ frequency: 20, type: "highpass", Q: 0 });
-
   sineCore.connect(evenShaper);
   evenShaper.connect(dcBlocker);
 
   const cvAmt = new Tone.Gain(data.cvAmount);
-  cvAmt.connect(osc.frequency);
-  cvAmt.connect(sineCore.frequency); // beide Kerne folgen derselben CV
+  // ALLE fünf Kerne folgen derselben CV, damit sie zueinander stimmig bleiben
+  [...allOscs, sineCore].forEach((o) => cvAmt.connect(o.frequency));
 
   return {
     type: "evenvco",
-    osc,
+    oscSine,
+    oscTriangle,
+    oscSawtooth,
+    oscSquare,
     sineCore,
     evenShaper,
     dcBlocker,
     cvAmt,
     currentData: data,
     ins: { cv: cvAmt },
-    outs: { main: osc, even: dcBlocker },
+    outs: {
+      sine: oscSine,
+      triangle: oscTriangle,
+      sawtooth: oscSawtooth,
+      square: oscSquare,
+      even: dcBlocker,
+    },
   };
 }
 
@@ -94,32 +106,37 @@ export function updateEvenVcoNode(
   entry: EvenVcoEntry,
   patch: Partial<EvenVcoData>,
 ): void {
-  entry.currentData = { ...entry.currentData, ...patch }; // zuerst mergen
+  entry.currentData = { ...entry.currentData, ...patch };
 
   if (patch.octave !== undefined || patch.fineTune !== undefined) {
-    const freq = computeFrequency(entry.currentData); // dann mit den NEUEN, gemergten Daten rechnen
-    entry.osc.frequency.rampTo(freq, RAMP);
+    const freq = computeFrequency(entry.currentData);
+    entry.oscSine.frequency.rampTo(freq, RAMP);
+    entry.oscTriangle.frequency.rampTo(freq, RAMP);
+    entry.oscSawtooth.frequency.rampTo(freq, RAMP);
+    entry.oscSquare.frequency.rampTo(freq, RAMP);
     entry.sineCore.frequency.rampTo(freq, RAMP);
-  }
-  if (patch.waveform !== undefined) {
-    entry.osc.type = patch.waveform;
   }
   if (patch.cvAmount !== undefined) {
     entry.cvAmt.gain.rampTo(patch.cvAmount, RAMP);
   }
   if (patch.running !== undefined) {
-    if (patch.running) {
-      entry.osc.start();
-      entry.sineCore.start();
-    } else {
-      entry.osc.stop();
-      entry.sineCore.stop();
-    }
+    const oscs = [
+      entry.oscSine,
+      entry.oscTriangle,
+      entry.oscSawtooth,
+      entry.oscSquare,
+      entry.sineCore,
+    ];
+    if (patch.running) oscs.forEach((o) => o.start());
+    else oscs.forEach((o) => o.stop());
   }
 }
 
 export function disposeEvenVcoNode(entry: EvenVcoEntry): void {
-  entry.osc.dispose();
+  entry.oscSine.dispose();
+  entry.oscTriangle.dispose();
+  entry.oscSawtooth.dispose();
+  entry.oscSquare.dispose();
   entry.sineCore.dispose();
   entry.evenShaper.dispose();
   entry.dcBlocker.dispose();
@@ -128,35 +145,27 @@ export function disposeEvenVcoNode(entry: EvenVcoEntry): void {
 
 /* ---------- UI-Seite ---------- */
 
-const WAVEFORM_LABELS: Record<Waveform, string> = {
-  sine: "Sin",
-  triangle: "Tri",
-  sawtooth: "Saw",
-  square: "Sqr",
-};
+const OCTAVE_LABELS = [
+  "32'",
+  "16'",
+  "8'",
+  "4'",
+  "2'",
+  "1'",
+  "1/2'",
+  "1/4'",
+  "1/8'",
+  "1/16'",
+  "1/32'",
+  "1/64'",
+];
 
 export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
   const { updateNodeData } = useReactFlow();
-
   const patch = (changes: Partial<EvenVcoData>) => {
     updateNodeData(id, changes);
     updateAudioNode(id, changes);
   };
-
-  const OCTAVE_LABELS = [
-    "32'",
-    "16'",
-    "8'",
-    "4'",
-    "2'",
-    "1'",
-    "1/2'",
-    "1/4'",
-    "1/8'",
-    "1/16'",
-    "1/32'",
-    "1/64'",
-  ];
 
   return (
     <div className={`${styles.module} ${data.running ? styles.isRunning : ""}`}>
@@ -169,6 +178,7 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           {data.running ? "an" : "aus"}
         </button>
       </header>
+
       <RotarySwitch
         positions={12}
         value={data.octave}
@@ -185,17 +195,7 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
         format={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} Hz`}
         onChange={(fineTune) => patch({ fineTune })}
       />
-      <div className={`${styles.row} ${styles.rowGap}`}>
-        {WAVEFORMS.map((w) => (
-          <button
-            key={w}
-            className={`${styles.chip} ${data.waveform === w ? styles.chipActive : ""}`}
-            onClick={() => patch({ waveform: w })}
-          >
-            {WAVEFORM_LABELS[w]}
-          </button>
-        ))}
-      </div>
+
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="cv" />
         <span className={styles.ioLabel}>CV</span>
@@ -210,13 +210,41 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           onChange={(cvAmount) => patch({ cvAmount })}
         />
       </div>
+
       <div className={styles.ioRowOut}>
-        <span className={styles.ioLabel}>Main</span>
+        <span className={styles.ioLabel}>Sin</span>
         <Handle
           type="source"
           position={Position.Right}
-          id="main"
-          style={{ top: "70%" }}
+          id="sine"
+          style={{ top: "58%" }}
+        />
+      </div>
+      <div className={styles.ioRowOut}>
+        <span className={styles.ioLabel}>Tri</span>
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="triangle"
+          style={{ top: "67%" }}
+        />
+      </div>
+      <div className={styles.ioRowOut}>
+        <span className={styles.ioLabel}>Saw</span>
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="sawtooth"
+          style={{ top: "76%" }}
+        />
+      </div>
+      <div className={styles.ioRowOut}>
+        <span className={styles.ioLabel}>Sqr</span>
+        <Handle
+          type="source"
+          position={Position.Right}
+          id="square"
+          style={{ top: "85%" }}
         />
       </div>
       <div className={styles.ioRowOut}>
@@ -225,7 +253,7 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           type="source"
           position={Position.Right}
           id="even"
-          style={{ top: "85%" }}
+          style={{ top: "94%" }}
         />
       </div>
     </div>
