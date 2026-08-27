@@ -204,7 +204,8 @@
       "cvLabel": "CV",
       "cvAmountLabel": "Amount",
       "fmLabel": "FM",
-      "fmAmountLabel": "Amount"
+      "fmAmountLabel": "Amount",
+      "syncLabel": "Sync In"
     }
   },
   "pages": {

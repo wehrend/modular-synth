@@ -42,18 +42,16 @@ export type EvenVcoEntry = {
   type: "evenvco";
   masterCvIn: Tone.Gain;
   slaveFmIn: Tone.Gain;
+  syncIn: Tone.Gain; // ← NEU (1)
   sineOut: Tone.Gain;
   triangleOut: Tone.Gain;
   sawtoothOut: Tone.Gain;
   squareOut: Tone.Gain;
   evenOut: Tone.Gain;
   workletNode: AudioWorkletNode | null;
-  // Patches, die eintreffen bevor das Worklet-Modul geladen ist, werden
-  // hier zwischengespeichert und beim Verbinden nachgeholt -- sonst gehen
-  // schnelle Knob-Drehungen im Ladefenster (typ. < 50ms) verloren.
   pendingPatch: Partial<EvenVcoData>;
   currentData: EvenVcoData;
-  ins: { masterCv: Tone.Gain; slaveFm: Tone.Gain };
+  ins: { masterCv: Tone.Gain; slaveFm: Tone.Gain; sync: Tone.Gain }; // ← ERWEITERT (2)
   outs: {
     sine: Tone.ToneAudioNode;
     triangle: Tone.ToneAudioNode;
@@ -65,7 +63,6 @@ export type EvenVcoEntry = {
 
 let workletModulePromise: Promise<void> | null = null;
 
-/** Lädt das Worklet-Modul genau einmal pro AudioContext. */
 function loadEvenVcoWorklet(): Promise<void> {
   if (!workletModulePromise) {
     const url = new URL(
@@ -92,12 +89,9 @@ export function createEvenVcoNode(
   _id: string,
   data: EvenVcoData,
 ): EvenVcoEntry {
-  // Sofort echte Tone-Gains zurückgeben -- createAudioNode() in der Registry
-  // läuft synchron beim App-Start, vor jeder Nutzergeste. Das Worklet-Modul
-  // lädt async im Hintergrund und wird nachträglich dazwischengehängt;
-  // bis dahin bleibt der Pfad stumm statt zu blockieren oder zu werfen.
   const masterCvIn = new Tone.Gain(1);
   const slaveFmIn = new Tone.Gain(1);
+  const syncIn = new Tone.Gain(1); // ← NEU (3)
   const sineOut = new Tone.Gain(1);
   const triangleOut = new Tone.Gain(1);
   const sawtoothOut = new Tone.Gain(1);
@@ -108,6 +102,7 @@ export function createEvenVcoNode(
     type: "evenvco",
     masterCvIn,
     slaveFmIn,
+    syncIn, // ← NEU (4)
     sineOut,
     triangleOut,
     sawtoothOut,
@@ -116,7 +111,7 @@ export function createEvenVcoNode(
     workletNode: null,
     pendingPatch: {},
     currentData: data,
-    ins: { masterCv: masterCvIn, slaveFm: slaveFmIn },
+    ins: { masterCv: masterCvIn, slaveFm: slaveFmIn, sync: syncIn }, // ← ERWEITERT
     outs: {
       sine: sineOut,
       triangle: triangleOut,
@@ -130,7 +125,7 @@ export function createEvenVcoNode(
     .then(() => {
       const context = Tone.getContext().rawContext as unknown as AudioContext;
       const node = new AudioWorkletNode(context, WORKLET_NAME, {
-        numberOfInputs: 2,
+        numberOfInputs: 3, // ← GEÄNDERT (5), war 2
         numberOfOutputs: 5,
         outputChannelCount: [1, 1, 1, 1, 1],
         channelCount: 1,
@@ -145,6 +140,7 @@ export function createEvenVcoNode(
 
       toneConnect(masterCvIn, node, 0, 0);
       toneConnect(slaveFmIn, node, 0, 1);
+      toneConnect(syncIn, node, 0, 2); // ← NEU (6)
       toneConnect(node, sineOut, 0, 0);
       toneConnect(node, triangleOut, 1, 0);
       toneConnect(node, sawtoothOut, 2, 0);
@@ -187,11 +183,15 @@ export function updateEvenVcoNode(
   if (patch.fmAmount !== undefined) {
     setParam(entry.workletNode, "fmAmount", patch.fmAmount);
   }
+  // kein eigener patch-Fall für "sync" nötig -- es ist ein reiner Audio-
+  // Eingang ohne zugehörigen Regler/Parameter, wie ins.cv bei anderen
+  // Modulen auch keinen "amount" braucht, wenn nur das rohe Signal zählt.
 }
 
 export function disposeEvenVcoNode(entry: EvenVcoEntry): void {
   entry.masterCvIn.dispose();
   entry.slaveFmIn.dispose();
+  entry.syncIn.dispose(); // ← NEU
   entry.sineOut.dispose();
   entry.triangleOut.dispose();
   entry.sawtoothOut.dispose();
@@ -273,6 +273,12 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           format={(v) => `±${v}`}
           onChange={(fmAmount) => patch({ fmAmount })}
         />
+      </div>
+
+      {/* ← NEUE Eingangszeile, kein Knob -- reiner Trigger-Eingang */}
+      <div className={styles.ioRow}>
+        <Handle type="target" position={Position.Left} id="sync" />
+        <span className={styles.ioLabel}>{t("modules.evenvco.syncLabel")}</span>
       </div>
 
       <div className={styles.ioRowOut}>
