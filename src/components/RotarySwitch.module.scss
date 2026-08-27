@@ -1,0 +1,40 @@
+@use "../styles/variables" as v;
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+// RotarySwitch.module.scss
+.switch {
+  width: 64px; // war 56px
+  height: 64px; // war 56px
+  border-radius: 50%;
+  background: v.$panel;
+  border: 2px solid v.$panel-edge;
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.indicator {
+  position: absolute;
+  top: 5px; // proportional mitgewachsen
+  left: 50%;
+  width: 4px;
+  height: 20px; // war 18px, leicht angepasst an die größere Fläche
+  background: v.$signal;
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+.label {
+  font-size: 10px;
+  @include v.dim-label;
+}

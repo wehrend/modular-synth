@@ -9,6 +9,7 @@ import {
   type Waveform,
 } from "../types";
 import styles from "./Module.module.scss";
+import RotarySwitch from "../components/RotarySwitch";
 
 const RAMP = 0.04;
 
@@ -126,6 +127,23 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
     updateAudioNode(id, changes);
   };
 
+  const BASE_FREQUENCY = 440; // A4 als Referenz bei Oktave-Index 5 (Mitte von 0-11)
+
+  const OCTAVE_LABELS = [
+    "32'",
+    "16'",
+    "8'",
+    "4'",
+    "2'",
+    "1'",
+    "1/2'",
+    "1/4'",
+    "1/8'",
+    "1/16'",
+    "1/32'",
+    "1/64'",
+  ];
+
   return (
     <div className={`${styles.module} ${data.running ? styles.isRunning : ""}`}>
       <header className={styles.head}>
@@ -137,7 +155,14 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           {data.running ? "an" : "aus"}
         </button>
       </header>
-
+      <RotarySwitch
+        positions={12}
+        value={data.octave}
+        labels={OCTAVE_LABELS}
+        onChange={(octave) =>
+          patch({ octave, frequency: BASE_FREQUENCY * Math.pow(2, octave - 5) })
+        }
+      />
       <Knob
         label="Frequenz"
         value={data.frequency}
@@ -148,7 +173,6 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
         format={(v) => `${v} Hz`}
         onChange={(frequency) => patch({ frequency })}
       />
-
       <div className={`${styles.row} ${styles.rowGap}`}>
         {WAVEFORMS.map((w) => (
           <button
@@ -160,7 +184,6 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           </button>
         ))}
       </div>
-
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="cv" />
         <span className={styles.ioLabel}>CV</span>
@@ -175,7 +198,6 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           onChange={(cvAmount) => patch({ cvAmount })}
         />
       </div>
-
       <div className={styles.ioRowOut}>
         <span className={styles.ioLabel}>Main</span>
         <Handle

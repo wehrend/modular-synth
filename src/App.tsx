@@ -54,6 +54,7 @@ import { MODULE_CATALOG } from "./moduleCatalog";
 import { usePresetActions } from "./hooks/usePresetActions";
 import { usePatchFromUrl } from "./hooks/usePatchFromUrl";
 import { useFlowAudioSync } from "./hooks/useFlowAudioSync";
+import EvenVcoNode from "./nodes/EvenVcoNode";
 
 const nodeTypes = {
   osc: OscillatorNode,
@@ -71,6 +72,7 @@ const nodeTypes = {
   vocoderSynth: VocoderSynthNode,
   voicedUnvoiced: VoicedUnvoicedNode,
   panner: PannerNode,
+  evenvco: EvenVcoNode,
   out: OutputNode,
 };
 
@@ -129,6 +131,18 @@ export default function App() {
     [setNodes, t, i18n.language],
   );
 
+  // App.tsx, an der Stelle, wo du Nodes für React Flow aufbereitest/renderst
+  const displayNodes = useMemo(() => {
+    return nodes.map((n) => {
+      if (n.type !== "evenvco") return n;
+
+      const isPatched = edges.some(
+        (e) => e.source === n.id || e.target === n.id,
+      );
+      return { ...n, draggable: !isPatched };
+    });
+  }, [nodes, edges]);
+
   return (
     // Erster Klick irgendwo im Canvas weckt den AudioContext auf
     <div className={styles.app} onPointerDown={() => void resumeAudio()}>
@@ -158,7 +172,7 @@ export default function App() {
           />
         </div>
         <ReactFlow<AppNode>
-          nodes={nodes}
+          nodes={displayNodes} // statt nodes direkt
           edges={edges}
           nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
