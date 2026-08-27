@@ -13,42 +13,13 @@
 // Even-Ausgang aus der SLAVE-Phase kommt, trägt er die Sync-Zerhackung
 // mit -- ein eigenständiges, drittes Timbre zwischen reinem Even-Klang
 // und reinem Sync-Sweep.
-
-declare const sampleRate: number;
-
-interface AudioParamDescriptor {
-  name: string;
-  defaultValue?: number;
-  minValue?: number;
-  maxValue?: number;
-  automationRate?: "a-rate" | "k-rate";
-}
-
-declare class AudioWorkletProcessor {
-  readonly port: MessagePort;
-  constructor(options?: unknown);
-  process(
-    inputs: Float32Array[][],
-    outputs: Float32Array[][],
-    parameters: Record<string, Float32Array>,
-  ): boolean;
-}
-
-declare function registerProcessor(
-  name: string,
-  processorCtor: (new (options?: unknown) => AudioWorkletProcessor) & {
-    parameterDescriptors?: AudioParamDescriptor[];
-  },
-): void;
-
+// ganz oben in beiden Dateien
+import "./worklet-types"; // nur für die Ambient-Deklarationen, kein Wert-Import nötig
+import { clamp } from "./worklet-utils";
 /* eslint-disable no-restricted-globals */
 
 function wrap01(x: number): number {
   return x - Math.floor(x);
-}
-
-function clamp(v: number, lo: number, hi: number): number {
-  return v < lo ? lo : v > hi ? hi : v;
 }
 
 // Klassische, nicht bandlimitierte Formeln -- etwas Aliasing bei hohen

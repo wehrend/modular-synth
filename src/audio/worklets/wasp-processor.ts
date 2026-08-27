@@ -16,32 +16,9 @@
 // nicht, deshalb die folgenden lokalen Ambient-Deklarationen, rein damit
 // `tsc --noEmit` diese Datei mitprüfen kann.
 
-declare const sampleRate: number;
-
-interface AudioParamDescriptor {
-  name: string;
-  defaultValue?: number;
-  minValue?: number;
-  maxValue?: number;
-  automationRate?: "a-rate" | "k-rate";
-}
-
-declare class AudioWorkletProcessor {
-  readonly port: MessagePort;
-  constructor(options?: unknown);
-  process(
-    inputs: Float32Array[][],
-    outputs: Float32Array[][],
-    parameters: Record<string, Float32Array>,
-  ): boolean;
-}
-
-declare function registerProcessor(
-  name: string,
-  processorCtor: (new (options?: unknown) => AudioWorkletProcessor) & {
-    parameterDescriptors?: AudioParamDescriptor[];
-  },
-): void;
+// ganz oben in beiden Dateien
+import "./worklet-types"; // nur für die Ambient-Deklarationen, kein Wert-Import nötig
+import { clamp } from "./worklet-utils";
 
 /* eslint-disable no-restricted-globals -- sampleRate ist im AudioWorkletGlobalScope korrekt global */
 
@@ -86,10 +63,6 @@ const DRIVE_RANGE = 0.9; // max. Arbeitspunkt-Verschiebung durch "drive" in Volt
 const NR_ITERATIONS = 8;
 const NR_EPS = 1e-4;
 const RELAX_PASSES = 3;
-
-function clamp(v: number, lo: number, hi: number): number {
-  return v < lo ? lo : v > hi ? hi : v;
-}
 
 /**
  * Netto-Strom (PMOS minus NMOS), der in den Ausgangsknoten fließt, skaliert
@@ -138,11 +111,14 @@ function solveStage(
   let vout = voutPrev;
 
   const residual = (v: number) =>
-    inverterCurrent(vin, v, currentGain) - (v - VBIAS) / r - geq * (v - voutPrev);
+    inverterCurrent(vin, v, currentGain) -
+    (v - VBIAS) / r -
+    geq * (v - voutPrev);
 
   for (let iter = 0; iter < NR_ITERATIONS; iter++) {
     const f = residual(vout);
-    const df = (residual(vout + NR_EPS) - residual(vout - NR_EPS)) / (2 * NR_EPS);
+    const df =
+      (residual(vout + NR_EPS) - residual(vout - NR_EPS)) / (2 * NR_EPS);
     if (Math.abs(df) < 1e-9) break;
 
     let step = f / df;
@@ -157,10 +133,34 @@ function solveStage(
 class WaspCircuitProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors(): AudioParamDescriptor[] {
     return [
-      { name: "cutoff", defaultValue: 1200, minValue: 20, maxValue: 15000, automationRate: "k-rate" },
-      { name: "resonance", defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "k-rate" },
-      { name: "drive", defaultValue: 0, minValue: 0, maxValue: 1, automationRate: "k-rate" },
-      { name: "cutoffAmount", defaultValue: 0, minValue: 0, maxValue: 5000, automationRate: "k-rate" },
+      {
+        name: "cutoff",
+        defaultValue: 1200,
+        minValue: 20,
+        maxValue: 15000,
+        automationRate: "k-rate",
+      },
+      {
+        name: "resonance",
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 1,
+        automationRate: "k-rate",
+      },
+      {
+        name: "drive",
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 1,
+        automationRate: "k-rate",
+      },
+      {
+        name: "cutoffAmount",
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 5000,
+        automationRate: "k-rate",
+      },
     ];
   }
 
@@ -199,7 +199,10 @@ class WaspCircuitProcessor extends AudioWorkletProcessor {
 
       for (let pass = 0; pass < RELAX_PASSES; pass++) {
         const vinA =
-          VBIAS + audioIn[i] * INPUT_SCALE + driveOffset + resGain * (vC - VBIAS);
+          VBIAS +
+          audioIn[i] * INPUT_SCALE +
+          driveOffset +
+          resGain * (vC - VBIAS);
         vA = solveStage(vinA, this.vA, R_STAGE_A, C_STAGE_A, t);
         vB = solveStage(vA, this.vB, R_STAGE_BC, C_STAGE_BC, t, gmScale);
         vC = solveStage(vB, this.vC, R_STAGE_BC, C_STAGE_BC, t, gmScale);
