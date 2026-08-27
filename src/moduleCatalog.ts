@@ -150,7 +150,8 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
     labelKey: "modules.catalog.evenvco",
     basePosition: { x: 440, y: 460 },
     defaults: () => ({
-      frequency: 220,
+      octave: 5,
+      fineTune: 0,
       waveform: "sawtooth",
       running: false,
       cvAmount: 0,

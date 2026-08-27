@@ -19,6 +19,7 @@ export type EvenVcoEntry = {
   type: "evenvco";
   osc: Tone.Oscillator; // normaler, wählbarer Ausgang
   sineCore: Tone.Oscillator; // interner, fester Sinus -- Basis für den Even-Trick
+  currentData: EvenVcoData;
   evenShaper: Tone.WaveShaper;
   dcBlocker: Tone.Filter;
   cvAmt: Tone.Gain;
@@ -40,16 +41,27 @@ function evenHarmonicsCurve(): Float32Array {
   return curve;
 }
 
+function computeFrequency(data: EvenVcoData): number {
+  const BASE_FREQUENCY = 440;
+  const octave = data.octave ?? 5;
+  const fineTune = data.fineTune ?? 0;
+  return BASE_FREQUENCY * Math.pow(2, octave - 5) + fineTune;
+}
+
 export function createEvenVcoNode(
   _id: string,
   data: EvenVcoData,
 ): EvenVcoEntry {
-  const osc = new Tone.Oscillator(data.frequency, data.waveform);
+  const freq = computeFrequency(data);
+  const osc = new Tone.Oscillator(freq, data.waveform);
   if (data.running) osc.start();
 
   // Fester Sinuskern für den Even-Ausgang, unabhängig von der gewählten
   // Wellenform des Hauptausgangs -- läuft synchron zur selben Frequenz.
-  const sineCore = new Tone.Oscillator(data.frequency, "sine");
+  const BASE_FREQUENCY = 440; // A4 als Referenz
+
+  // Startfrequenz anhand von octave/fineTune (oder Standard BASE_FREQUENCY) initialisieren:
+  const sineCore = new Tone.Oscillator(BASE_FREQUENCY, "sine");
   if (data.running) sineCore.start();
 
   const evenShaper = new Tone.WaveShaper(evenHarmonicsCurve());
@@ -72,6 +84,7 @@ export function createEvenVcoNode(
     evenShaper,
     dcBlocker,
     cvAmt,
+    currentData: data,
     ins: { cv: cvAmt },
     outs: { main: osc, even: dcBlocker },
   };
@@ -81,9 +94,12 @@ export function updateEvenVcoNode(
   entry: EvenVcoEntry,
   patch: Partial<EvenVcoData>,
 ): void {
-  if (patch.frequency !== undefined) {
-    entry.osc.frequency.rampTo(patch.frequency, RAMP);
-    entry.sineCore.frequency.rampTo(patch.frequency, RAMP);
+  entry.currentData = { ...entry.currentData, ...patch }; // zuerst mergen
+
+  if (patch.octave !== undefined || patch.fineTune !== undefined) {
+    const freq = computeFrequency(entry.currentData); // dann mit den NEUEN, gemergten Daten rechnen
+    entry.osc.frequency.rampTo(freq, RAMP);
+    entry.sineCore.frequency.rampTo(freq, RAMP);
   }
   if (patch.waveform !== undefined) {
     entry.osc.type = patch.waveform;
@@ -127,8 +143,6 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
     updateAudioNode(id, changes);
   };
 
-  const BASE_FREQUENCY = 440; // A4 als Referenz bei Oktave-Index 5 (Mitte von 0-11)
-
   const OCTAVE_LABELS = [
     "32'",
     "16'",
@@ -159,19 +173,17 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
         positions={12}
         value={data.octave}
         labels={OCTAVE_LABELS}
-        onChange={(octave) =>
-          patch({ octave, frequency: BASE_FREQUENCY * Math.pow(2, octave - 5) })
-        }
+        onChange={(octave) => patch({ octave })}
       />
+
       <Knob
-        label="Frequenz"
-        value={data.frequency}
-        min={40}
-        max={1600}
-        step={1}
-        log
-        format={(v) => `${v} Hz`}
-        onChange={(frequency) => patch({ frequency })}
+        label="Fine"
+        value={data.fineTune}
+        min={-20}
+        max={20}
+        step={0.1}
+        format={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} Hz`}
+        onChange={(fineTune) => patch({ fineTune })}
       />
       <div className={`${styles.row} ${styles.rowGap}`}>
         {WAVEFORMS.map((w) => (

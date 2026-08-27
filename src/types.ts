@@ -137,7 +137,7 @@ export type PannerFlowNode = Node<PannerData, "panner">;
 
 export type EvenVcoData = {
   octave: number;
-  frequency: number;
+  fineTune: number;
   waveform: Waveform; // für den normalen Ausgang
   running: boolean;
   cvAmount: number;
