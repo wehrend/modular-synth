@@ -9,6 +9,7 @@ import { updateAudioNode } from "../audio";
 import type { EvenVcoData, EvenVcoFlowNode } from "../types";
 import baseStyles from "./Module.module.scss";
 import styles from "./EvenVcoNode.module.scss";
+import * as SAC from "standardized-audio-context";
 const RAMP = 0.04;
 const WORKLET_NAME = "evenvco-processor";
 const BASE_FREQUENCY = 440; // A4 als Referenz bei Oktave-Index 5 (Mitte von 0-11)
@@ -82,7 +83,11 @@ function setParam(
 ): void {
   const param = node.parameters.get(name);
   if (!param) return;
-  param.linearRampToValueAtTime(value, Tone.getContext().currentTime + RAMP);
+  const safeValue = Number.isFinite(value) ? value : param.defaultValue;
+  param.linearRampToValueAtTime(
+    safeValue,
+    Tone.getContext().currentTime + RAMP,
+  );
 }
 
 export function createEvenVcoNode(
@@ -124,14 +129,29 @@ export function createEvenVcoNode(
   loadEvenVcoWorklet()
     .then(() => {
       const context = Tone.getContext().rawContext as unknown as AudioContext;
-      const node = new AudioWorkletNode(context, WORKLET_NAME, {
-        numberOfInputs: 3, // ← GEÄNDERT (5), war 2
-        numberOfOutputs: 5,
-        outputChannelCount: [1, 1, 1, 1, 1],
-        channelCount: 1,
-        channelCountMode: "explicit",
-      });
+      if (!SAC.AudioWorkletNode) {
+        throw new Error(
+          "AudioWorkletNode wird von diesem Browser nicht unterstützt.",
+        );
+      }
+      const AudioWorkletNodeCtor = SAC.AudioWorkletNode;
+      if (!AudioWorkletNodeCtor) {
+        throw new Error(
+          "AudioWorkletNode wird von diesem Browser nicht unterstützt.",
+        );
+      }
 
+      const node = new AudioWorkletNodeCtor(
+        context as unknown as SAC.IAudioContext,
+        WORKLET_NAME,
+        {
+          numberOfInputs: 3,
+          numberOfOutputs: 5,
+          outputChannelCount: [1, 1, 1, 1, 1],
+          channelCount: 1,
+          channelCountMode: "explicit",
+        },
+      ) as unknown as AudioWorkletNode;
       const initial: EvenVcoData = { ...data, ...entry.pendingPatch };
       setParam(node, "masterFreq", computeMasterFrequency(initial));
       setParam(node, "slaveFreq", initial.slaveFreq);
