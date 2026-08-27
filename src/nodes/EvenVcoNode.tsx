@@ -7,8 +7,8 @@ import Knob from "../components/Knob";
 import RotarySwitch from "../components/RotarySwitch";
 import { updateAudioNode } from "../audio";
 import type { EvenVcoData, EvenVcoFlowNode } from "../types";
-import styles from "./Module.module.scss";
-
+import baseStyles from "./Module.module.scss";
+import styles from "./EvenVcoNode.module.scss";
 const RAMP = 0.04;
 const WORKLET_NAME = "evenvco-processor";
 const BASE_FREQUENCY = 440; // A4 als Referenz bei Oktave-Index 5 (Mitte von 0-11)
@@ -213,118 +213,118 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
   };
 
   return (
-    <div className={styles.module}>
-      <header className={styles.head}>
-        <span className={styles.title}>{t("modules.evenvco.title")}</span>
+    <div className={`${baseStyles.module} ${styles.evenVcoModule}`}>
+      <header className={baseStyles.head}>
+        <span className={baseStyles.title}>{t("modules.evenvco.title")}</span>
       </header>
 
-      <div className={styles.row}>
-        <RotarySwitch
-          positions={12}
-          value={data.octave}
-          labels={OCTAVE_LABELS}
-          onChange={(octave) => patch({ octave })}
-        />
-        <Knob
-          label={t("modules.evenvco.fineLabel")}
-          value={data.fineTune}
-          min={-20}
-          max={20}
-          step={0.1}
-          format={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} Hz`}
-          onChange={(fineTune) => patch({ fineTune })}
-        />
-      </div>
+      <div className={styles.bodyGrid}>
+        {/* Zeile 1: CV (Ganz links) | Octave & Fine (Mitte) | Sin (Ganz rechts) */}
+        <div className={styles.leftIn}>
+          <Handle type="target" position={Position.Left} id="masterCv" />
+          <span className={baseStyles.ioLabel}>
+            {t("modules.evenvco.cvLabel")}
+          </span>
+        </div>
 
-      <Knob
-        label={t("modules.evenvco.slaveLabel")}
-        value={data.slaveFreq}
-        min={20}
-        max={2000}
-        step={1}
-        log
-        format={(v) => `${v} Hz`}
-        onChange={(slaveFreq) => patch({ slaveFreq })}
-      />
+        <div className={styles.centerControls}>
+          <RotarySwitch
+            positions={12}
+            value={data.octave}
+            labels={OCTAVE_LABELS}
+            onChange={(octave) => patch({ octave })}
+          />
+          <Knob
+            label={t("modules.evenvco.fineLabel")}
+            value={data.fineTune}
+            min={-20}
+            max={20}
+            step={0.1}
+            format={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} Hz`}
+            onChange={(fineTune) => patch({ fineTune })}
+          />
+        </div>
 
-      <div className={styles.ioRow}>
-        <Handle type="target" position={Position.Left} id="masterCv" />
-        <span className={styles.ioLabel}>{t("modules.evenvco.cvLabel")}</span>
-        <Knob
-          label={t("modules.evenvco.cvAmountLabel")}
-          value={data.masterCvAmount}
-          min={0}
-          max={5000}
-          step={10}
-          format={(v) => `±${v}`}
-          onChange={(masterCvAmount) => patch({ masterCvAmount })}
-        />
-      </div>
+        <div className={styles.rightOut}>
+          <span className={baseStyles.ioLabel}>Sin</span>
+          <Handle type="source" position={Position.Right} id="sine" />
+        </div>
 
-      <div className={styles.ioRow}>
-        <Handle type="target" position={Position.Left} id="slaveFm" />
-        <span className={styles.ioLabel}>{t("modules.evenvco.fmLabel")}</span>
-        <Knob
-          label={t("modules.evenvco.fmAmountLabel")}
-          value={data.fmAmount}
-          min={0}
-          max={5000}
-          step={10}
-          format={(v) => `±${v}`}
-          onChange={(fmAmount) => patch({ fmAmount })}
-        />
-      </div>
+        {/* Zeile 2: FM (Ganz links) | CV-Amount & Slave (Mitte) | Tri (Ganz rechts) */}
+        <div className={styles.leftIn}>
+          <Handle type="target" position={Position.Left} id="slaveFm" />
+          <span className={baseStyles.ioLabel}>
+            {t("modules.evenvco.fmLabel")}
+          </span>
+        </div>
 
-      {/* ← NEUE Eingangszeile, kein Knob -- reiner Trigger-Eingang */}
-      <div className={styles.ioRow}>
-        <Handle type="target" position={Position.Left} id="sync" />
-        <span className={styles.ioLabel}>{t("modules.evenvco.syncLabel")}</span>
-      </div>
+        <div className={styles.centerControls}>
+          <Knob
+            label={t("modules.evenvco.cvAmountLabel")}
+            value={data.masterCvAmount}
+            min={0}
+            max={5000}
+            step={10}
+            format={(v) => `±${v}`}
+            onChange={(masterCvAmount) => patch({ masterCvAmount })}
+          />
+          <Knob
+            label={t("modules.evenvco.slaveLabel")}
+            value={data.slaveFreq}
+            min={20}
+            max={2000}
+            step={1}
+            log
+            format={(v) => `${v} Hz`}
+            onChange={(slaveFreq) => patch({ slaveFreq })}
+          />
+        </div>
 
-      <div className={styles.ioRowOut}>
-        <span className={styles.ioLabel}>Sin</span>
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="sine"
-          style={{ top: "55%" }}
-        />
-      </div>
-      <div className={styles.ioRowOut}>
-        <span className={styles.ioLabel}>Tri</span>
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="triangle"
-          style={{ top: "65%" }}
-        />
-      </div>
-      <div className={styles.ioRowOut}>
-        <span className={styles.ioLabel}>Saw</span>
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="sawtooth"
-          style={{ top: "75%" }}
-        />
-      </div>
-      <div className={styles.ioRowOut}>
-        <span className={styles.ioLabel}>Sqr</span>
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="square"
-          style={{ top: "85%" }}
-        />
-      </div>
-      <div className={styles.ioRowOut}>
-        <span className={styles.ioLabel}>Even</span>
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="even"
-          style={{ top: "95%" }}
-        />
+        <div className={styles.rightOut}>
+          <span className={baseStyles.ioLabel}>Tri</span>
+          <Handle type="source" position={Position.Right} id="triangle" />
+        </div>
+
+        {/* Zeile 3: Sync (Ganz links) | FM-Amount (Mitte) | Saw (Ganz rechts) */}
+        <div className={styles.leftIn}>
+          <Handle type="target" position={Position.Left} id="sync" />
+          <span className={baseStyles.ioLabel}>
+            {t("modules.evenvco.syncLabel")}
+          </span>
+        </div>
+
+        <div className={styles.centerControls}>
+          <Knob
+            label={t("modules.evenvco.fmAmountLabel")}
+            value={data.fmAmount}
+            min={0}
+            max={5000}
+            step={10}
+            format={(v) => `±${v}`}
+            onChange={(fmAmount) => patch({ fmAmount })}
+          />
+        </div>
+
+        <div className={styles.rightOut}>
+          <span className={baseStyles.ioLabel}>Saw</span>
+          <Handle type="source" position={Position.Right} id="sawtooth" />
+        </div>
+
+        {/* Zeile 4: Leer (Links) | Leer (Mitte) | Sqr (Ganz rechts) */}
+        <div />
+        <div />
+        <div className={styles.rightOut}>
+          <span className={baseStyles.ioLabel}>Sqr</span>
+          <Handle type="source" position={Position.Right} id="square" />
+        </div>
+
+        {/* Zeile 5: Leer (Links) | Leer (Mitte) | Even (Ganz rechts) */}
+        <div />
+        <div />
+        <div className={styles.rightOut}>
+          <span className={baseStyles.ioLabel}>Even</span>
+          <Handle type="source" position={Position.Right} id="even" />
+        </div>
       </div>
     </div>
   );
