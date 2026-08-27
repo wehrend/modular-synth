@@ -82,7 +82,8 @@
       "vocoderAnalysis": "+ Vocoder (Analyse)",
       "vocoderSynth": "+ Vocoder (Synthese)",
       "voicedUnvoiced": "+ Stimmhaft/Stimmlos-Detektor",
-      "panner": "+ Panner"
+      "panner": "+ Panner",
+      "evenvco": "+ Even VCO"
     },
     "vco": {
       "title": "VCO",
@@ -195,6 +196,15 @@
       "panCvLabel": "Pan CV",
       "left": "L",
       "right": "R"
+    },
+    "evenVco": {
+      "frequency": "Frequenz",
+      "cv": "CV",
+      "cvAmount": "Amount",
+      "outputMain": "Main",
+      "outputEven": "Even",
+      "running": "an",
+      "stopped": "aus"
     }
   },
   "pages": {
