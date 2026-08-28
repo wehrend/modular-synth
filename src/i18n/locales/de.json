@@ -197,7 +197,7 @@
       "left": "L",
       "right": "R"
     },
-    "evenVco": {
+    "evenvco": {
       "title": "EVEN VCO",
       "fineLabel": "Fine",
       "slaveLabel": "Slave",

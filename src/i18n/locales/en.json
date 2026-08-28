@@ -197,7 +197,7 @@
       "left": "L",
       "right": "R"
     },
-    "evenVco": {
+    "evenvco": {
       "frequency": "Frequency",
       "cv": "CV",
       "cvAmount": "Amount",
