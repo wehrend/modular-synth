@@ -81,7 +81,8 @@
       "sampler": "+ Sampler",
       "vocoderAnalysis": "+ Vocoder (Analyse)",
       "vocoderSynth": "+ Vocoder (Synthese)",
-      "voicedUnvoiced": "+ Stimmhaft/Stimmlos-Detektor"
+      "voicedUnvoiced": "+ Stimmhaft/Stimmlos-Detektor",
+      "panner": "+ Panner"
     },
     "vco": {
       "title": "VCO",
@@ -186,6 +187,14 @@
       "unvoicedLedLabel": "Unvoiced",
       "speechOutLabel": "Speech Out",
       "carrierOutLabel": "Carrier"
+    },
+    "panner": {
+      "title": "PANNER",
+      "panLabel": "Pan",
+      "center": "Mitte",
+      "panCvLabel": "Pan CV",
+      "left": "L",
+      "right": "R"
     }
   },
   "pages": {

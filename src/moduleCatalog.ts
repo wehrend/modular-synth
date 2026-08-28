@@ -137,4 +137,11 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
     basePosition: { x: 440, y: 460 },
     defaults: () => ({ gain: 1, trebleBoost: 6 }),
   },
+  {
+    type: "panner",
+    idPrefix: "panner",
+    labelKey: "modules.catalog.panner",
+    basePosition: { x: 440, y: 460 },
+    defaults: () => ({ pan: 0, panAmount: 0 }),
+  },
 ];

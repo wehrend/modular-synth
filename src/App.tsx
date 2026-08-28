@@ -36,6 +36,7 @@ import SamplerNode from "./nodes/SamplerNode";
 import VocoderAnalysisNode from "./nodes/VocoderAnalysisNode";
 import VocoderSynthNode from "./nodes/VocoderSynthNode";
 import VoicedUnvoicedNode from "./nodes/VoicedUnvoicedNode";
+import PannerNode from "./nodes/PannerNode";
 
 import { createAudioNode, connectAudio, resumeAudio } from "./audio";
 import type { AppNode } from "./types";
@@ -69,6 +70,7 @@ const nodeTypes = {
   vocoderAnalysis: VocoderAnalysisNode,
   vocoderSynth: VocoderSynthNode,
   voicedUnvoiced: VoicedUnvoicedNode,
+  panner: PannerNode,
   out: OutputNode,
 };
 
