@@ -54,7 +54,16 @@ export function connectAudio(
   const output = resolveOutput(registry.get(sourceId), sourceHandle);
   const input = resolveInput(registry.get(targetId), targetHandle);
   if (output && input) {
-    output.connect(input);
+    // Panner: Tone.Split hat zwei Kanäle (0 = links, 1 = rechts) an
+    // EINEM Node -- der Kanalindex muss explizit mitgegeben werden,
+    // sonst landet jede Verbindung auf Kanal 0.
+    if (sourceHandle === "l") {
+      output.connect(input, 0, 0);
+    } else if (sourceHandle === "r") {
+      output.connect(input, 1, 0);
+    } else {
+      output.connect(input);
+    }
   } else {
     // Das Kabel existiert im Flow-Graph, aber im Audiographen fehlt ein
     // Ende -- meistens ein Handle-ID-Tippfehler oder das Zielmodul war
@@ -73,6 +82,7 @@ export function connectAudio(
   }
 }
 
+/** Kante gelöscht → Audiosignal trennen. */
 /** Kante gelöscht → Audiosignal trennen. */
 export function disconnectAudio(
   sourceId: string,
@@ -95,7 +105,17 @@ export function disconnectAudio(
 
   try {
     if (input) {
-      output.disconnect(input);
+      // Panner: Tone.Split hat zwei Kanäle (0 = links, 1 = rechts) an
+      // EINEM Node -- der Kanalindex muss beim Trennen genauso explizit
+      // mitgegeben werden wie beim Verbinden in connectAudio, sonst
+      // trifft der Aufruf die falsche (oder keine) Verbindung.
+      if (sourceHandle === "l") {
+        output.disconnect(input, 0, 0);
+      } else if (sourceHandle === "r") {
+        output.disconnect(input, 1, 0);
+      } else {
+        output.disconnect(input);
+      }
     } else {
       output.disconnect();
     }

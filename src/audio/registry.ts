@@ -83,7 +83,13 @@ import {
   updateVoicedUnvoicedNode,
   VoicedUnvoicedEntry,
 } from "../nodes/VoicedUnvoicedNode";
+import {
+  createPannerNode,
+  updatePannerNode,
+  disposePannerNode,
+} from "../nodes/PannerNode";
 import { gateRoutes } from "./gateRouting";
+import { PannerEntry } from "../nodes/PannerNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -163,6 +169,7 @@ export type RegistryEntry =
   | VocoderAnalysisEntry
   | VocoderSynthEntry
   | VoicedUnvoicedEntry
+  | PannerEntry
   | OutEntry;
 
 export const registry = new Map<string, RegistryEntry>();
@@ -251,6 +258,11 @@ export const MODULE_HANDLERS: Record<string, ModuleHandler<any, any>> = {
     create: createVoicedUnvoicedNode,
     update: updateVoicedUnvoicedNode,
     dispose: disposeVoicedUnvoicedNode,
+  },
+  panner: {
+    create: createPannerNode,
+    update: updatePannerNode,
+    dispose: disposePannerNode,
   },
   out: {
     create: createOutputNode,
