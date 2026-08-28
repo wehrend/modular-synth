@@ -128,6 +128,13 @@ export type VoicedUnvoicedData = {
 
 export type VoicedUnvoicedFlowNode = Node<VoicedUnvoicedData, "voicedUnvoiced">;
 
+export type PannerData = {
+  pan: number; // -1 (links) bis +1 (rechts)
+  panAmount: number; // CV-Hub für externe Modulation
+};
+
+export type PannerFlowNode = Node<PannerData, "panner">;
+
 /** Diskriminierte Union aller Knoten der App. */
 export type AppNode =
   | OscFlowNode
@@ -144,6 +151,7 @@ export type AppNode =
   | VocoderAnalysisFlowNode
   | VocoderSynthFlowNode
   | VoicedUnvoicedFlowNode
+  | PannerFlowNode
   | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
@@ -162,6 +170,7 @@ export type AudioNodeInit =
   | { id: string; type: "vocoderAnalysis"; data: VocoderAnalysisData }
   | { id: string; type: "vocoderSynth"; data: VocoderSynthData }
   | { id: string; type: "voicedUnvoiced"; data: VoicedUnvoicedData }
+  | { id: string; type: "panner"; data: PannerData }
   | { id: string; type: "out"; data: OutData };
 
 /** Partielle Parameter-Updates, wie sie von den Reglern kommen. */
@@ -180,4 +189,5 @@ export type NodePatch =
   | Partial<VocoderAnalysisData>
   | Partial<VocoderSynthData>
   | Partial<VoicedUnvoicedData>
+  | Partial<PannerData>
   | Partial<OutData>;
