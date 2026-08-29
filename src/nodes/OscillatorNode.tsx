@@ -13,6 +13,7 @@ import {
   type Waveform,
 } from "../types";
 import * as Tone from "tone";
+import Info from "../components/Info";
 
 const RAMP = 0.04; // Sekunden — knackfreie Parameterwechsel
 
@@ -31,7 +32,7 @@ export function createOscNode(_id: string, data: OscData): OscEntry {
 
   const cvAmt = new Tone.Gain(data.cvAmount);
   cvAmt.connect(osc.frequency); // addiert sich auf den Grundwert, wie bei deinem VCF
-  
+
   return { type: "osc", osc, cvAmt, ins: { cv: cvAmt }, out: osc };
 }
 
@@ -82,7 +83,9 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
           className={`${styles.power} ${data.running ? styles.powerOn : ""}`}
           onClick={() => patch({ running: !data.running })}
           aria-label={
-            data.running ? t("modules.vco.ariaStop") : t("modules.vco.ariaStart")
+            data.running
+              ? t("modules.vco.ariaStop")
+              : t("modules.vco.ariaStart")
           }
         >
           {data.running ? t("modules.vco.on") : t("modules.vco.off")}
@@ -101,6 +104,7 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="cv" />
         <span className={styles.ioLabel}>{t("common.cv")}</span>
+        <Info>{t("modules.vco.cvHint")}</Info>
       </div>
       <Knob
         label={t("common.amountLabel")}
@@ -111,7 +115,6 @@ export default function OscillatorNode({ id, data }: NodeProps<OscFlowNode>) {
         format={(v) => `±${v}`}
         onChange={(cvAmount) => patch({ cvAmount })}
       />
-      <span className={styles.ioLabel}>{t("modules.vco.cvHint")}</span>
       <div className={`${styles.row} ${styles.rowGap}`}>
         {WAVEFORMS.map((w) => (
           <button

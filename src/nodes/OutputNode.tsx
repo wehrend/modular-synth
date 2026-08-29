@@ -9,6 +9,7 @@ import { OutEntry, updateAudioNode } from "../audio";
 import type { OutData, OutFlowNode } from "../types";
 import * as Tone from "tone";
 import { LockIcon } from "lucide-react";
+import Info from "../components/Info";
 
 const RAMP = 0.04; // Sekunden — knackfreie Parameterwechsel
 
@@ -61,7 +62,8 @@ export default function OutputNode({ id, data }: NodeProps<OutFlowNode>) {
           className={styles.lockedHint}
           title={t("modules.output.lockedHint")}
         >
-          <LockIcon/>
+          <LockIcon />
+          <Info>{t("modules.output.lockedHint")}</Info>
         </span>
         <button
           className={`${styles.power} ${data.muted ? "" : styles.powerOn}`}

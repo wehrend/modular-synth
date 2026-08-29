@@ -64,7 +64,8 @@
       "sawtooth": "Saw",
       "square": "Sqr"
     },
-    "bandLabel": "Band {{n}}"
+    "bandLabel": "Band {{n}}",
+    "moreInfo": "Mehr Informationen"
   },
   "modules": {
     "catalog": {
@@ -132,7 +133,7 @@
     },
     "output": {
       "title": "OUT",
-      "lockedHint": "Kann nicht gelöscht werden",
+      "lockedHint": "Einzige Instanz des Ausgangs - Dieses Modul kann nicht gelöscht werden.",
       "muted": "stumm",
       "unmuted": "laut",
       "levelLabel": "Pegel",
