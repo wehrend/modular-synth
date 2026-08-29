@@ -1,3 +1,96 @@
+(for german see below)
+
+# Modular Synth
+
+A modular software synthesizer in the browser: React Flow as the patch interface, Tone.js as the audio engine, written entirely in TypeScript (strict), multilingual (react-i18next), with a Supabase backend for accounts and saved patches.
+
+Included modules: VCO, LFO, Mixer, VCF, Wasp Filter (custom DSP), Envelope/ADSR, Ring Modulator, Noise, VCA, Sequencer (CD4017-style), Sampler (microphone recording + cloud storage), Vocoder (analysis + synthesis, modeled after the Doepfer A-129), Voiced/Unvoiced Detector, and OUT.
+
+## Getting Started
+
+```bash
+npm install
+npm run dev
+```
+
+Then open it in your browser (Vite displays the URL, usually http://localhost:5173).
+
+Important: The AudioContext doesn’t start until you click on the page for the first time—this is a browser security rule, not a bug.
+
+## Usage
+
+1. Drag from the right node of a source module to the left node of a destination module → the signal is patched.
+2. Create modules using the “+” buttons in the toolbar.
+3. Multiple sources can be routed to the same input (they are mixed).
+4. Select an edge or module and press `Del`/`Backspace` to delete it.
+5. Patches can be saved/loaded (Supabase account required) or shared as a preset (`?patch=<id>` in the URL).
+
+## Architecture
+
+The core principle: **The flow graph (UI) and the audiograph (Tone.js) are kept in sync.** Every node in the React Flow canvas has a counterpart in an audio registry; every edge in the graph corresponds to a real `connect()` connection between Tone.js objects.
+
+```
+React Flow (UI)                 Tone.js (Audio)
+─────────────────               ─────────────────
+Node “osc-1”     ←──────→     Tone.Oscillator
+Node “out-1”     ←──────→     Tone.Volume → Destination
+Edge osc-1→out-1  ←──────→     osc.connect(vol)
+```
+
+Important files:
+
+- **`src/types.ts`** – Data types per module (`XyzData`), React Flow node type (`XyzFlowNode`), and the three central discriminated unions `AppNode`, `AudioNodeInit`, `NodePatch`.
+- **`src/audio/`** – everything recognized by Tone.js, divided into:
+  - `registry.ts` – map from node ID to audio entry, `MODULE_HANDLERS` (`create`/`update`/`dispose` per module type)
+  - `connections.ts` – `connectAudio`/`disconnectAudio`, resolves handle IDs into actual Tone connections
+  - `gateRouting.ts`, `samplerControls.ts`, `hmr.ts`, `vocoderDebug.ts` – module-specific additional logic
+  - `index.ts` – Barrel export (**explicit**, no `export *` – new functions must be listed individually here)
+- **`src/nodes/*.tsx`** – Custom Nodes. Each file exports both the audio side (`createXyzNode`/`updateXyzNode`/`disposeXyzNode`) and the UI component (default export). Parameter changes are always sent simultaneously to `updateNodeData` (UI state) **and** `updateAudioNode` (sound).
+- **`src/moduleCatalog.ts`** – Toolbar entries: type, ID prefix, translation key for the label, start position, default values.
+- **`src/App.tsx`** – React Flow canvas plus `nodeTypes` registration. The actual logic is contained in hooks (`usePresetActions`, `usePatchFromUrl`, `useFlowAudioSync`).
+- **`src/persist/serialize.ts`** – `MODULE_DEFAULTS`, ensuring that saved presets load reliably even if fields are missing or new ones are added.
+- **`src/i18n/locales/{de,en}.json`** – all visible text, structured as `modules.catalog.<typ>` (toolbar labels) and `modules.<typ>.*` (titles, field labels).
+
+## Adding a New Module
+
+A new module affects **eight locations**. That sounds like a lot, but it always follows the same pattern—it’s best to copy from an existing, similar module (e.g., `RingModNode.tsx` for modules with two audio inputs, `SequencerNode.tsx` for modules with many similar ports).
+
+1. **`src/types.ts`** – Define the `XyzData` type (the knob/parameter values) and `XyzFlowNode = Node<XyzData, “xyz”>`, then add them to the three unions `AppNode`, `AudioNodeInit`, and `NodePatch`.
+
+2. **`src/nodes/XyzNode.tsx`** (new file) – contains:
+   - `createXyzNode(id, data)`: constructs the Tone.js objects and returns an `XyzEntry` with `ins`/`outs` (or `in`/`out` if there is only one port)—these are the connection points through which other modules connect.
+   - `updateXyzNode(entry, patch)`: applies parameter changes in real time (usually `rampTo` to avoid clicks).
+   - `disposeXyzNode(entry)`: cleans up **all** created Tone objects, not just the obvious ones.
+   - Default export: the UI component with `useTranslation()`, `Handle` elements (IDs must match the `ins`/`outs` keys exactly), and `Knob` components per parameter.
+
+3. **`src/audio/registry.ts`** – import the three functions from Step 2 (path: `".. /nodes/XyzNode“`, **not** `”./nodes/..."` – the most common copy-paste mistake), add the `XyzEntry` type to the `RegistryEntry` union, and update the entry in `MODULE_HANDLERS`.
+
+4. **`src/moduleCatalog.ts`** – Add a new entry with `type`, `idPrefix`, `labelKey: “modules.catalog.xyz”`, `basePosition`, and `defaults: () => ({...})`.
+
+5. **`src/App.tsx`** – Import the component and add it to `nodeTypes` under the same `type` key.
+
+6. **`src/persist/serialize.ts`** – Add an entry to `MODULE_DEFAULTS` so that older saved patches without the new module (or with missing new fields) are not rejected with the error “Preset uses an unknown module.”
+
+7. **`src/i18n/locales/de.json`** and **`en.json`** – `modules.catalog.xyz` (toolbar label) as well as a `modules.xyz` block containing the title and all field/handle labels. Recurring terms (Gain, Band N, In/Out) are centralized under `common.*`—check there before creating a new key.
+
+8. **If the module has multiple ports of the same type** (as with the 10-band vocoder): create a shared constants file (see `nodes/vocoderBands.ts`) instead of duplicating frequencies/counts in multiple places—otherwise, two related modules (e.g., analysis and synthesis) can easily become out of sync.
+
+**Common pitfalls** (all of which have happened before):
+
+- Handle `id` in the UI ≠ key in `ins`/`outs` → A connection is drawn in the flow graph, but `connectAudio` cannot find a destination and silently connects nothing in the audio graph. In this case, `connectAudio` logs a warning (`Connection cannot be resolved`)—this is the first thing to check when you have “a cable connected but no sound.”
+- `dispose()` forgets an intermediate node (filter, meter, follower) → memory leak when deleting/reloading modules.
+- A `log` knob with `min={0}` → `Math.log(v/0)` returns `NaN`, which is written to the state unnoticed and mutes the entire signal path. For logarithmic knobs, always set `min` to > 0.
+- A new function was added to `src/audio/*.ts` but not listed in the Barrel export `src/audio/index.ts` → `Module has no exported member`, even though the function exists.
+
+## Debugging
+
+For modules with multi-stage signal processing (filter banks, follower chains), it’s worth using `Tone. Meter({ normalRange: true })` as a branch at relevant points in the signal path, combined with a React state display polled via `requestAnimationFrame` (see `VocoderAnalysisNode.tsx`)—this immediately shows where a signal disappears, instead of having to guess.
+
+## Known Issues
+
+- The even VCO’s UI is still suboptimal and should be improved
+- The sampler module should be reworked to support file uploads and multiple samples
+
 # Modular Synth
 
 Ein modularer Software-Synthesizer im Browser: React Flow als Patch-Oberfläche, Tone.js als Audio-Engine, vollständig in TypeScript (strict), mehrsprachig (react-i18next), mit Supabase-Backend für Accounts und gespeicherte Patches.
@@ -83,3 +176,8 @@ Ein neues Modul berührt **acht Stellen**. Das klingt nach viel, ist aber immer 
 ## Debugging
 
 Für Module mit mehrstufiger Signalverarbeitung (Filterbänke, Follower-Ketten) lohnt sich `Tone.Meter({ normalRange: true })` als Abzweig an relevanten Punkten im Signalpfad, kombiniert mit einer per `requestAnimationFrame` gepollten React-State-Anzeige (siehe `VocoderAnalysisNode.tsx`) – zeigt sofort, an welcher Stelle ein Signal verschwindet, statt raten zu müssen.
+
+## Bekannte Fehler
+
+- Die UI des even VCO ist noch suboptimal und sollte verbessert werden
+- Das Sampler-Modul sollte überarbeitet werden und File-Upload sowie mehrere Samples unterstützen
