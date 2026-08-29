@@ -64,7 +64,8 @@
       "sawtooth": "Saw",
       "square": "Sqr"
     },
-    "bandLabel": "Band {{n}}"
+    "bandLabel": "Band {{n}}",
+    "moreInfo": "More information"
   },
   "modules": {
     "catalog": {
@@ -132,7 +133,7 @@
     },
     "output": {
       "title": "OUT",
-      "lockedHint": "Cannot be deleted",
+      "lockedHint": "Only instance of output - This module cannot be deleted",
       "muted": "muted",
       "unmuted": "loud",
       "levelLabel": "Level",
@@ -158,6 +159,7 @@
       "title": "SAMPLER",
       "rec": "rec",
       "recActive": "● rec",
+      "hint": "For microphone recordings pull gain to 150-200 % for a viable gain.",
       "hintLoading": "Loading sample...",
       "hintReady": "Sample ready",
       "hintEmpty": "No recording yet",

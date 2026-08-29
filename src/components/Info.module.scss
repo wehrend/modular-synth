@@ -1,0 +1,47 @@
+// Info.module.scss
+@use "../styles/variables" as v;
+
+.marker {
+  @include v.control-base;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &:hover,
+  &[aria-expanded="true"] {
+    border-color: v.$signal;
+    color: v.$signal;
+  }
+}
+
+.markerDanger {
+  // Gleiche Rot-Nuance wie .error in AuthPages.module.scss -- eine
+  // Fehler-/Warnfarbe im Projekt, statt eine zweite einzuführen.
+  color: #d66b6b;
+  border-color: #d66b6b;
+
+  &:hover,
+  &[aria-expanded="true"] {
+    border-color: #d66b6b;
+    color: #d66b6b;
+    opacity: 0.8;
+  }
+}
+
+.popover {
+  position: fixed;
+  z-index: 50; // über dem ResourceStatsOverlay (z-index: 20) und React-Flow-Controls
+  background: v.$panel;
+  border: 1px solid v.$panel-edge;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: v.$text;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}

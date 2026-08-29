@@ -18,6 +18,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import { useEffect, useState } from "react";
+import Info from "../components/Info";
 
 /* ---------- Audio-Seite ---------- */
 
@@ -169,6 +170,7 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
             ? t("modules.sampler.recActive")
             : t("modules.sampler.rec")}
         </button>
+        <Info>{t("modules.sampler.hint")}</Info>
       </header>
 
       <span className={styles.hint}>

@@ -152,6 +152,7 @@ export default function App() {
         onConfirm={handleConfirmSave}
       />
       <Toolbar user={user} moduleButtons={moduleButtons} />
+      
       <div className={styles.layout}>
         <div className={styles.sidebarColumn}>
           <SidebarActions
