@@ -21,12 +21,14 @@ type Props = {
   children: React.ReactNode;
   /** Optional: eigenes aria-label statt des generischen Standardtexts. */
   label?: string;
+  /** Optional: Farbvariante des Markers (z.B. "danger" für Warnhinweise). */
+  variant?: "default" | "danger";
 };
 
 const POPOVER_MAX_WIDTH = 260;
 const VIEWPORT_MARGIN = 8;
 
-export default function Info({ children, label }: Props) {
+export default function Info({ children, label, variant = "default" }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{
@@ -108,7 +110,7 @@ export default function Info({ children, label }: Props) {
       <button
         ref={btnRef}
         type="button"
-        className={`nodrag ${styles.marker}`}
+        className={`nodrag ${styles.marker} ${variant === "danger" ? styles.markerDanger : ""}`}
         onClick={toggle}
         aria-label={label ?? t("common.moreInfo")}
         aria-expanded={open}

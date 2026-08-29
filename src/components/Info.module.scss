@@ -19,6 +19,20 @@
   }
 }
 
+.markerDanger {
+  // Gleiche Rot-Nuance wie .error in AuthPages.module.scss -- eine
+  // Fehler-/Warnfarbe im Projekt, statt eine zweite einzuführen.
+  color: #d66b6b;
+  border-color: #d66b6b;
+
+  &:hover,
+  &[aria-expanded="true"] {
+    border-color: #d66b6b;
+    color: #d66b6b;
+    opacity: 0.8;
+  }
+}
+
 .popover {
   position: fixed;
   z-index: 50; // über dem ResourceStatsOverlay (z-index: 20) und React-Flow-Controls
