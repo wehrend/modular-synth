@@ -159,6 +159,7 @@
       "title": "SAMPLER",
       "rec": "rec",
       "recActive": "● rec",
+      "hint": "Bei Mikrofonaufnahmen sollten Sie die Verstärkung auf 150–200 % einstellen, um eine brauchbare Verstärkung zu erzielen.",
       "hintLoading": "Lade Sample...",
       "hintReady": "Sample bereit",
       "hintEmpty": "Noch keine Aufnahme",

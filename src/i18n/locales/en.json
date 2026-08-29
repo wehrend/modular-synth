@@ -159,6 +159,7 @@
       "title": "SAMPLER",
       "rec": "rec",
       "recActive": "● rec",
+      "hint": "For microphone recordings pull gain to 150-200 % for a viable gain.",
       "hintLoading": "Loading sample...",
       "hintReady": "Sample ready",
       "hintEmpty": "No recording yet",
