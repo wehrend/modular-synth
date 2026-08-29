@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { User } from "@supabase/supabase-js";
 import styles from "../App.module.scss";
 import ModuleToolbar, { type ModuleButtonConfig } from "./ModuleToolbar";
+import Info from "./Info";
 
 type Props = {
   user: User | null;
@@ -26,7 +27,7 @@ export default function Toolbar({ user, moduleButtons }: Props) {
       )}
       <div className={styles.actions}>
         <ModuleToolbar modules={moduleButtons} />
-        <p className={styles.hint}>{t("toolbar.hint")}</p>
+        <Info>{t("toolbar.hint")}</Info>
       </div>
     </div>
   );
