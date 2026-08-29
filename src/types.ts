@@ -135,6 +135,16 @@ export type PannerData = {
 
 export type PannerFlowNode = Node<PannerData, "panner">;
 
+export type EvenVcoData = {
+  octave: number; // 0-11, RotarySwitch
+  fineTune: number; // Hz-Offset zur Oktave
+  slaveFreq: number; // unabhängige Slave-Frequenz für den Sync-Sweep
+  masterCvAmount: number;
+  fmAmount: number;
+};
+
+export type EvenVcoFlowNode = Node<EvenVcoData, "evenvco">;
+
 /** Diskriminierte Union aller Knoten der App. */
 export type AppNode =
   | OscFlowNode
@@ -152,6 +162,7 @@ export type AppNode =
   | VocoderSynthFlowNode
   | VoicedUnvoicedFlowNode
   | PannerFlowNode
+  | EvenVcoFlowNode
   | OutFlowNode;
 
 /** Was die Audio-Engine zum Anlegen eines Knotens braucht. */
@@ -171,6 +182,7 @@ export type AudioNodeInit =
   | { id: string; type: "vocoderSynth"; data: VocoderSynthData }
   | { id: string; type: "voicedUnvoiced"; data: VoicedUnvoicedData }
   | { id: string; type: "panner"; data: PannerData }
+  | { id: string; type: "evenvco"; data: EvenVcoData }
   | { id: string; type: "out"; data: OutData };
 
 /** Partielle Parameter-Updates, wie sie von den Reglern kommen. */
@@ -190,4 +202,5 @@ export type NodePatch =
   | Partial<VocoderSynthData>
   | Partial<VoicedUnvoicedData>
   | Partial<PannerData>
+  | Partial<EvenVcoData>
   | Partial<OutData>;

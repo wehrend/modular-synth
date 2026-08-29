@@ -1,0 +1,56 @@
+@use "../styles/variables" as v;
+
+.evenVcoModule {
+  width: 280px !important; // Kompakte Gesamtbreite
+  padding: 10px 14px !important;
+}
+
+// 3-Spalten-Layout über das gesamte Modul
+.bodyGrid {
+  display: grid;
+  grid-template-columns: min-content 1fr min-content; // Links flexibel schmal, Mitte nimmt Platz, Rechts schmal
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: center;
+}
+
+// Spalte 1: Bündig am LINKEN Rand
+.leftIn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  white-space: nowrap;
+
+  :global(.react-flow__handle) {
+    top: 50% !important;
+    left: -14px !important; // Drückt den Handle exakt an die linke Modul-Außenkante
+    right: auto !important;
+    transform: translateY(-50%) !important;
+  }
+}
+
+// Spalte 2: Hauptregler & Zusatzknobs mittig
+.centerControls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+// Spalte 3: Bündig am RECHTEN Rand
+.rightOut {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
+
+  :global(.react-flow__handle) {
+    top: 50% !important;
+    right: -14px !important; // Drückt den Handle exakt an die rechte Modul-Außenkante
+    left: auto !important;
+    transform: translateY(-50%) !important;
+  }
+}

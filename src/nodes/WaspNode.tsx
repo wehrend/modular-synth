@@ -7,6 +7,7 @@ import Knob from "../components/Knob";
 import { updateAudioNode } from "../audio";
 import type { WaspData, WaspFlowNode } from "../types";
 import styles from "./Module.module.scss";
+import * as SAC from "standardized-audio-context";
 
 const RAMP = 0.04;
 const WORKLET_NAME = "wasp-circuit-processor";
@@ -74,12 +75,29 @@ export function createWaspNode(_id: string, data: WaspData): WaspEntry {
   loadWaspWorklet()
     .then(() => {
       const context = Tone.getContext().rawContext as unknown as AudioContext;
-      const node = new AudioWorkletNode(context, WORKLET_NAME, {
-        numberOfInputs: 2,
-        numberOfOutputs: 1,
-        channelCount: 1,
-        channelCountMode: "explicit",
-      });
+      if (!SAC.AudioWorkletNode) {
+        throw new Error(
+          "AudioWorkletNode wird von diesem Browser nicht unterstützt.",
+        );
+      }
+      const AudioWorkletNodeCtor = SAC.AudioWorkletNode;
+      if (!AudioWorkletNodeCtor) {
+        throw new Error(
+          "AudioWorkletNode wird von diesem Browser nicht unterstützt.",
+        );
+      }
+
+      const node = new AudioWorkletNodeCtor(
+        context as unknown as SAC.IAudioContext,
+        WORKLET_NAME,
+        {
+          numberOfInputs: 3,
+          numberOfOutputs: 5,
+          outputChannelCount: [1, 1, 1, 1, 1],
+          channelCount: 1,
+          channelCountMode: "explicit",
+        },
+      ) as unknown as AudioWorkletNode;
 
       const initial: WaspData = { ...data, ...entry.pendingPatch };
       setParam(node, "cutoff", initial.cutoff);

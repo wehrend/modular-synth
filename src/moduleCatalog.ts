@@ -144,4 +144,17 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
     basePosition: { x: 440, y: 460 },
     defaults: () => ({ pan: 0, panAmount: 0 }),
   },
+  {
+    type: "evenvco",
+    idPrefix: "evenvco",
+    labelKey: "modules.catalog.evenvco",
+    basePosition: { x: 440, y: 460 },
+    defaults: () => ({
+      octave: 5,
+      fineTune: 0,
+      slaveFreq: 440,
+      masterCvAmount: 0,
+      fmAmount: 0,
+    }),
+  },
 ];
