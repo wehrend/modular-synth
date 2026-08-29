@@ -128,6 +128,15 @@ export function createEvenVcoNode(
 
   loadEvenVcoWorklet()
     .then(() => {
+      // Race Condition abfangen: Der Node kann bereits gelöscht (und damit
+      // disposeEvenVcoNode() bereits gelaufen) sein, bevor dieses Promise
+      // auflöst -- z.B. bei schnellem Hinzufügen+Löschen oder langsamer
+      // Verbindung kurz nach dem App-Start. In dem Fall NICHT mehr
+      // versuchen, an bereits disposte Tone.js-Objekte zu connecten (das
+      // würde eine Exception werfen) -- einfach abbrechen, ohne den
+      // AudioWorkletNode überhaupt erst zu erzeugen.
+      if (masterCvIn.disposed) return;
+
       const context = Tone.getContext().rawContext as unknown as AudioContext;
       const AudioWorkletNodeCtor = SAC.AudioWorkletNode;
       if (!AudioWorkletNodeCtor) {
