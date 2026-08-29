@@ -5,7 +5,7 @@ import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
 import styles from "./Module.module.scss";
-import { OutEntry, updateAudioNode } from "../audio";
+import { OutEntry, updateAudioNode, resumeAudio } from "../audio";
 import type { OutData, OutFlowNode } from "../types";
 import * as Tone from "tone";
 import { LockIcon } from "lucide-react";
@@ -66,8 +66,11 @@ export default function OutputNode({ id, data }: NodeProps<OutFlowNode>) {
           <Info>{t("modules.output.lockedHint")}</Info>
         </span>
         <button
-          className={`${styles.power} ${data.muted ? "" : styles.powerOn}`}
-          onClick={() => patch({ muted: !data.muted })}
+          className={`nodrag ${styles.power} ${data.muted ? "" : styles.powerOn}`}
+          onClick={() => {
+            void resumeAudio();
+            patch({ muted: !data.muted });
+          }}
         >
           {data.muted ? t("modules.output.muted") : t("modules.output.unmuted")}
         </button>
