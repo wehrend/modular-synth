@@ -78,6 +78,12 @@ export function createWaspNode(_id: string, data: WaspData): WaspEntry {
 
   loadWaspWorklet()
     .then(() => {
+      // Race Condition abfangen: Der Node kann bereits gelöscht (und damit
+      // disposeWaspNode() bereits gelaufen) sein, bevor dieses Promise
+      // auflöst -- s. ausführlicher Kommentar bei EvenVcoNode.tsx, exakt
+      // dasselbe Muster hier.
+      if (inputGain.disposed) return;
+
       const context = Tone.getContext().rawContext as unknown as AudioContext;
       const AudioWorkletNodeCtor = SAC.AudioWorkletNode;
       if (!AudioWorkletNodeCtor) {

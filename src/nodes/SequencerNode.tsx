@@ -2,7 +2,7 @@ import * as Tone from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
-import { updateAudioNode, fireGate } from "../audio";
+import { updateAudioNode, fireGate, resumeAudio } from "../audio";
 import type { SequencerData, SequencerFlowNode } from "../types";
 import styles from "./Module.module.scss";
 
@@ -94,8 +94,11 @@ export default function SequencerNode({
       <header className={styles.head}>
         <span className={styles.title}>{t("modules.sequencer.title")}</span>
         <button
-          className={`${styles.power} ${data.running ? styles.powerOn : ""}`}
-          onClick={() => patch({ running: !data.running })}
+          className={`nodrag ${styles.power} ${data.running ? styles.powerOn : ""}`}
+          onClick={() => {
+            void resumeAudio();
+            patch({ running: !data.running });
+          }}
         >
           {data.running
             ? t("modules.sequencer.running")

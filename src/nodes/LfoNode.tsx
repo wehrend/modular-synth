@@ -5,7 +5,7 @@ import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
 import Knob from "../components/Knob";
 import styles from "./Module.module.scss";
-import { updateAudioNode } from "../audio";
+import { updateAudioNode, resumeAudio } from "../audio";
 import { LfoData, LfoFlowNode, WAVEFORMS, type Waveform } from "../types";
 
 import * as Tone from "tone";
@@ -81,8 +81,11 @@ export default function LfoNode({ id, data }: NodeProps<LfoFlowNode>) {
         {WAVEFORMS.map((w) => (
           <button
             key={w}
-            className={`${styles.chip} ${data.waveform === w ? styles.chipActive : ""}`}
-            onClick={() => patch({ waveform: w })}
+            className={`nodrag ${styles.chip} ${data.waveform === w ? styles.chipActive : ""}`}
+            onClick={() => {
+              void resumeAudio();
+              patch({ waveform: w });
+            }}
           >
             {t(WAVEFORM_KEYS[w])}
           </button>
