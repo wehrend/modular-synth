@@ -198,13 +198,14 @@
       "right": "R"
     },
     "evenvco": {
-      "frequency": "Frequency",
-      "cv": "CV",
-      "cvAmount": "Amount",
-      "outputMain": "Main",
-      "outputEven": "Even",
-      "running": "on",
-      "stopped": "off"
+      "title": "EVEN VCO",
+      "fineLabel": "Fine",
+      "slaveLabel": "Slave",
+      "cvLabel": "CV",
+      "cvAmountLabel": "Amount",
+      "fmLabel": "FM",
+      "fmAmountLabel": "Amount",
+      "syncLabel": "Sync In"
     }
   },
   "pages": {

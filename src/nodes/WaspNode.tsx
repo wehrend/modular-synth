@@ -49,7 +49,11 @@ function setParam(
 ): void {
   const param = node.parameters.get(name);
   if (!param) return;
-  param.linearRampToValueAtTime(value, Tone.getContext().currentTime + RAMP);
+  const safeValue = Number.isFinite(value) ? value : param.defaultValue;
+  param.linearRampToValueAtTime(
+    safeValue,
+    Tone.getContext().currentTime + RAMP,
+  );
 }
 
 export function createWaspNode(_id: string, data: WaspData): WaspEntry {
@@ -75,11 +79,6 @@ export function createWaspNode(_id: string, data: WaspData): WaspEntry {
   loadWaspWorklet()
     .then(() => {
       const context = Tone.getContext().rawContext as unknown as AudioContext;
-      if (!SAC.AudioWorkletNode) {
-        throw new Error(
-          "AudioWorkletNode wird von diesem Browser nicht unterstützt.",
-        );
-      }
       const AudioWorkletNodeCtor = SAC.AudioWorkletNode;
       if (!AudioWorkletNodeCtor) {
         throw new Error(

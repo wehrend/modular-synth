@@ -136,20 +136,6 @@
   @include v.dim-label;
 }
 
-// Für Ausgangs-Reihen mit vielen Bändern (Vocoder-Analyse): Label oben,
-// Handle darunter, rechtsbündig zum Modulrand.
-.ioRowOut {
-  position: relative;
-  margin: 10px 0;
-  min-height: 24px;
-}
-
-.ioRowOut .ioLabel {
-  display: block;
-  text-align: right;
-  margin-bottom: 4px;
-}
-
 // LED und Handle teilen sich diesen kleinen Rahmen als gemeinsamen
 // Bezugspunkt -- so zentrieren sich beide auf DIESELBE Mitte, statt (wie
 // vorher) auf die Mitte der ganzen Zeile inkl. Label.
