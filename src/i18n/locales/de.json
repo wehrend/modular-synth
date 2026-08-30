@@ -19,7 +19,8 @@
     "saveNamed": "Speichern ({{name}})",
     "saveAs": "Speichern unter",
     "hint": "Ausgang → Eingang ziehen, um zu patchen. Kabel per Doppelklick entfernen — oder auswählen und Entf/Backspace.",
-    "language": "Sprache"
+    "language": "Sprache",
+    "privacy": "Datenschutz"
   },
   "auth": {
     "login": {
@@ -37,7 +38,8 @@
       "submit": "Konto erstellen",
       "haveAccount": "Schon registriert?",
       "login": "Anmelden",
-      "successInfo": "Konto angelegt. Bitte E-Mail-Postfach prüfen, falls eine Bestätigung nötig ist."
+      "successInfo": "Konto angelegt. Bitte E-Mail-Postfach prüfen, falls eine Bestätigung nötig ist.",
+      "privacyLink": "Datenschutzerklärung"
     }
   },
   "language": {
@@ -232,6 +234,90 @@
       "errors": {
         "invalidImage": "Bitte eine Bilddatei auswählen.",
         "imageTooLarge": "Bild ist zu groß (max. 2 MB)."
+      }
+    },
+    "privacy": {
+      "title": "Datenschutzerklärung",
+      "lastUpdated": "Stand: {{date}}",
+      "sections": {
+        "controller": {
+          "heading": "1. Verantwortlicher",
+          "paragraphs": [
+            "Verantwortlich für die Datenverarbeitung auf dieser Website im Sinne der DSGVO ist:",
+            "Sven Wehrend\nEythstrasse 20\n12105 Berlin\nEmail: sven.wehrend[at]gmail.com"
+          ]
+        },
+        "overview": {
+          "heading": "2. Allgemeines",
+          "paragraphs": [
+            "Diese App ist ein browserbasierter modularer Synthesizer mit optionalem Nutzerkonto. Ohne Konto kannst du die App vollständig nutzen -- ein Konto brauchst du nur, um eigene Patches (Klangaufbauten) zu speichern, öffentlich zu teilen oder Samples aufzunehmen.",
+            "Diese Seite nutzt kein Analytics/Tracking und keine Cookies zu Marketing- oder Analysezwecken."
+          ]
+        },
+        "hosting": {
+          "heading": "3. Hosting und Infrastruktur",
+          "paragraphs": [
+            "Die App selbst wird statisch über GitHub Pages ausgeliefert (GitHub Inc./GitHub B.V.). Für Nutzerkonten, Datenbank und Datei-Speicher (z.B. Sample-Aufnahmen, Profilbilder) wird Supabase eingesetzt, ein Backend-as-a-Service-Anbieter.",
+            "Das Supabase-Projekt wird in der Region Irland (eu-west-1) gehostet, also innerhalb der Europäischen Union. Eine Datenübermittlung in ein Drittland außerhalb der EU/des EWR findet dadurch nicht statt. Mit Supabase besteht ein Auftragsverarbeitungsvertrag (AVV) gemäß Art. 28 DSGVO."
+          ]
+        },
+        "account": {
+          "heading": "4. Registrierung und Nutzerkonto",
+          "paragraphs": [
+            "Bei der Registrierung erhebt und speichert Supabase Auth deine E-Mail-Adresse und ein von dir gewähltes (gehashtes) Passwort. Diese Daten werden ausschließlich zur Authentifizierung und Verwaltung deines Kontos verwendet.",
+            "Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung -- Bereitstellung des Nutzerkontos)."
+          ]
+        },
+        "profile": {
+          "heading": "5. Profildaten",
+          "paragraphs": [
+            "Optional kannst du in deinem Profil einen Anzeigenamen, eine kurze Biografie, ein Profilbild und eine Website-URL hinterlegen. Diese Angaben sind freiwillig.",
+            "Ist dein Profil bzw. ein von dir veröffentlichter Patch öffentlich sichtbar (siehe Punkt 6), sind Anzeigename, Profilbild, Biografie und Website-Link für alle Besucher der App einsehbar, auch ohne eigenes Konto.",
+            "Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung durch aktives Ausfüllen und Veröffentlichen)."
+          ]
+        },
+        "patches": {
+          "heading": "6. Gespeicherte Patches (Klangaufbauten)",
+          "paragraphs": [
+            "Wenn du einen Patch speicherst, werden Name, Beschreibung, die technische Struktur des Klangaufbaus sowie ein automatisch erzeugtes Vorschaubild in der Datenbank abgelegt. Standardmäßig sind gespeicherte Patches privat -- nur du siehst sie.",
+            "Du kannst einen Patch jederzeit über den 🌐/🔒-Umschalter öffentlich machen. Öffentliche Patches erscheinen für alle Besucher auf der 'Entdecken'-Seite, zusammen mit deinem Profil. Diese Sichtbarkeit lässt sich jederzeit wieder zurücknehmen."
+          ]
+        },
+        "microphone": {
+          "heading": "7. Mikrofonzugriff (Sampler-Modul)",
+          "paragraphs": [
+            "Das Sampler-Modul kann eine Audioaufnahme über dein Mikrofon starten. Der Browser fragt dafür jedes Mal explizit um Erlaubnis -- ohne deine Bestätigung im Browser-Dialog findet keine Aufnahme statt.",
+            "Speicherst du eine Aufnahme (indem du sie einem Preset zuordnest bzw. das Preset speicherst), wird die Audiodatei im Supabase-Storage abgelegt. Ist das zugehörige Preset öffentlich, ist auch die Aufnahme über die generierte URL abrufbar.",
+            "Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung durch aktive Mikrofonfreigabe)."
+          ]
+        },
+        "retention": {
+          "heading": "8. Speicherdauer",
+          "paragraphs": [
+            "Konto-, Profil- und Patch-Daten werden gespeichert, solange dein Nutzerkonto besteht. Nach Löschung deines Kontos werden diese Daten gelöscht, soweit keine gesetzlichen Aufbewahrungspflichten entgegenstehen."
+          ]
+        },
+        "rights": {
+          "heading": "9. Deine Rechte",
+          "paragraphs": [
+            "Du hast jederzeit das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO), Löschung (Art. 17 DSGVO), Einschränkung der Verarbeitung (Art. 18 DSGVO), Datenübertragbarkeit (Art. 20 DSGVO) sowie Widerspruch (Art. 21 DSGVO) bezüglich deiner personenbezogenen Daten.",
+            "Profil- und Kontodaten kannst du direkt in der App unter deinem Profil einsehen, ändern oder löschen. Für weitergehende Anfragen wende dich an die oben genannte Kontaktadresse.",
+            "Du hast außerdem das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren."
+          ]
+        },
+        "storage": {
+          "heading": "10. Lokale Datenspeicherung im Browser",
+          "paragraphs": [
+            "Zur Aufrechterhaltung deiner Anmeldung speichert Supabase Auth ein Sitzungs-Token im localStorage deines Browsers. Dieses ist technisch notwendig für die Anmeldefunktion und wird nicht zu Tracking-Zwecken verwendet.",
+            "Deine gewählte Sprache wird ebenfalls im localStorage gespeichert (Schlüssel modular-synth:lang)."
+          ]
+        },
+        "contact": {
+          "heading": "11. Kontakt",
+          "paragraphs": [
+            "Bei Fragen zum Datenschutz wende dich bitte an: sven.wehrend[at]gmail.com"
+          ]
+        }
       }
     }
   },
