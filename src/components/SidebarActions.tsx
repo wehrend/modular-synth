@@ -51,6 +51,12 @@ export default function SidebarActions({
       <div className={styles.group}>
         <LanguageSwitcher />
       </div>
+
+      <div className={styles.group}>
+        <Link className={styles.btn} to="/datenschutz">
+          {t("toolbar.privacy")}
+        </Link>
+      </div>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import "./styles/global.scss";
 import "./i18n"; // muss vor dem ersten Render laufen, damit useTranslation() sofort Übersetzungen hat
 import UserDetailPage from "./pages/UserDetailPage";
 import DiscoverPage from "./pages/DiscoverPage";
+import PrivacyPage from "./pages/PrivacyPage";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -22,6 +23,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/user/:id" element={<UserDetailPage />} />
           <Route path="/discover" element={<DiscoverPage />} />
+          <Route path="/datenschutz" element={<PrivacyPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

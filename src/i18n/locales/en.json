@@ -19,7 +19,8 @@
     "saveNamed": "Save ({{name}})",
     "saveAs": "Save as",
     "hint": "Drag from an output to an input to patch. Double-click a cable to remove it — or select it and press Delete/Backspace.",
-    "language": "Language"
+    "language": "Language",
+    "privacy": "Privacy"
   },
   "auth": {
     "login": {
@@ -37,7 +38,8 @@
       "submit": "Create account",
       "haveAccount": "Already registered?",
       "login": "Sign in",
-      "successInfo": "Account created. Please check your inbox if confirmation is required."
+      "successInfo": "Account created. Please check your inbox if confirmation is required.",
+      "privacyLink": "Privacy Policy"
     }
   },
   "language": {
@@ -232,6 +234,90 @@
       "errors": {
         "invalidImage": "Please choose an image file.",
         "imageTooLarge": "Image is too large (max. 2 MB)."
+      }
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Last updated: {{date}}",
+      "sections": {
+        "controller": {
+          "heading": "1. Data Controller",
+          "paragraphs": [
+            "The controller responsible for data processing on this website under the GDPR is:",
+            "Sven Wehrend\nEythstrasse 20\n12105 Berlin\nEmail: sven.wehrend[at]gmail.com"
+          ] 
+        },
+        "overview": {
+          "heading": "2. Overview",
+          "paragraphs": [
+            "This app is a browser-based modular synthesizer with an optional user account. You can use the app fully without an account -- an account is only needed to save your own patches, share them publicly, or record samples.",
+            "This site does not use analytics/tracking or cookies for marketing or analytics purposes."
+          ]
+        },
+        "hosting": {
+          "heading": "3. Hosting and Infrastructure",
+          "paragraphs": [
+            "The app itself is served statically via GitHub Pages (GitHub Inc./GitHub B.V.). User accounts, the database, and file storage (e.g. sample recordings, profile pictures) are provided by Supabase, a backend-as-a-service provider.",
+            "The Supabase project is hosted in the Ireland region (eu-west-1), i.e. within the European Union. No data transfer to a third country outside the EU/EEA takes place as a result. A data processing agreement (DPA) under Art. 28 GDPR is in place with Supabase."
+          ]
+        },
+        "account": {
+          "heading": "4. Registration and User Account",
+          "paragraphs": [
+            "During registration, Supabase Auth collects and stores your email address and a (hashed) password of your choosing. This data is used exclusively for authenticating and managing your account.",
+            "The legal basis is Art. 6(1)(b) GDPR (performance of a contract -- providing the user account)."
+          ]
+        },
+        "profile": {
+          "heading": "5. Profile Data",
+          "paragraphs": [
+            "Optionally, you can add a display name, a short bio, a profile picture, and a website URL to your profile. These fields are voluntary.",
+            "If your profile or a patch you publish is publicly visible (see section 6), your display name, profile picture, bio, and website link are visible to all visitors of the app, even without an account of their own.",
+            "The legal basis is Art. 6(1)(a) GDPR (consent, given by actively filling in and publishing this data)."
+          ]
+        },
+        "patches": {
+          "heading": "6. Saved Patches",
+          "paragraphs": [
+            "When you save a patch, its name, description, technical structure, and an automatically generated thumbnail are stored in the database. Saved patches are private by default -- only you can see them.",
+            "You can make a patch public at any time via the 🌐/🔒 toggle. Public patches appear to all visitors on the 'Discover' page, together with your profile. This visibility can be revoked at any time."
+          ]
+        },
+        "microphone": {
+          "heading": "7. Microphone Access (Sampler Module)",
+          "paragraphs": [
+            "The Sampler module can start an audio recording via your microphone. The browser explicitly asks for permission every time -- without your confirmation in the browser dialog, no recording takes place.",
+            "If you save a recording (by assigning it to a preset and saving that preset), the audio file is stored in Supabase Storage. If the associated preset is public, the recording is also accessible via the generated URL.",
+            "The legal basis is Art. 6(1)(a) GDPR (consent, given by actively granting microphone access)."
+          ]
+        },
+        "retention": {
+          "heading": "8. Retention Period",
+          "paragraphs": [
+            "Account, profile, and patch data are stored for as long as your user account exists. After your account is deleted, this data is deleted as well, unless legal retention obligations apply."
+          ]
+        },
+        "rights": {
+          "heading": "9. Your Rights",
+          "paragraphs": [
+            "You have the right, at any time, to access (Art. 15 GDPR), rectify (Art. 16 GDPR), erase (Art. 17 GDPR), restrict processing of (Art. 18 GDPR), receive a copy of (Art. 20 GDPR), and object to (Art. 21 GDPR) your personal data.",
+            "You can view, change, or delete your profile and account data directly in the app under your profile. For further requests, please contact the address given above.",
+            "You also have the right to lodge a complaint with a data protection supervisory authority."
+          ]
+        },
+        "storage": {
+          "heading": "10. Local Browser Storage",
+          "paragraphs": [
+            "To keep you signed in, Supabase Auth stores a session token in your browser's localStorage. This is technically necessary for the login function and is not used for tracking purposes.",
+            "Your chosen language is also stored in localStorage (key modular-synth:lang)."
+          ]
+        },
+        "contact": {
+          "heading": "11. Contact",
+          "paragraphs": [
+            "For questions about data protection, please contact: sven.wehrend[at]gmail.com"
+          ]
+        }
       }
     }
   },
