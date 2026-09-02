@@ -10,6 +10,8 @@ import type { EvenVcoData, EvenVcoFlowNode } from "../types";
 import baseStyles from "./Module.module.scss";
 import styles from "./EvenVcoNode.module.scss";
 import * as SAC from "standardized-audio-context";
+import Info from "../components/Info";
+
 const RAMP = 0.04;
 const WORKLET_NAME = "evenvco-processor";
 const BASE_FREQUENCY = 440; // A4 als Referenz bei Oktave-Index 5 (Mitte von 0-11)
@@ -258,6 +260,7 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
             labels={OCTAVE_LABELS}
             onChange={(octave) => patch({ octave })}
           />
+           <Info>{t("modules.evenvco.hint")}</Info>
           <Knob
             label={t("modules.evenvco.fineLabel")}
             value={data.fineTune}

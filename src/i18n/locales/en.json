@@ -151,6 +151,7 @@
     },
     "envelope": {
       "title": "ADSR",
+      "hint": "Press given key to trigger envelope and create a sound.",
       "gateKeySpace": "Space",
       "attackLabel": "A",
       "decayLabel": "D",
@@ -203,6 +204,7 @@
     },
     "evenvco": {
       "title": "EVEN VCO",
+      "hint": "After patching this module is locked in position, so that the rotary switch can be used.",
       "fineLabel": "Fine",
       "slaveLabel": "Slave",
       "cvLabel": "CV",
@@ -245,7 +247,7 @@
           "paragraphs": [
             "The controller responsible for data processing on this website under the GDPR is:",
             "Sven Wehrend\nEythstrasse 20\n12105 Berlin\nEmail: sven.wehrend[at]gmail.com"
-          ] 
+          ]
         },
         "overview": {
           "heading": "2. Overview",

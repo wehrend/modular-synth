@@ -6,6 +6,8 @@ import Knob from "../components/Knob";
 import { useEffect, useRef, useState } from "react";
 import styles from "./Module.module.scss";
 import * as Tone from "tone";
+import Info from "../components/Info";
+
 
 const GATE_KEY = " "; // Leertaste; e.key für Space ist ein Leerzeichen
 
@@ -94,6 +96,7 @@ export default function EnvelopeNode({
         <span className={`power ${gateActive ? "power--on" : ""}`}>
           {GATE_KEY === " " ? t("modules.envelope.gateKeySpace") : GATE_KEY}
         </span>
+        <Info>{t("modules.envelope.hint")}</Info>
       </header>
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="gate" />

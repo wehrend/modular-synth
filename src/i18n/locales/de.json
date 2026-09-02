@@ -151,6 +151,7 @@
     },
     "envelope": {
       "title": "ADSR",
+      "hint": "Drücke die angegebene Taste, um die Hüllkurve auszulösen und einen Ton zu erzeugen.",
       "gateKeySpace": "Leertaste",
       "attackLabel": "A",
       "decayLabel": "D",
