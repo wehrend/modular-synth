@@ -161,8 +161,10 @@ export function createEvenVcoNode(
       const initial: EvenVcoData = { ...data, ...entry.pendingPatch };
       setParam(node, "masterFreq", computeMasterFrequency(initial));
       setParam(node, "slaveFreq", initial.slaveFreq);
-      setParam(node, "masterCvAmount", initial.masterCvAmount);
-      setParam(node, "fmAmount", initial.fmAmount);
+      // Original-Hardware kennt keine CV-/FM-Amount-Regler -- Hub fest auf
+      // 1 statt einstellbar, kein Knob mehr dafür in der UI.
+      setParam(node, "masterCvAmount", 1);
+      setParam(node, "fmAmount", 1);
 
       toneConnect(masterCvIn, node, 0, 0);
       toneConnect(slaveFmIn, node, 0, 1);
@@ -203,12 +205,8 @@ export function updateEvenVcoNode(
   if (patch.slaveFreq !== undefined) {
     setParam(entry.workletNode, "slaveFreq", patch.slaveFreq);
   }
-  if (patch.masterCvAmount !== undefined) {
-    setParam(entry.workletNode, "masterCvAmount", patch.masterCvAmount);
-  }
-  if (patch.fmAmount !== undefined) {
-    setParam(entry.workletNode, "fmAmount", patch.fmAmount);
-  }
+  // masterCvAmount/fmAmount sind kein einstellbarer Parameter mehr (s.
+  // createEvenVcoNode) -- deshalb hier kein Patch-Zweig mehr dafür.
   // kein eigener patch-Fall für "sync" nötig -- es ist ein reiner Audio-
   // Eingang ohne zugehörigen Regler/Parameter, wie ins.cv bei anderen
   // Modulen auch keinen "amount" braucht, wenn nur das rohe Signal zählt.
@@ -260,7 +258,7 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
             labels={OCTAVE_LABELS}
             onChange={(octave) => patch({ octave })}
           />
-           <Info>{t("modules.evenvco.hint")}</Info>
+          <Info>{t("modules.evenvco.hint")}</Info>
           <Knob
             label={t("modules.evenvco.fineLabel")}
             value={data.fineTune}
@@ -287,15 +285,6 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
 
         <div className={styles.centerControls}>
           <Knob
-            label={t("modules.evenvco.cvAmountLabel")}
-            value={data.masterCvAmount}
-            min={0}
-            max={5000}
-            step={10}
-            format={(v) => `±${v}`}
-            onChange={(masterCvAmount) => patch({ masterCvAmount })}
-          />
-          <Knob
             label={t("modules.evenvco.slaveLabel")}
             value={data.slaveFreq}
             min={20}
@@ -312,7 +301,9 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           <Handle type="source" position={Position.Right} id="triangle" />
         </div>
 
-        {/* Zeile 3: Sync (Ganz links) | FM-Amount (Mitte) | Saw (Ganz rechts) */}
+        {/* Zeile 3: Sync (Ganz links) | (Mitte jetzt leer -- FM-Amount-Knob
+            entfernt, Original-Hardware kennt keinen einstellbaren FM-Hub) |
+            Saw (Ganz rechts) */}
         <div className={styles.leftIn}>
           <Handle type="target" position={Position.Left} id="sync" />
           <span className={baseStyles.ioLabel}>
@@ -320,17 +311,7 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           </span>
         </div>
 
-        <div className={styles.centerControls}>
-          <Knob
-            label={t("modules.evenvco.fmAmountLabel")}
-            value={data.fmAmount}
-            min={0}
-            max={5000}
-            step={10}
-            format={(v) => `±${v}`}
-            onChange={(fmAmount) => patch({ fmAmount })}
-          />
-        </div>
+        <div className={styles.centerControls} />
 
         <div className={styles.rightOut}>
           <span className={baseStyles.ioLabel}>Saw</span>

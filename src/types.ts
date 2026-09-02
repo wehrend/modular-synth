@@ -139,8 +139,6 @@ export type EvenVcoData = {
   octave: number; // 0-11, RotarySwitch
   fineTune: number; // Hz-Offset zur Oktave
   slaveFreq: number; // unabhängige Slave-Frequenz für den Sync-Sweep
-  masterCvAmount: number;
-  fmAmount: number;
 };
 
 export type EvenVcoFlowNode = Node<EvenVcoData, "evenvco">;
