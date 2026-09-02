@@ -153,6 +153,7 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
       octave: 5,
       fineTune: 0,
       slaveFreq: 440,
+      pulseWidth: 0.5,
     }),
   },
 ];

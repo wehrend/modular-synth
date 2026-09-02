@@ -151,7 +151,7 @@
     },
     "envelope": {
       "title": "ADSR",
-      "hint": "Drücke die angegebene Taste, um die Hüllkurve auszulösen und einen Ton zu erzeugen.",
+      "hint": "Drücke",
       "gateKeySpace": "Leertaste",
       "attackLabel": "A",
       "decayLabel": "D",
@@ -204,11 +204,14 @@
     },
     "evenvco": {
       "title": "EVEN VCO",
+      "hint": "Nach dem patchen ist dieses Modul in der Position gesperrt, sodass der Drehknopf verwendet werden kann.",
       "fineLabel": "Fine",
       "slaveLabel": "Slave",
       "cvLabel": "CV",
       "fmLabel": "FM",
-      "syncLabel": "Sync In"
+      "syncLabel": "Sync In",
+      "pwmLabel": "PW",
+      "pwmCvLabel": "PWM"
     }
   },
   "pages": {

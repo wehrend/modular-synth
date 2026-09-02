@@ -209,7 +209,9 @@
       "slaveLabel": "Slave",
       "cvLabel": "CV",
       "fmLabel": "FM",
-      "syncLabel": "Sync In"
+      "syncLabel": "Sync In",
+      "pwmLabel": "PW",
+      "pwmCvLabel": "PWM"
     }
   },
   "pages": {

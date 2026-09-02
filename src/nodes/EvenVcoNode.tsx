@@ -31,7 +31,12 @@ const OCTAVE_LABELS = [
   "1/64'",
 ];
 
-type EvenVcoParam = "masterFreq" | "slaveFreq" | "masterCvAmount" | "fmAmount";
+type EvenVcoParam =
+  | "masterFreq"
+  | "slaveFreq"
+  | "masterCvAmount"
+  | "fmAmount"
+  | "pulseWidth";
 
 function computeMasterFrequency(data: EvenVcoData): number {
   const octave = data.octave ?? 5;
@@ -45,7 +50,8 @@ export type EvenVcoEntry = {
   type: "evenvco";
   masterCvIn: Tone.Gain;
   slaveFmIn: Tone.Gain;
-  syncIn: Tone.Gain; // ← NEU (1)
+  syncIn: Tone.Gain;
+  pwmIn: Tone.Gain; // ← NEU: PWM-CV-Eingang
   sineOut: Tone.Gain;
   triangleOut: Tone.Gain;
   sawtoothOut: Tone.Gain;
@@ -54,7 +60,12 @@ export type EvenVcoEntry = {
   workletNode: AudioWorkletNode | null;
   pendingPatch: Partial<EvenVcoData>;
   currentData: EvenVcoData;
-  ins: { masterCv: Tone.Gain; slaveFm: Tone.Gain; sync: Tone.Gain }; // ← ERWEITERT (2)
+  ins: {
+    masterCv: Tone.Gain;
+    slaveFm: Tone.Gain;
+    sync: Tone.Gain;
+    pwm: Tone.Gain; // ← NEU
+  };
   outs: {
     sine: Tone.ToneAudioNode;
     triangle: Tone.ToneAudioNode;
@@ -98,7 +109,8 @@ export function createEvenVcoNode(
 ): EvenVcoEntry {
   const masterCvIn = new Tone.Gain(1);
   const slaveFmIn = new Tone.Gain(1);
-  const syncIn = new Tone.Gain(1); // ← NEU (3)
+  const syncIn = new Tone.Gain(1);
+  const pwmIn = new Tone.Gain(1); // ← NEU
   const sineOut = new Tone.Gain(1);
   const triangleOut = new Tone.Gain(1);
   const sawtoothOut = new Tone.Gain(1);
@@ -109,7 +121,8 @@ export function createEvenVcoNode(
     type: "evenvco",
     masterCvIn,
     slaveFmIn,
-    syncIn, // ← NEU (4)
+    syncIn,
+    pwmIn, // ← NEU
     sineOut,
     triangleOut,
     sawtoothOut,
@@ -118,7 +131,7 @@ export function createEvenVcoNode(
     workletNode: null,
     pendingPatch: {},
     currentData: data,
-    ins: { masterCv: masterCvIn, slaveFm: slaveFmIn, sync: syncIn }, // ← ERWEITERT
+    ins: { masterCv: masterCvIn, slaveFm: slaveFmIn, sync: syncIn, pwm: pwmIn },
     outs: {
       sine: sineOut,
       triangle: triangleOut,
@@ -151,7 +164,7 @@ export function createEvenVcoNode(
         context as unknown as SAC.IAudioContext,
         WORKLET_NAME,
         {
-          numberOfInputs: 3,
+          numberOfInputs: 4,
           numberOfOutputs: 5,
           outputChannelCount: [1, 1, 1, 1, 1],
           channelCount: 1,
@@ -165,10 +178,12 @@ export function createEvenVcoNode(
       // 1 statt einstellbar, kein Knob mehr dafür in der UI.
       setParam(node, "masterCvAmount", 1);
       setParam(node, "fmAmount", 1);
+      setParam(node, "pulseWidth", initial.pulseWidth);
 
       toneConnect(masterCvIn, node, 0, 0);
       toneConnect(slaveFmIn, node, 0, 1);
-      toneConnect(syncIn, node, 0, 2); // ← NEU (6)
+      toneConnect(syncIn, node, 0, 2);
+      toneConnect(pwmIn, node, 0, 3); // ← NEU
       toneConnect(node, sineOut, 0, 0);
       toneConnect(node, triangleOut, 1, 0);
       toneConnect(node, sawtoothOut, 2, 0);
@@ -205,6 +220,9 @@ export function updateEvenVcoNode(
   if (patch.slaveFreq !== undefined) {
     setParam(entry.workletNode, "slaveFreq", patch.slaveFreq);
   }
+  if (patch.pulseWidth !== undefined) {
+    setParam(entry.workletNode, "pulseWidth", patch.pulseWidth);
+  }
   // masterCvAmount/fmAmount sind kein einstellbarer Parameter mehr (s.
   // createEvenVcoNode) -- deshalb hier kein Patch-Zweig mehr dafür.
   // kein eigener patch-Fall für "sync" nötig -- es ist ein reiner Audio-
@@ -215,7 +233,8 @@ export function updateEvenVcoNode(
 export function disposeEvenVcoNode(entry: EvenVcoEntry): void {
   entry.masterCvIn.dispose();
   entry.slaveFmIn.dispose();
-  entry.syncIn.dispose(); // ← NEU
+  entry.syncIn.dispose();
+  entry.pwmIn.dispose(); // ← NEU
   entry.sineOut.dispose();
   entry.triangleOut.dispose();
   entry.sawtoothOut.dispose();
@@ -258,7 +277,7 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
             labels={OCTAVE_LABELS}
             onChange={(octave) => patch({ octave })}
           />
-          <Info>{t("modules.evenvco.hint")}</Info>
+           <Info>{t("modules.evenvco.hint")}</Info>
           <Knob
             label={t("modules.evenvco.fineLabel")}
             value={data.fineTune}
@@ -318,9 +337,26 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
           <Handle type="source" position={Position.Right} id="sawtooth" />
         </div>
 
-        {/* Zeile 4: Leer (Links) | Leer (Mitte) | Sqr (Ganz rechts) */}
-        <div />
-        <div />
+        {/* Zeile 4: PWM-CV (Ganz links) | PW-Knob (Mitte) | Sqr (Ganz rechts) --
+            direkt neben dem Ausgang platziert, den sie beeinflussen. */}
+        <div className={styles.leftIn}>
+          <Handle type="target" position={Position.Left} id="pwm" />
+          <span className={baseStyles.ioLabel}>
+            {t("modules.evenvco.pwmCvLabel")}
+          </span>
+        </div>
+
+        <div className={styles.centerControls}>
+          <Knob
+            label={t("modules.evenvco.pwmLabel")}
+            value={data.pulseWidth}
+            min={0.05}
+            max={0.95}
+            step={0.01}
+            format={(v) => `${Math.round(v * 100)}%`}
+            onChange={(pulseWidth) => patch({ pulseWidth })}
+          />
+        </div>
         <div className={styles.rightOut}>
           <span className={baseStyles.ioLabel}>Sqr</span>
           <Handle type="source" position={Position.Right} id="square" />

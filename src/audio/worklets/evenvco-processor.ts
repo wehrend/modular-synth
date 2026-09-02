@@ -39,8 +39,8 @@ function triangleWave(phase: number): number {
 function sawtoothWave(phase: number): number {
   return 2 * phase - 1;
 }
-function squareWave(phase: number): number {
-  return phase < 0.5 ? 1 : -1;
+function squareWave(phase: number, width: number): number {
+  return phase < width ? 1 : -1;
 }
 // |sin(x)| ist gerad-symmetrisch (f(-x) = f(x)) -> ausschließlich
 // geradzahlige Harmonische. *2-1 zentriert das Ergebnis wieder um 0.
@@ -79,12 +79,24 @@ class EvenVcoProcessor extends AudioWorkletProcessor {
         maxValue: 5000,
         automationRate: "k-rate",
       },
+      {
+        name: "pulseWidth",
+        defaultValue: 0.5, // 0.5 = klassisches 50/50-Rechteck
+        minValue: 0.05,
+        maxValue: 0.95, // Extreme vermeiden -- 0/1 wäre DC-Stille statt Puls
+        automationRate: "k-rate",
+      },
     ];
   }
 
   private masterPhase = 0;
   private slavePhase = 0;
   private prevSyncSample = 0; // für Nulldurchgangs-Erkennung am externen Sync-Eingang
+
+  // ±1 CV (z.B. von einem LFO) soll die volle Regelbreite [0.05, 0.95] um
+  // die Regler-Grundbreite herum ausschöpfen können, ohne eigenen
+  // Amount-Regler -- direkt addiert wie bei CV/FM.
+  private static readonly PWM_CV_SCALE = 0.45;
 
   process(
     inputs: Float32Array[][],
@@ -94,6 +106,7 @@ class EvenVcoProcessor extends AudioWorkletProcessor {
     const masterCvIn = inputs[0]?.[0];
     const slaveFmIn = inputs[1]?.[0];
     const syncIn = inputs[2]?.[0]; // neuer, dritter Eingangsbus
+    const pwmIn = inputs[3]?.[0]; // vierter Eingangsbus: PWM-CV
 
     const outSine = outputs[0]?.[0];
     const outTri = outputs[1]?.[0];
@@ -106,11 +119,13 @@ class EvenVcoProcessor extends AudioWorkletProcessor {
     const slaveFreqBase = parameters.slaveFreq[0];
     const masterCvAmount = parameters.masterCvAmount[0];
     const fmAmount = parameters.fmAmount[0];
+    const pulseWidthBase = parameters.pulseWidth[0];
     const t = 1 / sampleRate;
 
     for (let i = 0; i < outSine.length; i++) {
       const masterCv = masterCvIn ? masterCvIn[i] : 0;
       const slaveFm = slaveFmIn ? slaveFmIn[i] : 0;
+      const pwmCv = pwmIn ? pwmIn[i] : 0;
 
       const mFreq = clamp(
         masterFreqBase + masterCvAmount * masterCv,
@@ -118,6 +133,11 @@ class EvenVcoProcessor extends AudioWorkletProcessor {
         20000,
       );
       const sFreq = clamp(slaveFreqBase + fmAmount * slaveFm, 0.01, 20000);
+      const width = clamp(
+        pulseWidthBase + pwmCv * EvenVcoProcessor.PWM_CV_SCALE,
+        0.05,
+        0.95,
+      );
 
       // Externer Sync-Eingang: steigender Nulldurchgang resettet den
       // Master von außen.
@@ -144,7 +164,7 @@ class EvenVcoProcessor extends AudioWorkletProcessor {
       outSine[i] = sineWave(this.slavePhase);
       if (outTri) outTri[i] = triangleWave(this.slavePhase);
       if (outSaw) outSaw[i] = sawtoothWave(this.slavePhase);
-      if (outSqr) outSqr[i] = squareWave(this.slavePhase);
+      if (outSqr) outSqr[i] = squareWave(this.slavePhase, width);
       if (outEven) outEven[i] = evenWave(this.slavePhase);
     }
 
