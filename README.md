@@ -88,7 +88,6 @@ For modules with multi-stage signal processing (filter banks, follower chains), 
 
 ## Known Issues
 
-- The even VCO’s UI is still suboptimal and should be improved
 - The sampler module should be reworked to support file uploads and multiple samples
 
 # Modular Synth
@@ -179,5 +178,4 @@ Für Module mit mehrstufiger Signalverarbeitung (Filterbänke, Follower-Ketten) 
 
 ## Bekannte Fehler
 
-- Die UI des even VCO ist noch suboptimal und sollte verbessert werden
 - Das Sampler-Modul sollte überarbeitet werden und File-Upload sowie mehrere Samples unterstützen
