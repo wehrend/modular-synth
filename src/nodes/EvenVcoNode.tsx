@@ -262,112 +262,100 @@ export default function EvenVcoNode({ id, data }: NodeProps<EvenVcoFlowNode>) {
       </header>
 
       <div className={styles.bodyGrid}>
-        {/* Zeile 1: CV (Ganz links) | Octave & Fine (Mitte) | Sin (Ganz rechts) */}
-        <div className={styles.leftIn}>
-          <Handle type="target" position={Position.Left} id="masterCv" />
-          <span className={baseStyles.ioLabel}>
-            {t("modules.evenvco.cvLabel")}
-          </span>
+        <div className={styles.leftColumn}>
+          <div className={styles.leftIn}>
+            <Handle type="target" position={Position.Left} id="masterCv" />
+            <span className={baseStyles.ioLabel}>
+              {t("modules.evenvco.cvLabel")}
+            </span>
+          </div>
+          <div className={styles.leftIn}>
+            <Handle type="target" position={Position.Left} id="slaveFm" />
+            <span className={baseStyles.ioLabel}>
+              {t("modules.evenvco.fmLabel")}
+            </span>
+          </div>
+          <div className={styles.leftIn}>
+            <Handle type="target" position={Position.Left} id="sync" />
+            <span className={baseStyles.ioLabel}>
+              {t("modules.evenvco.syncLabel")}
+            </span>
+          </div>
+          <div className={styles.leftIn}>
+            <Handle type="target" position={Position.Left} id="pwm" />
+            <span className={baseStyles.ioLabel}>
+              {t("modules.evenvco.pwmCvLabel")}
+            </span>
+          </div>
         </div>
 
-        <div className={styles.centerControls}>
-          <RotarySwitch
-            positions={12}
-            value={data.octave}
-            labels={OCTAVE_LABELS}
-            onChange={(octave) => patch({ octave })}
-          />
-           <Info>{t("modules.evenvco.hint")}</Info>
-          <Knob
-            label={t("modules.evenvco.fineLabel")}
-            value={data.fineTune}
-            min={-20}
-            max={20}
-            step={0.1}
-            format={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} Hz`}
-            onChange={(fineTune) => patch({ fineTune })}
-          />
+        <div className={styles.centerColumn}>
+          <div className={styles.centerControls}>
+            <RotarySwitch
+              positions={12}
+              value={data.octave}
+              labels={OCTAVE_LABELS}
+              onChange={(octave) => patch({ octave })}
+            />
+            <Info>{t("modules.evenvco.hint")}</Info>
+            <Knob
+              label={t("modules.evenvco.fineLabel")}
+              value={data.fineTune}
+              min={-20}
+              max={20}
+              step={0.1}
+              format={(v) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} Hz`}
+              onChange={(fineTune) => patch({ fineTune })}
+            />
+          </div>
+
+          <div className={styles.centerControls}>
+            <Knob
+              label={t("modules.evenvco.slaveLabel")}
+              value={data.slaveFreq}
+              min={20}
+              max={2000}
+              step={1}
+              log
+              format={(v) => `${v} Hz`}
+              onChange={(slaveFreq) => patch({ slaveFreq })}
+            />
+          </div>
+
+          <div className={styles.centerControls}>
+            <Knob
+              label={t("modules.evenvco.pwmLabel")}
+              value={data.pulseWidth}
+              min={0.05}
+              max={0.95}
+              step={0.01}
+              format={(v) => `${Math.round(v * 100)}%`}
+              onChange={(pulseWidth) => patch({ pulseWidth })}
+            />
+          </div>
         </div>
 
-        <div className={styles.rightOut}>
-          <span className={baseStyles.ioLabel}>Sin</span>
-          <Handle type="source" position={Position.Right} id="sine" />
-        </div>
-
-        {/* Zeile 2: FM (Ganz links) | CV-Amount & Slave (Mitte) | Tri (Ganz rechts) */}
-        <div className={styles.leftIn}>
-          <Handle type="target" position={Position.Left} id="slaveFm" />
-          <span className={baseStyles.ioLabel}>
-            {t("modules.evenvco.fmLabel")}
-          </span>
-        </div>
-
-        <div className={styles.centerControls}>
-          <Knob
-            label={t("modules.evenvco.slaveLabel")}
-            value={data.slaveFreq}
-            min={20}
-            max={2000}
-            step={1}
-            log
-            format={(v) => `${v} Hz`}
-            onChange={(slaveFreq) => patch({ slaveFreq })}
-          />
-        </div>
-
-        <div className={styles.rightOut}>
-          <span className={baseStyles.ioLabel}>Tri</span>
-          <Handle type="source" position={Position.Right} id="triangle" />
-        </div>
-
-        {/* Zeile 3: Sync (Ganz links) | (Mitte jetzt leer -- FM-Amount-Knob
-            entfernt, Original-Hardware kennt keinen einstellbaren FM-Hub) |
-            Saw (Ganz rechts) */}
-        <div className={styles.leftIn}>
-          <Handle type="target" position={Position.Left} id="sync" />
-          <span className={baseStyles.ioLabel}>
-            {t("modules.evenvco.syncLabel")}
-          </span>
-        </div>
-
-        <div className={styles.centerControls} />
-
-        <div className={styles.rightOut}>
-          <span className={baseStyles.ioLabel}>Saw</span>
-          <Handle type="source" position={Position.Right} id="sawtooth" />
-        </div>
-
-        {/* Zeile 4: PWM-CV (Ganz links) | PW-Knob (Mitte) | Sqr (Ganz rechts) --
-            direkt neben dem Ausgang platziert, den sie beeinflussen. */}
-        <div className={styles.leftIn}>
-          <Handle type="target" position={Position.Left} id="pwm" />
-          <span className={baseStyles.ioLabel}>
-            {t("modules.evenvco.pwmCvLabel")}
-          </span>
-        </div>
-
-        <div className={styles.centerControls}>
-          <Knob
-            label={t("modules.evenvco.pwmLabel")}
-            value={data.pulseWidth}
-            min={0.05}
-            max={0.95}
-            step={0.01}
-            format={(v) => `${Math.round(v * 100)}%`}
-            onChange={(pulseWidth) => patch({ pulseWidth })}
-          />
-        </div>
-        <div className={styles.rightOut}>
-          <span className={baseStyles.ioLabel}>Sqr</span>
-          <Handle type="source" position={Position.Right} id="square" />
-        </div>
-
-        {/* Zeile 5: Leer (Links) | Leer (Mitte) | Even (Ganz rechts) */}
-        <div />
-        <div />
-        <div className={styles.rightOut}>
-          <span className={baseStyles.ioLabel}>Even</span>
-          <Handle type="source" position={Position.Right} id="even" />
+        <div className={styles.rightColumn}>
+          <div className={styles.rightOut}>
+            <span className={baseStyles.ioLabel}>Sin</span>
+            <Handle type="source" position={Position.Right} id="sine" />
+          </div>
+          <div className={styles.rightOut}>
+            <span className={baseStyles.ioLabel}>Tri</span>
+            <Handle type="source" position={Position.Right} id="triangle" />
+          </div>
+          <div className={styles.rightOut}>
+            <span className={baseStyles.ioLabel}>Saw</span>
+            <Handle type="source" position={Position.Right} id="sawtooth" />
+          </div>
+          <div className={styles.rightOut}>
+            <span className={baseStyles.ioLabel}>Sqr</span>
+            <Handle type="source" position={Position.Right} id="square" />
+          </div>
+          <div className={styles.rightOut}>
+            <span className={baseStyles.ioLabel}>Even</span>
+            <Handle type="source" position={Position.Right} id="even" />
+          </div>
         </div>
       </div>
     </div>
