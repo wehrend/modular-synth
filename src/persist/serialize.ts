@@ -64,8 +64,7 @@ export const MODULE_DEFAULTS: Record<string, Record<string, unknown>> = {
     octave: 5,
     fineTune: 0,
     slaveFreq: 440,
-    masterCvAmount: 0,
-    fmAmount: 0,
+    pulseWidth: 0.5,
   },
   out: { volume: -12, muted: false },
 };

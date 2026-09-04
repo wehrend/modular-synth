@@ -208,10 +208,10 @@
       "fineLabel": "Fine",
       "slaveLabel": "Slave",
       "cvLabel": "CV",
-      "cvAmountLabel": "Amount",
       "fmLabel": "FM",
-      "fmAmountLabel": "Amount",
-      "syncLabel": "Sync In"
+      "syncLabel": "Sync In",
+      "pwmLabel": "PW",
+      "pwmCvLabel": "PWM"
     }
   },
   "pages": {
