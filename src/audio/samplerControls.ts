@@ -10,9 +10,10 @@ export async function startSamplerRecording(id: string): Promise<void> {
   const node = registry.get(id);
   if (node?.type !== "sampler") return;
 
-  // Mikro nur öffnen, wenn es nicht schon offen ist -- unnötiges
-  // erneutes getUserMedia() bei jeder Aufnahme vermeiden.
-  if (node.mic.state !== "started") {
+  // Mikro nur öffnen, wenn es aktuell überhaupt die aktive Quelle ist --
+  // sonst fragt die App unnötig nach Mikrofonberechtigung, obwohl gerade
+  // vom gepatchten Eingang aufgenommen wird.
+  if (node.currentData.recordSource === "mic" && node.mic.state !== "started") {
     await node.mic.open(); // fragt bei Bedarf nach Mikrofonberechtigung
   }
 

@@ -5,7 +5,12 @@
 // `registry` von hier, um auf einzelne Einträge zuzugreifen.
 
 import * as Tone from "tone";
-import { AudioNodeInit, NodePatch, type MixerChannel } from "../types";
+import {
+  AudioNodeInit,
+  NodePatch,
+  type MixerChannel,
+  type SamplerData,
+} from "../types";
 import {
   createOscNode,
   disposeOscNode,
@@ -90,7 +95,12 @@ import {
   updateEvenVcoNode,
 } from "../nodes/EvenVcoNode";
 import { gateRoutes } from "./gateRouting";
-import { createPannerNode, disposePannerNode, PannerEntry, updatePannerNode } from "../nodes/PannerNode";
+import {
+  createPannerNode,
+  disposePannerNode,
+  PannerEntry,
+  updatePannerNode,
+} from "../nodes/PannerNode";
 
 type OscEntry = { type: "osc"; osc: Tone.Oscillator; out: Tone.ToneAudioNode };
 type MixerEntry = {
@@ -148,11 +158,15 @@ export type NoiseEntry = {
 export type SamplerEntry = {
   type: "sampler";
   mic: Tone.UserMedia;
+  in: Tone.Gain; // gepatchter Audio-Eingang, Alternative zum Mikrofon
+  micEnable: Tone.Gain; // 1 = Mikro aktiv, 0 = stumm
+  lineEnable: Tone.Gain; // 1 = Eingang aktiv, 0 = stumm
   recorder: Tone.Recorder;
   player: Tone.Player;
   out: Tone.ToneAudioNode;
   gainNode: Tone.Gain;
   pendingLoad: Promise<void>;
+  currentData: SamplerData;
 };
 
 export type RegistryEntry =

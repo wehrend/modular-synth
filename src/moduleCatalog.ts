@@ -114,6 +114,7 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
       playbackRate: 1,
       gain: 1,
       sampleUrl: null,
+      recordSource: "mic",
     }),
   },
   {

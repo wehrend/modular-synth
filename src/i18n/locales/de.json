@@ -174,7 +174,10 @@
         "notLoggedIn": "Nicht eingeloggt -- Aufnahme wird nicht persistiert.",
         "startFailed": "Aufnahme konnte nicht gestartet werden:"
       },
-      "voicesLabel": "Stimmen"
+      "voicesLabel": "Stimmen",
+      "micLabel": "Mic",
+      "lineLabel": "In",
+      "sourceSwitchLabel": "Aufnahmequelle: Mikrofon oder Eingang"
     },
     "vocoderAnalysis": {
       "title": "VOCODER · ANALYSIS",

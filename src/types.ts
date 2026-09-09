@@ -102,6 +102,7 @@ export type SamplerData = {
   playbackRate: number; // Pitch/Geschwindigkeit der Wiedergabe
   gain: number;
   sampleUrl: string | null;
+  recordSource: "mic" | "line"; // Mikrofon oder gepatchtes Signal am "in"-Eingang
 };
 
 export type SamplerFlowNode = Node<SamplerData, "sampler">;

@@ -174,7 +174,10 @@
         "notLoggedIn": "Not signed in -- recording will not be persisted.",
         "startFailed": "Could not start recording:"
       },
-      "voicesLabel": "Voices"
+      "voicesLabel": "Voices",
+      "micLabel": "Mic",
+      "lineLabel": "In",
+      "sourceSwitchLabel": "Recording source: microphone or input"
     },
     "vocoderAnalysis": {
       "title": "VOCODER · ANALYSIS",
