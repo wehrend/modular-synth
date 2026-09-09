@@ -203,6 +203,12 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
 
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="in" />
+        <span className={styles.ioLabel}>
+          {t("modules.sampler.lineInLabel")}
+        </span>
+      </div>
+
+      <div className={styles.rowCenter}>
         <span className={styles.ioLabel}>{t("modules.sampler.micLabel")}</span>
         <Switch
           checked={data.recordSource === "line"}

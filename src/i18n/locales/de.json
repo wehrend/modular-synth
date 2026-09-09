@@ -177,7 +177,8 @@
       "voicesLabel": "Stimmen",
       "micLabel": "Mic",
       "lineLabel": "In",
-      "sourceSwitchLabel": "Aufnahmequelle: Mikrofon oder Eingang"
+      "sourceSwitchLabel": "Aufnahmequelle: Mikrofon oder Eingang",
+      "lineInLabel": "Eingang"
     },
     "vocoderAnalysis": {
       "title": "VOCODER · ANALYSIS",

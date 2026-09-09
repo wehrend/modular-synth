@@ -54,6 +54,14 @@
   margin-top: 10px;
 }
 
+.rowCenter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 4px;
+}
+
 // ---------- Bedienelemente ----------
 
 .power {
