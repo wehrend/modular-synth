@@ -55,6 +55,7 @@ export const MODULE_DEFAULTS: Record<string, Record<string, unknown>> = {
     playbackRate: 1,
     gain: 1,
     sampleUrl: null,
+    recordSource: "mic",
   },
   vocoderAnalysis: { sensitivity: 0.02 },
   vocoderSynth: {},

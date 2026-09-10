@@ -1,6 +1,7 @@
 import * as Tone from "tone";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import Knob from "../components/Knob";
+import Switch from "../components/Switch";
 import {
   updateAudioNode,
   startSamplerRecording,
@@ -42,8 +43,20 @@ export function createSamplerNode(
   data: SamplerData,
 ): SamplerEntry {
   const mic = new Tone.UserMedia();
+  const lineIn = new Tone.Gain(1); // gepatchter Audio-Eingang
+
+  // Statt hart zwischen zwei Quellen umzustecken: beide sind IMMER mit dem
+  // Recorder verbunden, aber jeweils über einen eigenen "Enable"-Gain, der
+  // je nach recordSource auf 1 oder 0 steht. Weniger fehleranfällig als
+  // Web-Audio-Verbindungen zur Laufzeit zu trennen/neu herzustellen, und
+  // erlaubt einen klickfreien Übergang per rampTo() beim Umschalten.
+  const micEnable = new Tone.Gain(data.recordSource === "line" ? 0 : 1);
+  const lineEnable = new Tone.Gain(data.recordSource === "line" ? 1 : 0);
   const recorder = new Tone.Recorder();
-  mic.connect(recorder);
+  mic.connect(micEnable);
+  micEnable.connect(recorder);
+  lineIn.connect(lineEnable);
+  lineEnable.connect(recorder);
 
   const player = new Tone.Player();
   player.playbackRate = data.playbackRate;
@@ -59,11 +72,15 @@ export function createSamplerNode(
   return {
     type: "sampler",
     mic,
+    in: lineIn,
+    micEnable,
+    lineEnable,
     recorder,
     player,
     gainNode,
     out: gainNode,
     pendingLoad,
+    currentData: data,
   };
 }
 
@@ -71,11 +88,19 @@ export function updateSamplerNode(
   entry: SamplerEntry,
   patch: Partial<SamplerData>,
 ): void {
+  entry.currentData = { ...entry.currentData, ...patch };
+
   if (patch.playbackRate !== undefined) {
     entry.player.playbackRate = patch.playbackRate;
   }
   if (patch.gain !== undefined) {
     entry.gainNode.gain.rampTo(patch.gain, 0.04);
+  }
+  if (patch.recordSource !== undefined) {
+    const micOn = patch.recordSource === "mic" ? 1 : 0;
+    const lineOn = patch.recordSource === "line" ? 1 : 0;
+    entry.micEnable.gain.rampTo(micOn, 0.01);
+    entry.lineEnable.gain.rampTo(lineOn, 0.01);
   }
   // "recording" wird bewusst NICHT hier behandelt -- Start/Stop läuft über
   // die eigenständigen async-Funktionen startSamplerRecording/stopSamplerRecording,
@@ -86,6 +111,9 @@ export function updateSamplerNode(
 export function disposeSamplerNode(entry: SamplerEntry): void {
   entry.mic.close();
   entry.mic.dispose();
+  entry.in.dispose();
+  entry.micEnable.dispose();
+  entry.lineEnable.dispose();
   entry.recorder.dispose();
   entry.player.dispose();
   entry.gainNode.dispose();
@@ -172,6 +200,25 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
         </button>
         <Info>{t("modules.sampler.hint")}</Info>
       </header>
+
+      <div className={styles.ioRow}>
+        <Handle type="target" position={Position.Left} id="in" />
+        <span className={styles.ioLabel}>
+          {t("modules.sampler.lineInLabel")}
+        </span>
+      </div>
+
+      <div className={styles.rowCenter}>
+        <span className={styles.ioLabel}>{t("modules.sampler.micLabel")}</span>
+        <Switch
+          checked={data.recordSource === "line"}
+          onChange={(checked) =>
+            patch({ recordSource: checked ? "line" : "mic" })
+          }
+          label={t("modules.sampler.sourceSwitchLabel")}
+        />
+        <span className={styles.ioLabel}>{t("modules.sampler.lineLabel")}</span>
+      </div>
 
       <span className={styles.hint}>
         {data.hasSample && !sampleReady
