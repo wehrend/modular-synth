@@ -90,6 +90,14 @@
   color: v.$signal;
 }
 
+.slotSelect {
+  @include v.control-base;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  width: 100%;
+}
+
 // ---------- Mixer ----------
 
 .mixerKnobRow {

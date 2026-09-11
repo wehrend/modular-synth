@@ -203,7 +203,7 @@ export async function loadProfile(id: string): Promise<Profile | null> {
 
 export async function uploadSamplerRecording(
   userId: string,
-  sampleId: string,
+  instanceNumber: number,
   blob: Blob,
   fileExtension = "webm", // Tone.Recorder liefert meist webm
   contentType = "audio/webm",
@@ -216,7 +216,12 @@ export async function uploadSamplerRecording(
   // minutenlang die alte, gecachte Version ausgeliefert. Ein neuer Pfad
   // pro Aufnahme umgeht das Problem komplett, da es für den CDN eine
   // völlig neue Ressource ist.
-  const filePath = `${userId}/${sampleId}-${Date.now()}.${fileExtension}`;
+  //
+  // Der Timestamp allein sorgt schon für Eindeutigkeit pro Upload -- selbst
+  // wenn zwei verschiedene Sampler-Module durch Löschen/Neuanlegen zufällig
+  // dieselbe instanceNumber hätten, würde nie derselbe Dateiname entstehen,
+  // da niemals zwei Uploads exakt dieselbe Millisekunde treffen.
+  const filePath = `${userId}/sampler-${instanceNumber}-autosave-${Date.now()}.${fileExtension}`;
 
   const { error } = await supabase.storage
     .from("sampler-recordings")

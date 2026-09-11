@@ -178,7 +178,9 @@
       "micLabel": "Mic",
       "lineLabel": "In",
       "sourceSwitchLabel": "Aufnahmequelle: Mikrofon oder Eingang",
-      "lineInLabel": "Eingang"
+      "lineInLabel": "Eingang",
+      "slotSelectLabel": "Sample-Slot wählen",
+      "slotEmpty": "Slot {{n}} (leer)"
     },
     "vocoderAnalysis": {
       "title": "VOCODER · ANALYSIS",

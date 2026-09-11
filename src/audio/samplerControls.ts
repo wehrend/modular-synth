@@ -45,7 +45,16 @@ export async function stopSamplerRecording(id: string): Promise<Blob | null> {
 export function triggerSamplerPlayback(id: string): void {
   const node = registry.get(id);
   if (node?.type !== "sampler") return;
+  // --- TEMPORÄRES DEBUG-LOGGING ---
+  console.log("triggerSamplerPlayback:", {
+    id,
+    playerLoaded: node.player.loaded,
+    playerState: node.player.state,
+    hasBuffer: node.player.buffer?.length,
+  });
+  // ---------------------------------
   if (!node.player.loaded) {
+    console.log("triggerSamplerPlayback: abgebrochen, player.loaded === false");
     return;
   }
   if (node.player.state === "started") node.player.stop();
