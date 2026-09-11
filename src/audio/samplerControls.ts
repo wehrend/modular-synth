@@ -45,16 +45,7 @@ export async function stopSamplerRecording(id: string): Promise<Blob | null> {
 export function triggerSamplerPlayback(id: string): void {
   const node = registry.get(id);
   if (node?.type !== "sampler") return;
-  // --- TEMPORÄRES DEBUG-LOGGING ---
-  console.log("triggerSamplerPlayback:", {
-    id,
-    playerLoaded: node.player.loaded,
-    playerState: node.player.state,
-    hasBuffer: node.player.buffer?.length,
-  });
-  // ---------------------------------
   if (!node.player.loaded) {
-    console.log("triggerSamplerPlayback: abgebrochen, player.loaded === false");
     return;
   }
   if (node.player.state === "started") node.player.stop();
@@ -78,4 +69,18 @@ export function isSamplerReady(id: string): boolean {
   const node = registry.get(id);
   if (node?.type !== "sampler") return false;
   return node.player.loaded;
+}
+
+/**
+ * Lädt eine beliebige URL direkt in den Player -- für Aufnahmen, die schon
+ * in Supabase Storage liegen, aber (noch) keinem Slot zugewiesen sind.
+ * Aktualisiert auch pendingLoad, damit waitForSamplerReady/isSamplerReady
+ * diesen Ladevorgang korrekt mitverfolgen.
+ */
+export function loadSamplerUrl(id: string, url: string): Promise<void> {
+  const node = registry.get(id);
+  if (node?.type !== "sampler") return Promise.resolve();
+  const promise = node.player.load(url).then(() => undefined);
+  node.pendingLoad = promise;
+  return promise;
 }

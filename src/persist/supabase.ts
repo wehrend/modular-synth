@@ -234,3 +234,41 @@ export async function uploadSamplerRecording(
     .getPublicUrl(filePath);
   return data.publicUrl;
 }
+
+export type StorageRecording = {
+  name: string;
+  url: string;
+  createdAt: string | null;
+};
+
+/**
+ * Listet alle Aufnahmen, die im Storage-Ordner dieses Nutzers liegen --
+ * unabhängig davon, ob sie in irgendeinem aktuell gespeicherten Preset
+ * noch referenziert sind. Nötig, weil die App Storage-Dateien sonst nur
+ * über die im Preset hinterlegte sampleUrl kennt -- eine Aufnahme, deren
+ * Preset nie gespeichert oder später überschrieben wurde, wäre der App
+ * sonst komplett unbekannt, obwohl die Datei physisch noch existiert.
+ */
+export async function listSamplerRecordings(
+  userId: string,
+): Promise<StorageRecording[]> {
+  const { data, error } = await supabase.storage
+    .from("sampler-recordings")
+    .list(userId, { sortBy: { column: "created_at", order: "desc" } });
+
+  if (error) throw new Error(error.message);
+  if (!data) return [];
+
+  return data
+    .filter((entry) => entry.name !== ".emptyFolderPlaceholder")
+    .map((entry) => {
+      const { data: urlData } = supabase.storage
+        .from("sampler-recordings")
+        .getPublicUrl(`${userId}/${entry.name}`);
+      return {
+        name: entry.name,
+        url: urlData.publicUrl,
+        createdAt: entry.created_at ?? null,
+      };
+    });
+}

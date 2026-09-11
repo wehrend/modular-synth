@@ -172,7 +172,8 @@
         "noBlobToUpload": "No recording available to upload.",
         "saveFailed": "Could not save recording:",
         "notLoggedIn": "Not signed in -- recording will not be persisted.",
-        "startFailed": "Could not start recording:"
+        "startFailed": "Could not start recording:",
+        "storageListFailed": "Could not load storage list:"
       },
       "voicesLabel": "Voices",
       "micLabel": "Mic",
@@ -180,7 +181,10 @@
       "sourceSwitchLabel": "Recording source: microphone or input",
       "lineInLabel": "Input",
       "slotSelectLabel": "Select sample slot",
-      "slotEmpty": "Slot {{n}} (empty)"
+      "slotEmpty": "Slot {{n}} (empty)",
+      "storageBrowse": "Load From storage",
+      "storageLoading": "Loading…",
+      "storageEmpty": "No files found in storage."
     },
     "vocoderAnalysis": {
       "title": "VOCODER · ANALYSIS",

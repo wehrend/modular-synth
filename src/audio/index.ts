@@ -31,6 +31,7 @@ export {
   triggerSamplerPlayback,
   waitForSamplerReady,
   isSamplerReady,
+  loadSamplerUrl,
 } from "./samplerControls";
 
 export {

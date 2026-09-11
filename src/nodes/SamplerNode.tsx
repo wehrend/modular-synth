@@ -9,12 +9,16 @@ import {
   triggerSamplerPlayback,
   waitForSamplerReady,
   isSamplerReady,
+  loadSamplerUrl,
   resumeAudio,
   SamplerEntry,
 } from "../audio";
 import type { SamplerData, SamplerFlowNode, SamplerSlot } from "../types";
 import styles from "./Module.module.scss";
-import { uploadSamplerRecording } from "../persist/supabase";
+import {
+  uploadSamplerRecording,
+  listSamplerRecordings,
+} from "../persist/supabase";
 import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
@@ -37,15 +41,19 @@ function filenameFromUrl(url: string): string {
 }
 
 /**
- * Liest den Timestamp aus dem Namensschema "sampler-<n>-autosave-<ts>.<ext>"
- * heraus und zeigt ihn als lesbares Datum + Uhrzeit -- aussagekräftiger in
- * der Slot-Liste als ein generisches "Slot 3" oder der rohe Dateiname mit
- * Unix-Timestamp. Fällt auf den rohen Dateinamen zurück, falls das Muster
- * mal nicht passt (z.B. abweichend benannte/ältere Dateien).
+ * Liest einen Unix-Timestamp aus dem Dateinamen heraus und zeigt ihn als
+ * lesbares Datum + Uhrzeit -- aussagekräftiger als ein generisches "Slot 3"
+ * oder der rohe Dateiname. Bewusst nicht auf das aktuelle Namensschema
+ * "sampler-<n>-autosave-<ts>.<ext>" festgelegt, sondern erkennt JEDEN
+ * ausreichend langen Zahlenblock direkt vorm Dateisuffix (z.B. auch das
+ * ältere Schema "sampler-<n>-<ts>.<ext>" ohne "-autosave-") -- Unix-
+ * Timestamps in Millisekunden sind immer 12+ Stellen lang, das genügt zur
+ * eindeutigen Erkennung. Fällt auf den rohen Dateinamen zurück, falls gar
+ * kein solcher Zahlenblock gefunden wird.
  */
 function slotLabel(url: string): string {
   const filename = filenameFromUrl(url);
-  const match = filename.match(/autosave-(\d+)\./);
+  const match = filename.match(/(\d{12,})\.[a-zA-Z0-9]+$/);
   if (!match) return filename;
   return new Date(Number(match[1])).toLocaleString();
 }
@@ -59,12 +67,27 @@ function slotLabel(url: string): string {
  * ohne eigene Slots-Daten sonst dasselbe Array teilen und sich gegenseitig
  * überschreiben). playbackRate/gain sind globale Top-Level-Felder (gelten
  * für alle 10 Slots dieser einen Sampler-Instanz gemeinsam).
+ *
+ * Migriert außerdem das alte, flache Format (vor der Slot-Einführung, nur
+ * ein einzelnes sampleUrl-Feld statt slots[]) -- eine bereits bestehende
+ * Aufnahme landet in Slot 1, statt beim nächsten Laden unsichtbar zu
+ * werden (die Datei selbst bleibt ja in Supabase liegen, nur die
+ * Verknüpfung im Preset würde sonst verloren gehen).
  */
-function normalizeSamplerData(raw: Partial<SamplerData>): SamplerData {
+function normalizeSamplerData(
+  raw: Partial<SamplerData> & {
+    hasSample?: boolean;
+    sampleUrl?: string | null;
+  },
+): SamplerData {
   const slots: SamplerSlot[] =
     Array.isArray(raw.slots) && raw.slots.length === SLOT_COUNT
       ? raw.slots.map((s) => ({ ...s })) // Kopie jedes einzelnen Slot-Objekts
       : Array.from({ length: SLOT_COUNT }, emptySlot);
+
+  if (!slots[0].hasSample && raw.sampleUrl) {
+    slots[0] = { hasSample: !!raw.hasSample, sampleUrl: raw.sampleUrl };
+  }
 
   return {
     recording: false,
@@ -122,7 +145,10 @@ export function createSamplerNode(
   player.fadeIn = 0.005;
   player.fadeOut = 0.02;
 
-  const pendingLoad: Promise<void> = loadIfPresent(player, activeSlot.sampleUrl);
+  const pendingLoad: Promise<void> = loadIfPresent(
+    player,
+    activeSlot.sampleUrl,
+  );
 
   const gainNode = new Tone.Gain(data.gain);
   player.connect(gainNode); // Verstärkung sitzt NACH dem Player, vor dem Ausgang
@@ -193,6 +219,23 @@ export function disposeSamplerNode(entry: SamplerEntry): void {
 
 /* ---------- UI-Seite ---------- */
 
+/**
+ * Fortlaufende Nummer unter allen AKTUELL im Patch vorhandenen Sampler-
+ * Modulen -- stabil sortiert nach Node-ID, damit dieselbe Nummer nicht bei
+ * jedem Render neu durcheinanderwürfelt. Als eigenständige Funktion statt
+ * inline dupliziert, da sowohl beim Aufnehmen als auch beim automatischen
+ * Zuweisen aus dem Storage gebraucht.
+ */
+function computeInstanceNumber(
+  nodes: { id: string; type?: string }[],
+  id: string,
+): number {
+  const samplerNodes = nodes
+    .filter((n) => n.type === "sampler")
+    .sort((a, b) => a.id.localeCompare(b.id));
+  return samplerNodes.findIndex((n) => n.id === id) + 1 || 1;
+}
+
 export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
   const { t } = useTranslation();
   const { updateNodeData, getNodes } = useReactFlow();
@@ -233,11 +276,107 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
   const activeSlot = data.slots[data.selectedSlot];
 
   const updateActiveSlot = (changes: Partial<SamplerSlot>) => {
-    const nextSlots = data.slots.map((slot, i) =>
-      i === data.selectedSlot ? { ...slot, ...changes } : slot,
+    // getNodes() statt data.slots: handleRecordToggle ist eine lang
+    // laufende async-Funktion (wartet auf den Upload). Zwischen zwei
+    // updateActiveSlot-Aufrufen (hasSample sofort, sampleUrl erst nach dem
+    // Upload) bleibt das `data` aus den Props im Closure eingefroren --
+    // obwohl React Flow den Node-State zwischenzeitlich schon geändert hat.
+    // Ohne diesen Fix würde der zweite Aufruf auf Basis des VERALTETEN
+    // Zustands rechnen und die Änderung des ersten Aufrufs unbemerkt wieder
+    // verwerfen (genau das hat "sampleUrl gesetzt, hasSample trotzdem
+    // false" verursacht).
+    const currentNode = getNodes().find((n) => n.id === id) as
+      | SamplerFlowNode
+      | undefined;
+    const currentData = currentNode?.data ?? data;
+
+    const nextSlots = currentData.slots.map((slot, i) =>
+      i === currentData.selectedSlot ? { ...slot, ...changes } : slot,
     );
     patch({ slots: nextSlots });
   };
+
+  // "Aus Storage laden" -- Dateien, die zwar physisch in Supabase liegen,
+  // aber in keinem aktuell gespeicherten Preset mehr referenziert sind
+  // (z.B. weil das Preset nach der Aufnahme nie gespeichert wurde), sind
+  // der App sonst komplett unbekannt. Weist die zu DIESER Sampler-Instanz
+  // gehörenden Dateien chronologisch den LEEREN Slots zu (älteste zuerst)
+  // -- bereits befüllte Slots (z.B. aus einem geladenen Preset) bleiben
+  // dabei unangetastet, es werden nur Lücken aufgefüllt.
+  const [storageLoading, setStorageLoading] = useState(false);
+
+  const autoAssignFromStorage = async () => {
+    if (!user) {
+      console.warn(t("modules.sampler.log.notLoggedIn"));
+      return;
+    }
+    setStorageLoading(true);
+    try {
+      const instanceNumber = computeInstanceNumber(getNodes(), id);
+      // Nur Dateien DIESER Instanz -- der Storage-Ordner ist flach (kein
+      // Node-ID-Unterordner mehr), mehrere Sampler-Module teilen sich also
+      // denselben Ordner. Erkennt beide Namensschemata: die aktuelle
+      // "sampler-<n>-autosave-<ts>.<ext>" und die ältere Variante ohne
+      // "-autosave-".
+      const ownPrefix = new RegExp(`^sampler-${instanceNumber}-`);
+      const allFiles = await listSamplerRecordings(user.id);
+      const ownFiles = allFiles.filter((f) => ownPrefix.test(f.name));
+
+      if (ownFiles.length === 0) {
+        console.warn(t("modules.sampler.storageEmpty"));
+        return;
+      }
+
+      // Chronologisch aufsteigend (älteste zuerst) -- listSamplerRecordings
+      // liefert absteigend (neueste zuerst), hier also umgekehrt sortieren.
+      ownFiles.sort((a, b) =>
+        (a.createdAt ?? "").localeCompare(b.createdAt ?? ""),
+      );
+
+      const previousSlotUrl = data.slots[data.selectedSlot]?.sampleUrl;
+
+      // Bereits befüllte Slots bleiben unangetastet -- nur LEERE Slots
+      // werden der Reihe nach mit den nächsten chronologischen Dateien
+      // aufgefüllt (nicht mehr strikt Datei[i] -> Slot[i], sondern
+      // "nächste freie Datei in nächsten freien Slot").
+      let fileIndex = 0;
+      const nextSlots = data.slots.map((slot) => {
+        if (slot.hasSample) return slot;
+        if (fileIndex >= ownFiles.length) return slot;
+        const file = ownFiles[fileIndex];
+        fileIndex += 1;
+        return { hasSample: true, sampleUrl: file.url };
+      });
+      patch({ slots: nextSlots });
+
+      // Hat sich die URL des GERADE ausgewählten Slots durch die
+      // Zuweisung geändert, denselben Bereit-Zustand-Zyklus wie beim
+      // normalen Slot-Wechsel durchlaufen -- sonst trifft ein sofortiger
+      // Play-Klick auf den alten, jetzt falschen Buffer.
+      const newSelectedUrl = nextSlots[data.selectedSlot]?.sampleUrl;
+      if (newSelectedUrl && newSelectedUrl !== previousSlotUrl) {
+        setSampleReady(false);
+        await loadSamplerUrl(id, newSelectedUrl);
+        setSampleReady(true);
+      }
+    } catch (err) {
+      console.error(t("modules.sampler.log.storageListFailed"), err);
+    } finally {
+      setStorageLoading(false);
+    }
+  };
+
+  // Beim Laden des Moduls automatisch dasselbe tun wie ein Klick auf den
+  // "Aus Storage"-Button -- deckt den Fall ab, dass in Supabase Storage
+  // Aufnahmen dieser Instanz liegen, die im geladenen Preset (noch) nicht
+  // referenziert sind. Bewusst nur beim MOUNT (leeres Deps-Array), nicht
+  // bei jeder Render -- autoAssignFromStorage wird bei jedem Render neu
+  // erzeugt, als Dependency einzutragen würde die Schleife bei jedem
+  // Zustands-Update erneut auslösen.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    autoAssignFromStorage();
+  }, []);
 
   const handleRecordToggle = async () => {
     await resumeAudio(); // s. Kommentar beim Play-Button weiter unten
@@ -254,14 +393,7 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
 
       if (user) {
         try {
-          // Fortlaufende Nummer unter allen AKTUELL im Patch vorhandenen
-          // Sampler-Modulen -- stabil sortiert nach Node-ID, damit dieselbe
-          // Nummer nicht bei jedem Render neu durcheinanderwürfelt.
-          const samplerNodes = getNodes()
-            .filter((n) => n.type === "sampler")
-            .sort((a, b) => a.id.localeCompare(b.id));
-          const instanceNumber =
-            samplerNodes.findIndex((n) => n.id === id) + 1 || 1;
+          const instanceNumber = computeInstanceNumber(getNodes(), id);
 
           const url = await uploadSamplerRecording(
             user.id,
@@ -305,7 +437,9 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
 
       <div className={styles.ioRow}>
         <Handle type="target" position={Position.Left} id="in" />
-        <span className={styles.ioLabel}>{t("modules.sampler.lineInLabel")}</span>
+        <span className={styles.ioLabel}>
+          {t("modules.sampler.lineInLabel")}
+        </span>
       </div>
 
       <div className={styles.rowCenter}>
@@ -344,14 +478,6 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
             ? t("modules.sampler.hintReady")
             : t("modules.sampler.hintEmpty")}
       </span>
-      {/* TEMPORÄRES DEBUG: live sichtbarer Zustand, unabhängig davon, ob
-          der Play-Button überhaupt klickbar ist (disabled-Buttons feuern
-          gar kein Click-Event -- das muss beim RENDERN sichtbar sein). */}
-      <span style={{ fontSize: 10, color: "orange", display: "block" }}>
-        DEBUG: hasSample={String(activeSlot.hasSample)} sampleReady=
-        {String(sampleReady)} sampleUrl=
-        {activeSlot.sampleUrl ? "vorhanden" : "null"}
-      </span>
       <Knob
         label={t("common.rateLabel")}
         value={data.playbackRate}
@@ -375,14 +501,6 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
       <button
         className={`nodrag ${styles.power}`}
         onClick={async () => {
-          // --- TEMPORÄRES DEBUG-LOGGING ---
-          console.log("Play geklickt:", {
-            selectedSlot: data.selectedSlot,
-            activeSlot,
-            sampleReady,
-            disabled: !activeSlot.hasSample || !sampleReady,
-          });
-          // ---------------------------------
           // AudioContext explizit aufwecken -- pointerdown auf Buttons
           // innerhalb eines React-Flow-Node erreicht sonst wegen des
           // Node-Drag-Handlings nie das äußere onPointerDown in App.tsx.

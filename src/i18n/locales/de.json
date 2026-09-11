@@ -172,7 +172,8 @@
         "noBlobToUpload": "Keine Aufnahme zum Hochladen vorhanden.",
         "saveFailed": "Aufnahme konnte nicht gespeichert werden:",
         "notLoggedIn": "Nicht eingeloggt -- Aufnahme wird nicht persistiert.",
-        "startFailed": "Aufnahme konnte nicht gestartet werden:"
+        "startFailed": "Aufnahme konnte nicht gestartet werden:",
+        "storageListFailed": "Storage-Liste konnte nicht geladen werden:"
       },
       "voicesLabel": "Stimmen",
       "micLabel": "Mic",
@@ -180,7 +181,10 @@
       "sourceSwitchLabel": "Aufnahmequelle: Mikrofon oder Eingang",
       "lineInLabel": "Eingang",
       "slotSelectLabel": "Sample-Slot wählen",
-      "slotEmpty": "Slot {{n}} (leer)"
+      "slotEmpty": "Slot {{n}} (leer)",
+      "storageBrowse": "Lade aus Speicher",
+      "storageLoading": "Lade…",
+      "storageEmpty": "Keine Dateien im Storage gefunden."
     },
     "vocoderAnalysis": {
       "title": "VOCODER · ANALYSIS",
