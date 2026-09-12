@@ -62,6 +62,15 @@
   margin: 6px 0 4px;
 }
 
+.slotSelect {
+  @include v.control-base;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  flex: 1; // teilt sich die Breite mit Geschwister-Buttons (z.B. ✏️), statt 100% zu erzwingen
+  min-width: 0; // erlaubt dem Select, in einem Flex-Row schmaler zu werden als sein Inhalt
+}
+
 // ---------- Bedienelemente ----------
 
 .power {
@@ -88,14 +97,6 @@
 .chipActive {
   border-color: v.$signal;
   color: v.$signal;
-}
-
-.slotSelect {
-  @include v.control-base;
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  width: 100%;
 }
 
 // ---------- Mixer ----------

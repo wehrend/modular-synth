@@ -173,7 +173,8 @@
         "saveFailed": "Could not save recording:",
         "notLoggedIn": "Not signed in -- recording will not be persisted.",
         "startFailed": "Could not start recording:",
-        "storageListFailed": "Could not load storage list:"
+        "storageListFailed": "Could not load storage list:",
+        "renameFailed": "Rename failed:"
       },
       "voicesLabel": "Voices",
       "micLabel": "Mic",
@@ -182,9 +183,10 @@
       "lineInLabel": "Input",
       "slotSelectLabel": "Select sample slot",
       "slotEmpty": "Slot {{n}} (empty)",
-      "storageBrowse": "Load From storage",
       "storageLoading": "Loading…",
-      "storageEmpty": "No files found in storage."
+      "storageEmpty": "No files found in storage.",
+      "renameLabel": "Rename sample",
+      "renamePlaceholder": "e.g. kick, vocal-take2"
     },
     "vocoderAnalysis": {
       "title": "VOCODER · ANALYSIS",

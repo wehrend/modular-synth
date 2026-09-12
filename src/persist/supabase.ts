@@ -272,3 +272,78 @@ export async function listSamplerRecordings(
       };
     });
 }
+
+/**
+ * Benennt eine Aufnahme im Storage um -- ersetzt das aktuelle Label im
+ * Dateinamen (egal ob "autosave" bei einer frischen Aufnahme oder ein
+ * bereits vorher vergebenes eigenes Label) durch das gewünschte, neue
+ * Label. Erneutes Umbenennen funktioniert also genauso wie das erste Mal,
+ * z.B. "sampler-2-autosave-171234567.webm" -> "...-kick-..." -> "...-snare-...".
+ *
+ * NUR das Label ist frei editierbar -- die Instanznummer bleibt exakt
+ * erhalten (Präfix "sampler-<n>-" wird 1:1 übernommen, nie vom Label-Input
+ * beeinflusst), und der Timestamp wird bei jeder Umbenennung frisch neu
+ * gesetzt (Date.now()), statt den alten Wert stehen zu lassen -- er ist
+ * damit weder manuell editierbar noch einfach unverändert, sondern
+ * spiegelt den Zeitpunkt der letzten Umbenennung.
+ *
+ * Ändert nur den Pfad/Namen, nicht den Dateiinhalt -- die alte URL wird
+ * dadurch ungültig, die zurückgegebene neue URL muss im jeweiligen Slot
+ * hinterlegt werden.
+ */
+export async function renameSamplerRecording(
+  userId: string,
+  currentUrl: string,
+  newLabel: string,
+): Promise<string> {
+  const oldFilename = currentUrl.split("?")[0].split("/").pop();
+  if (!oldFilename) throw new Error("Ungültige Datei-URL.");
+
+  // Nur alphanumerisch/Bindestrich/Unterstrich zulassen -- Storage-Pfade
+  // vertragen z.B. keine Schrägstriche, Leerzeichen sind zwar technisch
+  // erlaubt, aber in URLs unhandlich.
+  const sanitized = newLabel
+    .trim()
+    .replace(/[^a-zA-Z0-9-_]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  if (!sanitized) throw new Error("Ungültiges Label.");
+
+  // Präfix (Instanznummer) und Dateiendung extrahieren -- Label UND
+  // Timestamp werden komplett verworfen und neu gesetzt, nicht nur das
+  // Label wie ursprünglich.
+  //
+  // Zwei Namensschemata werden unterstützt: das aktuelle mit Label-Segment
+  // ("sampler-<n>-<label>-<ts>.<ext>") und das ältere ohne
+  // ("sampler-<n>-<ts>.<ext>", z.B. Aufnahmen von vor dem Label-Feature).
+  // Beide führen zu einer echten Umbenennung -- ein stiller No-Op, der die
+  // alte URL unverändert zurückgibt, wäre für den User nicht von einem
+  // Erfolg zu unterscheiden.
+  const labeledMatch = oldFilename.match(
+    /^(sampler-\d+-).+-\d{12,}(\.[a-zA-Z0-9]+)$/,
+  );
+  const legacyMatch = oldFilename.match(
+    /^(sampler-\d+-)\d{12,}(\.[a-zA-Z0-9]+)$/,
+  );
+  const match = labeledMatch ?? legacyMatch;
+  if (!match) {
+    throw new Error(
+      `Dateiname entspricht nicht dem erwarteten Schema: ${oldFilename}`,
+    );
+  }
+  const [, prefix, extension] = match;
+  const newFilename = `${prefix}${sanitized}-${Date.now()}${extension}`;
+
+  const oldPath = `${userId}/${oldFilename}`;
+  const newPath = `${userId}/${newFilename}`;
+
+  const { error } = await supabase.storage
+    .from("sampler-recordings")
+    .move(oldPath, newPath);
+
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage
+    .from("sampler-recordings")
+    .getPublicUrl(newPath);
+  return data.publicUrl;
+}

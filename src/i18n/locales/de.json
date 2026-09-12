@@ -173,7 +173,8 @@
         "saveFailed": "Aufnahme konnte nicht gespeichert werden:",
         "notLoggedIn": "Nicht eingeloggt -- Aufnahme wird nicht persistiert.",
         "startFailed": "Aufnahme konnte nicht gestartet werden:",
-        "storageListFailed": "Storage-Liste konnte nicht geladen werden:"
+        "storageListFailed": "Storage-Liste konnte nicht geladen werden:",
+        "renameFailed": "Umbenennen fehlgeschlagen:"
       },
       "voicesLabel": "Stimmen",
       "micLabel": "Mic",
@@ -182,9 +183,10 @@
       "lineInLabel": "Eingang",
       "slotSelectLabel": "Sample-Slot wählen",
       "slotEmpty": "Slot {{n}} (leer)",
-      "storageBrowse": "Lade aus Speicher",
       "storageLoading": "Lade…",
-      "storageEmpty": "Keine Dateien im Storage gefunden."
+      "storageEmpty": "Keine Dateien im Storage gefunden.",
+      "renameLabel": "Sample umbenennen",
+      "renamePlaceholder": "z.B. kick, vocal-take2"
     },
     "vocoderAnalysis": {
       "title": "VOCODER · ANALYSIS",
