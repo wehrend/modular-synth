@@ -20,10 +20,14 @@ import {
   listSamplerRecordings,
   renameSamplerRecording,
 } from "../persist/supabase";
+import {
+  prepareAudioFileForUpload,
+  AudioFileImportError,
+} from "../audio/fileImport";
 import { useAuth } from "../auth/AuthContext";
 import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import Info from "../components/Info";
 
 const SLOT_COUNT = 10;
@@ -325,6 +329,71 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
     }
   };
 
+  // Datei-Upload: Alternative zur Mikro-/Line-Aufnahme -- lädt eine vom
+  // User ausgewählte Audiodatei (wav/mp3/ogg/webm, max. 10 MB) in den
+  // aktuell gewählten Slot. WAV wird dabei vorher zu Opus/WebM komprimiert
+  // (siehe fileImport.ts), die anderen Formate unverändert übernommen.
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Zurücksetzen, damit dieselbe Datei danach erneut ausgewählt werden
+    // kann -- sonst feuert onChange beim zweiten Mal mit derselben Datei
+    // nicht, da sich der input-Wert nicht geändert hat.
+    e.target.value = "";
+    if (!file) return;
+
+    if (!user) {
+      window.alert(t("modules.sampler.log.notLoggedIn"));
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const { blob, extension, contentType } =
+        await prepareAudioFileForUpload(file);
+      const instanceNumber = computeInstanceNumber(getNodes(), id);
+      // Original-Dateiname (ohne Endung) als mittleres Namenssegment --
+      // die Bereinigung/Fallback-Logik übernimmt uploadSamplerRecording
+      // selbst (sanitizeStorageLabel), damit hier keine zweite,
+      // potenziell abweichende Sanitize-Implementierung entsteht.
+      const label = file.name.replace(/\.[a-zA-Z0-9]+$/, "");
+      const url = await uploadSamplerRecording(
+        user.id,
+        instanceNumber,
+        blob,
+        extension,
+        contentType,
+        label,
+      );
+      updateActiveSlot({ hasSample: true, sampleUrl: url });
+      setSampleReady(false);
+      await loadSamplerUrl(id, url);
+      setSampleReady(true);
+    } catch (err) {
+      if (err instanceof AudioFileImportError) {
+        window.alert(
+          err.reason === "fileTooLarge"
+            ? t("modules.sampler.errors.fileTooLarge")
+            : t("modules.sampler.errors.unsupportedFormat"),
+        );
+      } else {
+        window.alert(
+          err instanceof Error
+            ? err.message
+            : t("modules.sampler.log.uploadFailed"),
+        );
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleRecordToggle = async () => {
     await resumeAudio();
 
@@ -422,6 +491,22 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
         >
           ✏️
         </button>
+        <button
+          className={`nodrag ${styles.power}`}
+          onClick={handleFileButtonClick}
+          disabled={uploading}
+          aria-label={t("modules.sampler.uploadLabel")}
+          title={t("modules.sampler.uploadLabel")}
+        >
+          📁
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".wav,.mp3,.ogg,.webm,audio/wav,audio/x-wav,audio/mpeg,audio/ogg,audio/webm"
+          onChange={handleFileSelected}
+          style={{ display: "none" }}
+        />
       </div>
 
       {renameInput !== null && (
@@ -449,11 +534,13 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
       )}
 
       <span className={styles.hint}>
-        {activeSlot.hasSample && !sampleReady
-          ? t("modules.sampler.hintLoading")
-          : activeSlot.hasSample
-            ? t("modules.sampler.hintReady")
-            : t("modules.sampler.hintEmpty")}
+        {uploading
+          ? t("modules.sampler.uploadCompressing")
+          : activeSlot.hasSample && !sampleReady
+            ? t("modules.sampler.hintLoading")
+            : activeSlot.hasSample
+              ? t("modules.sampler.hintReady")
+              : t("modules.sampler.hintEmpty")}
       </span>
       <Knob
         label={t("common.rateLabel")}

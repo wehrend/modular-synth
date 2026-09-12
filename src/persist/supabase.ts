@@ -201,13 +201,39 @@ export async function loadProfile(id: string): Promise<Profile | null> {
   return data;
 }
 
+/**
+ * Bereinigt einen beliebigen String für die Verwendung als Label-Segment
+ * im Storage-Dateinamen ("sampler-<n>-<label>-<ts>.<ext>") -- nur
+ * alphanumerisch/Bindestrich/Unterstrich, da Storage-Pfade z.B. keine
+ * Schrägstriche vertragen. Gemeinsam genutzt von Rename UND Upload, damit
+ * beide Pfade garantiert demselben Namensschema folgen und nicht
+ * auseinanderlaufen. Gibt null zurück, wenn nach der Bereinigung nichts
+ * Verwertbares übrig bleibt (z.B. Eingabe bestand nur aus Sonderzeichen).
+ */
+export function sanitizeStorageLabel(input: string): string | null {
+  const sanitized = input
+    .trim()
+    .replace(/[^a-zA-Z0-9-_]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return sanitized || null;
+}
+
 export async function uploadSamplerRecording(
   userId: string,
   instanceNumber: number,
   blob: Blob,
   fileExtension = "webm", // Tone.Recorder liefert meist webm
   contentType = "audio/webm",
+  // Mittleres Namenssegment -- "autosave" für Mikro-/Line-Aufnahmen (siehe
+  // Aufrufer in SamplerNode.tsx), bei Datei-Uploads stattdessen der
+  // (bereinigte) Original-Dateiname, damit der Dateiname des Uploads schon
+  // vor jedem manuellen Rename im selben Schema wie umbenannte Aufnahmen
+  // erscheint. Fällt bei leerem/nicht sanitisierbarem Label ebenfalls auf
+  // "autosave" zurück, statt einen ungültigen Pfad zu erzeugen.
+  label = "autosave",
 ): Promise<string> {
+  const safeLabel = sanitizeStorageLabel(label) ?? "autosave";
+
   // Eindeutiger Pfad pro Upload statt fixem Pfad + upsert: Supabase liefert
   // Storage-Objekte über ein CDN aus, dessen Cache-Key den Query-String
   // ignoriert -- der "?t=..." Cache-Buster unten wirkt zwar gegen den
@@ -221,7 +247,7 @@ export async function uploadSamplerRecording(
   // wenn zwei verschiedene Sampler-Module durch Löschen/Neuanlegen zufällig
   // dieselbe instanceNumber hätten, würde nie derselbe Dateiname entstehen,
   // da niemals zwei Uploads exakt dieselbe Millisekunde treffen.
-  const filePath = `${userId}/sampler-${instanceNumber}-autosave-${Date.now()}.${fileExtension}`;
+  const filePath = `${userId}/sampler-${instanceNumber}-${safeLabel}-${Date.now()}.${fileExtension}`;
 
   const { error } = await supabase.storage
     .from("sampler-recordings")
@@ -301,11 +327,10 @@ export async function renameSamplerRecording(
 
   // Nur alphanumerisch/Bindestrich/Unterstrich zulassen -- Storage-Pfade
   // vertragen z.B. keine Schrägstriche, Leerzeichen sind zwar technisch
-  // erlaubt, aber in URLs unhandlich.
-  const sanitized = newLabel
-    .trim()
-    .replace(/[^a-zA-Z0-9-_]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  // erlaubt, aber in URLs unhandlich. Dieselbe Bereinigung wie beim
+  // Label-Segment eines Uploads (siehe sanitizeStorageLabel), damit beide
+  // Pfade garantiert dasselbe Namensschema erzeugen.
+  const sanitized = sanitizeStorageLabel(newLabel);
   if (!sanitized) throw new Error("Ungültiges Label.");
 
   // Präfix (Instanznummer) und Dateiendung extrahieren -- Label UND

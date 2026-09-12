@@ -174,7 +174,8 @@
         "notLoggedIn": "Nicht eingeloggt -- Aufnahme wird nicht persistiert.",
         "startFailed": "Aufnahme konnte nicht gestartet werden:",
         "storageListFailed": "Storage-Liste konnte nicht geladen werden:",
-        "renameFailed": "Umbenennen fehlgeschlagen:"
+        "renameFailed": "Umbenennen fehlgeschlagen:",
+        "uploadFailed": "Upload fehlgeschlagen:"
       },
       "voicesLabel": "Stimmen",
       "micLabel": "Mic",
@@ -186,7 +187,13 @@
       "storageLoading": "Lade…",
       "storageEmpty": "Keine Dateien im Storage gefunden.",
       "renameLabel": "Sample umbenennen",
-      "renamePlaceholder": "z.B. kick, vocal-take2"
+      "renamePlaceholder": "z.B. kick, vocal-take2",
+      "uploadLabel": "Audiodatei hochladen (wav, mp3, ogg, webm, max. 10 MB)",
+      "uploadCompressing": "Komprimiere Audiodatei…",
+      "errors": {
+        "fileTooLarge": "Datei zu groß -- maximal 10 MB erlaubt.",
+        "unsupportedFormat": "Nicht unterstütztes Format -- erlaubt sind wav, mp3, ogg, webm."
+      }
     },
     "vocoderAnalysis": {
       "title": "VOCODER · ANALYSIS",
