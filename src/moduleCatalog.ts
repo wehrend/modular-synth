@@ -110,11 +110,14 @@ export const MODULE_CATALOG: ModuleCatalogEntry[] = [
     basePosition: { x: 440, y: 460 },
     defaults: () => ({
       recording: false,
-      hasSample: false,
+      recordSource: "mic",
       playbackRate: 1,
       gain: 1,
-      sampleUrl: null,
-      recordSource: "mic",
+      selectedSlot: 0,
+      slots: Array.from({ length: 10 }, () => ({
+        hasSample: false,
+        sampleUrl: null,
+      })),
     }),
   },
   {

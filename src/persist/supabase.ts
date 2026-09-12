@@ -201,13 +201,39 @@ export async function loadProfile(id: string): Promise<Profile | null> {
   return data;
 }
 
+/**
+ * Bereinigt einen beliebigen String für die Verwendung als Label-Segment
+ * im Storage-Dateinamen ("sampler-<n>-<label>-<ts>.<ext>") -- nur
+ * alphanumerisch/Bindestrich/Unterstrich, da Storage-Pfade z.B. keine
+ * Schrägstriche vertragen. Gemeinsam genutzt von Rename UND Upload, damit
+ * beide Pfade garantiert demselben Namensschema folgen und nicht
+ * auseinanderlaufen. Gibt null zurück, wenn nach der Bereinigung nichts
+ * Verwertbares übrig bleibt (z.B. Eingabe bestand nur aus Sonderzeichen).
+ */
+export function sanitizeStorageLabel(input: string): string | null {
+  const sanitized = input
+    .trim()
+    .replace(/[^a-zA-Z0-9-_]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return sanitized || null;
+}
+
 export async function uploadSamplerRecording(
   userId: string,
-  sampleId: string,
+  instanceNumber: number,
   blob: Blob,
   fileExtension = "webm", // Tone.Recorder liefert meist webm
   contentType = "audio/webm",
+  // Mittleres Namenssegment -- "autosave" für Mikro-/Line-Aufnahmen (siehe
+  // Aufrufer in SamplerNode.tsx), bei Datei-Uploads stattdessen der
+  // (bereinigte) Original-Dateiname, damit der Dateiname des Uploads schon
+  // vor jedem manuellen Rename im selben Schema wie umbenannte Aufnahmen
+  // erscheint. Fällt bei leerem/nicht sanitisierbarem Label ebenfalls auf
+  // "autosave" zurück, statt einen ungültigen Pfad zu erzeugen.
+  label = "autosave",
 ): Promise<string> {
+  const safeLabel = sanitizeStorageLabel(label) ?? "autosave";
+
   // Eindeutiger Pfad pro Upload statt fixem Pfad + upsert: Supabase liefert
   // Storage-Objekte über ein CDN aus, dessen Cache-Key den Query-String
   // ignoriert -- der "?t=..." Cache-Buster unten wirkt zwar gegen den
@@ -216,7 +242,12 @@ export async function uploadSamplerRecording(
   // minutenlang die alte, gecachte Version ausgeliefert. Ein neuer Pfad
   // pro Aufnahme umgeht das Problem komplett, da es für den CDN eine
   // völlig neue Ressource ist.
-  const filePath = `${userId}/${sampleId}-${Date.now()}.${fileExtension}`;
+  //
+  // Der Timestamp allein sorgt schon für Eindeutigkeit pro Upload -- selbst
+  // wenn zwei verschiedene Sampler-Module durch Löschen/Neuanlegen zufällig
+  // dieselbe instanceNumber hätten, würde nie derselbe Dateiname entstehen,
+  // da niemals zwei Uploads exakt dieselbe Millisekunde treffen.
+  const filePath = `${userId}/sampler-${instanceNumber}-${safeLabel}-${Date.now()}.${fileExtension}`;
 
   const { error } = await supabase.storage
     .from("sampler-recordings")
@@ -227,5 +258,117 @@ export async function uploadSamplerRecording(
   const { data } = supabase.storage
     .from("sampler-recordings")
     .getPublicUrl(filePath);
+  return data.publicUrl;
+}
+
+export type StorageRecording = {
+  name: string;
+  url: string;
+  createdAt: string | null;
+};
+
+/**
+ * Listet alle Aufnahmen, die im Storage-Ordner dieses Nutzers liegen --
+ * unabhängig davon, ob sie in irgendeinem aktuell gespeicherten Preset
+ * noch referenziert sind. Nötig, weil die App Storage-Dateien sonst nur
+ * über die im Preset hinterlegte sampleUrl kennt -- eine Aufnahme, deren
+ * Preset nie gespeichert oder später überschrieben wurde, wäre der App
+ * sonst komplett unbekannt, obwohl die Datei physisch noch existiert.
+ */
+export async function listSamplerRecordings(
+  userId: string,
+): Promise<StorageRecording[]> {
+  const { data, error } = await supabase.storage
+    .from("sampler-recordings")
+    .list(userId, { sortBy: { column: "created_at", order: "desc" } });
+
+  if (error) throw new Error(error.message);
+  if (!data) return [];
+
+  return data
+    .filter((entry) => entry.name !== ".emptyFolderPlaceholder")
+    .map((entry) => {
+      const { data: urlData } = supabase.storage
+        .from("sampler-recordings")
+        .getPublicUrl(`${userId}/${entry.name}`);
+      return {
+        name: entry.name,
+        url: urlData.publicUrl,
+        createdAt: entry.created_at ?? null,
+      };
+    });
+}
+
+/**
+ * Benennt eine Aufnahme im Storage um -- ersetzt das aktuelle Label im
+ * Dateinamen (egal ob "autosave" bei einer frischen Aufnahme oder ein
+ * bereits vorher vergebenes eigenes Label) durch das gewünschte, neue
+ * Label. Erneutes Umbenennen funktioniert also genauso wie das erste Mal,
+ * z.B. "sampler-2-autosave-171234567.webm" -> "...-kick-..." -> "...-snare-...".
+ *
+ * NUR das Label ist frei editierbar -- die Instanznummer bleibt exakt
+ * erhalten (Präfix "sampler-<n>-" wird 1:1 übernommen, nie vom Label-Input
+ * beeinflusst), und der Timestamp wird bei jeder Umbenennung frisch neu
+ * gesetzt (Date.now()), statt den alten Wert stehen zu lassen -- er ist
+ * damit weder manuell editierbar noch einfach unverändert, sondern
+ * spiegelt den Zeitpunkt der letzten Umbenennung.
+ *
+ * Ändert nur den Pfad/Namen, nicht den Dateiinhalt -- die alte URL wird
+ * dadurch ungültig, die zurückgegebene neue URL muss im jeweiligen Slot
+ * hinterlegt werden.
+ */
+export async function renameSamplerRecording(
+  userId: string,
+  currentUrl: string,
+  newLabel: string,
+): Promise<string> {
+  const oldFilename = currentUrl.split("?")[0].split("/").pop();
+  if (!oldFilename) throw new Error("Ungültige Datei-URL.");
+
+  // Nur alphanumerisch/Bindestrich/Unterstrich zulassen -- Storage-Pfade
+  // vertragen z.B. keine Schrägstriche, Leerzeichen sind zwar technisch
+  // erlaubt, aber in URLs unhandlich. Dieselbe Bereinigung wie beim
+  // Label-Segment eines Uploads (siehe sanitizeStorageLabel), damit beide
+  // Pfade garantiert dasselbe Namensschema erzeugen.
+  const sanitized = sanitizeStorageLabel(newLabel);
+  if (!sanitized) throw new Error("Ungültiges Label.");
+
+  // Präfix (Instanznummer) und Dateiendung extrahieren -- Label UND
+  // Timestamp werden komplett verworfen und neu gesetzt, nicht nur das
+  // Label wie ursprünglich.
+  //
+  // Zwei Namensschemata werden unterstützt: das aktuelle mit Label-Segment
+  // ("sampler-<n>-<label>-<ts>.<ext>") und das ältere ohne
+  // ("sampler-<n>-<ts>.<ext>", z.B. Aufnahmen von vor dem Label-Feature).
+  // Beide führen zu einer echten Umbenennung -- ein stiller No-Op, der die
+  // alte URL unverändert zurückgibt, wäre für den User nicht von einem
+  // Erfolg zu unterscheiden.
+  const labeledMatch = oldFilename.match(
+    /^(sampler-\d+-).+-\d{12,}(\.[a-zA-Z0-9]+)$/,
+  );
+  const legacyMatch = oldFilename.match(
+    /^(sampler-\d+-)\d{12,}(\.[a-zA-Z0-9]+)$/,
+  );
+  const match = labeledMatch ?? legacyMatch;
+  if (!match) {
+    throw new Error(
+      `Dateiname entspricht nicht dem erwarteten Schema: ${oldFilename}`,
+    );
+  }
+  const [, prefix, extension] = match;
+  const newFilename = `${prefix}${sanitized}-${Date.now()}${extension}`;
+
+  const oldPath = `${userId}/${oldFilename}`;
+  const newPath = `${userId}/${newFilename}`;
+
+  const { error } = await supabase.storage
+    .from("sampler-recordings")
+    .move(oldPath, newPath);
+
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage
+    .from("sampler-recordings")
+    .getPublicUrl(newPath);
   return data.publicUrl;
 }

@@ -96,13 +96,18 @@ export type SequencerData = {
 
 export type SequencerFlowNode = Node<SequencerData, "sequencer">;
 
+export type SamplerSlot = {
+  hasSample: boolean;
+  sampleUrl: string | null;
+};
+ 
 export type SamplerData = {
   recording: boolean;
-  hasSample: boolean; // reiner UI-Zustand: gibt es schon eine Aufnahme?
-  playbackRate: number; // Pitch/Geschwindigkeit der Wiedergabe
-  gain: number;
-  sampleUrl: string | null;
   recordSource: "mic" | "line"; // Mikrofon oder gepatchtes Signal am "in"-Eingang
+  playbackRate: number; // global für diese Sampler-Instanz, gilt für alle 10 Slots
+  gain: number; // global für diese Sampler-Instanz, gilt für alle 10 Slots
+  selectedSlot: number; // 0-9, per RotarySwitch
+  slots: SamplerSlot[]; // feste Länge 10
 };
 
 export type SamplerFlowNode = Node<SamplerData, "sampler">;

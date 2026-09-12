@@ -70,3 +70,17 @@ export function isSamplerReady(id: string): boolean {
   if (node?.type !== "sampler") return false;
   return node.player.loaded;
 }
+
+/**
+ * Lädt eine beliebige URL direkt in den Player -- für Aufnahmen, die schon
+ * in Supabase Storage liegen, aber (noch) keinem Slot zugewiesen sind.
+ * Aktualisiert auch pendingLoad, damit waitForSamplerReady/isSamplerReady
+ * diesen Ladevorgang korrekt mitverfolgen.
+ */
+export function loadSamplerUrl(id: string, url: string): Promise<void> {
+  const node = registry.get(id);
+  if (node?.type !== "sampler") return Promise.resolve();
+  const promise = node.player.load(url).then(() => undefined);
+  node.pendingLoad = promise;
+  return promise;
+}

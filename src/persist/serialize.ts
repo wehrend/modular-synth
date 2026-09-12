@@ -51,11 +51,14 @@ export const MODULE_DEFAULTS: Record<string, Record<string, unknown>> = {
   },
   sampler: {
     recording: false,
-    hasSample: false,
+    recordSource: "mic",
     playbackRate: 1,
     gain: 1,
-    sampleUrl: null,
-    recordSource: "mic",
+    selectedSlot: 0,
+    slots: Array.from({ length: 10 }, () => ({
+      hasSample: false,
+      sampleUrl: null,
+    })),
   },
   vocoderAnalysis: { sensitivity: 0.02 },
   vocoderSynth: {},

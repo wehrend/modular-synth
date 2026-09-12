@@ -172,13 +172,28 @@
         "noBlobToUpload": "Keine Aufnahme zum Hochladen vorhanden.",
         "saveFailed": "Aufnahme konnte nicht gespeichert werden:",
         "notLoggedIn": "Nicht eingeloggt -- Aufnahme wird nicht persistiert.",
-        "startFailed": "Aufnahme konnte nicht gestartet werden:"
+        "startFailed": "Aufnahme konnte nicht gestartet werden:",
+        "storageListFailed": "Storage-Liste konnte nicht geladen werden:",
+        "renameFailed": "Umbenennen fehlgeschlagen:",
+        "uploadFailed": "Upload fehlgeschlagen:"
       },
       "voicesLabel": "Stimmen",
       "micLabel": "Mic",
       "lineLabel": "In",
       "sourceSwitchLabel": "Aufnahmequelle: Mikrofon oder Eingang",
-      "lineInLabel": "Eingang"
+      "lineInLabel": "Eingang",
+      "slotSelectLabel": "Sample-Slot wählen",
+      "slotEmpty": "Slot {{n}} (leer)",
+      "storageLoading": "Lade…",
+      "storageEmpty": "Keine Dateien im Storage gefunden.",
+      "renameLabel": "Sample umbenennen",
+      "renamePlaceholder": "z.B. kick, vocal-take2",
+      "uploadLabel": "Audiodatei hochladen (wav, mp3, ogg, webm, max. 10 MB)",
+      "uploadCompressing": "Komprimiere Audiodatei…",
+      "errors": {
+        "fileTooLarge": "Datei zu groß -- maximal 10 MB erlaubt.",
+        "unsupportedFormat": "Nicht unterstütztes Format -- erlaubt sind wav, mp3, ogg, webm."
+      }
     },
     "vocoderAnalysis": {
       "title": "VOCODER · ANALYSIS",
