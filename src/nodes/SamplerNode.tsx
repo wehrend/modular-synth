@@ -29,6 +29,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "../i18n";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import Info from "../components/Info";
+import { Pencil, Upload } from "lucide-react";
 
 const SLOT_COUNT = 10;
 
@@ -489,7 +490,7 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
           disabled={!activeSlot.sampleUrl}
           aria-label={t("modules.sampler.renameLabel")}
         >
-          ✏️
+          <Pencil size={12} />
         </button>
         <button
           className={`nodrag ${styles.power}`}
@@ -498,7 +499,7 @@ export default function SamplerNode({ id, data }: NodeProps<SamplerFlowNode>) {
           aria-label={t("modules.sampler.uploadLabel")}
           title={t("modules.sampler.uploadLabel")}
         >
-          📁
+          <Upload size={12} />
         </button>
         <input
           ref={fileInputRef}
