@@ -26,8 +26,8 @@ export default function Toolbar({ user, moduleButtons }: Props) {
         </Link>
       )}
       <div className={styles.actions}>
-        <ModuleToolbar modules={moduleButtons} />
         <Info variant="danger">{t("toolbar.hint")}</Info>
+        <ModuleToolbar modules={moduleButtons} />
       </div>
     </div>
   );
