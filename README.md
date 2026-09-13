@@ -86,10 +86,6 @@ A new module affects **eight locations**. That sounds like a lot, but it always 
 
 For modules with multi-stage signal processing (filter banks, follower chains), it’s worth using `Tone. Meter({ normalRange: true })` as a branch at relevant points in the signal path, combined with a React state display polled via `requestAnimationFrame` (see `VocoderAnalysisNode.tsx`)—this immediately shows where a signal disappears, instead of having to guess.
 
-## Known Issues
-
-- The sampler module should be reworked to support file uploads and multiple samples
-
 # Modular Synth
 
 Ein modularer Software-Synthesizer im Browser: React Flow als Patch-Oberfläche, Tone.js als Audio-Engine, vollständig in TypeScript (strict), mehrsprachig (react-i18next), mit Supabase-Backend für Accounts und gespeicherte Patches.
@@ -175,7 +171,3 @@ Ein neues Modul berührt **acht Stellen**. Das klingt nach viel, ist aber immer 
 ## Debugging
 
 Für Module mit mehrstufiger Signalverarbeitung (Filterbänke, Follower-Ketten) lohnt sich `Tone.Meter({ normalRange: true })` als Abzweig an relevanten Punkten im Signalpfad, kombiniert mit einer per `requestAnimationFrame` gepollten React-State-Anzeige (siehe `VocoderAnalysisNode.tsx`) – zeigt sofort, an welcher Stelle ein Signal verschwindet, statt raten zu müssen.
-
-## Bekannte Fehler
-
-- Das Sampler-Modul sollte überarbeitet werden und File-Upload sowie mehrere Samples unterstützen
