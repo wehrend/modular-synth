@@ -115,7 +115,7 @@ export default function Info({ children, label, variant = "default" }: Props) {
         aria-label={label ?? t("common.moreInfo")}
         aria-expanded={open}
       >
-        <InfoIcon size={12} strokeWidth={2.5} />
+        <InfoIcon size={24} strokeWidth={2.5} />
       </button>
       {open &&
         position &&
